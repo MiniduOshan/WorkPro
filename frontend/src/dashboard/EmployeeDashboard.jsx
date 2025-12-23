@@ -1,0 +1,191 @@
+import React from 'react';
+
+const EmployeeDashboard = () => {
+  return (
+    <div className="flex flex-col overflow-hidden">
+      {/* Header inside layout already renders; keep content only */}
+
+      {/* Scrollable Content */}
+      <div className="grow overflow-y-auto p-6 md:p-8 custom-scrollbar bg-gradient-to-br from-slate-50 to-blue-50/30">
+        {/* Welcome Card */}
+        <div className="mb-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 border border-blue-500/20 shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden hover:shadow-2xl transition-all duration-300">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-48 -mt-48 animate-pulse"></div>
+          <div className="z-10 text-left text-white">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
+              <i className="fa-solid fa-hand-wave text-yellow-300"></i>
+              Good morning!
+            </h2>
+            <p className="text-blue-100">You have <span className="text-yellow-300 font-bold">4 tasks</span> to focus on today.</p>
+          </div>
+          <div className="mt-6 md:mt-0 flex gap-3 z-10">
+            <button className="bg-white text-blue-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-transform shadow-lg">
+              <i className="fa-solid fa-clock mr-2"></i>Clock In
+            </button>
+            <button className="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-800 transition border border-blue-500">
+              <i className="fa-solid fa-users mr-2"></i>View Team
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <StatCard icon="fa-fire-flame-curved" color="blue" label="Weekly Streak" value="5 Days" />
+          <StatCard icon="fa-circle-check" color="green" label="Completed" value="18 Tasks" />
+          <StatCard icon="fa-trophy" color="amber" label="Rank" value="Top 10%" />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* My Tasks Section */}
+          <div className="xl:col-span-2 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-slate-800">My Priority Tasks</h3>
+              <button className="text-sm font-bold text-green-600 hover:underline">View All</button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <TaskCard badge="HIGH PRIORITY" badgeColor="red" leftBorder="red" title="Fix Mobile Navigation Bug" due="Due in 3h" by="Assigned by John" action="Start" />
+              <TaskCard badge="DEVELOPMENT" badgeColor="blue" leftBorder="blue" title="API Integration: Auth" due="Due Tomorrow" by="Assigned by John" action="Waiting..." muted />
+            </div>
+
+            {/* Department Updates */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-md hover:shadow-xl transition-shadow">
+              <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/50">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <i className="fa-solid fa-bell text-blue-600"></i>
+                  Department Feed (Tech)
+                </h3>
+              </div>
+              <div className="p-6 space-y-6">
+                <DeptUpdate icon="fa-code" iconBg="slate-100" iconColor="slate-400" title="Deployment Successful" desc="V2.4.0 was pushed to production by Sarah. All systems stable." time="2 hours ago" />
+                <DeptUpdate icon="fa-calendar-check" iconBg="blue-50" iconColor="blue-500" title="Sprint Planning Meeting" desc="New tasks will be assigned tomorrow at 9:00 AM." time="Yesterday" />
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Sidebar */}
+          <div className="space-y-8">
+            {/* Group Works Chat */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-md flex flex-col h-[500px] hover:shadow-xl transition-shadow">
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="text-left">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <i className="fa-solid fa-comments text-green-600"></i>
+                    Group Works
+                  </h3>
+                  <p className="text-[10px] text-green-600 font-bold uppercase flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                    #tech-frontend
+                  </p>
+                </div>
+                <button className="text-slate-400 hover:text-green-600 transition-colors">
+                  <i className="fa-solid fa-expand"></i>
+                </button>
+              </div>
+              <div className="grow overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                <ChatMessage initials="SL" left textClass="text-slate-700" name="Sarah L." content="Marcus, can you check the PR for the nav fixes?" />
+                <ChatMessage me initials="MK" right content="On it right now. Will push by noon." />
+                <ChatMessage initials="JD" left textClass="text-slate-700" name="John D. (Manager)" content="Great work team. The client loved the last demo." />
+              </div>
+              <div className="p-4 border-t border-slate-100 bg-slate-50">
+                <div className="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200 hover:border-green-300 transition-colors">
+                  <button className="text-slate-400 hover:text-green-600 p-1 transition-colors"><i className="fa-solid fa-paperclip text-sm"></i></button>
+                  <input type="text" placeholder="Reply to #tech-frontend..." className="grow bg-transparent border-none text-xs focus:ring-0" />
+                  <button className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg flex items-center justify-center hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg">
+                    <i className="fa-solid fa-paper-plane text-xs"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Personal Performance */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md text-left hover:shadow-xl transition-shadow">
+              <h4 className="font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <i className="fa-solid fa-chart-line text-blue-600"></i>
+                My Productivity
+              </h4>
+              <Progress label="Task Accuracy" value="94%" barColor="green" />
+              <Progress label="Punctuality" value="88%" barColor="blue" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ icon, color, label, value }) => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 text-left hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer group">
+    <div className={`w-14 h-14 bg-gradient-to-br from-${color}-400 to-${color}-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform`}>
+      <i className={`fa-solid ${icon}`}></i>
+    </div>
+    <div>
+      <p className="text-slate-500 text-xs font-semibold uppercase tracking-wide">{label}</p>
+      <h3 className="text-2xl font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{value}</h3>
+    </div>
+  </div>
+);
+
+const TaskCard = ({ badge, badgeColor, leftBorder, title, due, by, action, muted }) => (
+  <div className={`task-card bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-md border-l-4 ${leftBorder ? `border-l-${leftBorder}-500` : ''} text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group`}>
+    <div className="flex justify-between mb-4">
+      <span className={`px-3 py-1 bg-${badgeColor}-100 text-${badgeColor}-700 text-[10px] font-bold rounded-lg uppercase tracking-wide`}>{badge}</span>
+      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+        <i className="fa-regular fa-clock"></i>
+        {due}
+      </span>
+    </div>
+    <h4 className="font-bold text-slate-800 mb-2 text-lg group-hover:text-blue-600 transition-colors">{title}</h4>
+    <p className="text-xs text-slate-500 mb-6 leading-relaxed">The burger menu isn't triggering on iOS Safari. Needs a CSS fix.</p>
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+          JD
+        </div>
+        <span className="text-[10px] font-bold text-slate-600">{by}</span>
+      </div>
+      <button className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${muted ? 'text-slate-400 bg-slate-50' : 'text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md'}`}>
+        {action} {!muted && <i className="fa-solid fa-play ml-1"></i>}
+      </button>
+    </div>
+  </div>
+);
+
+const DeptUpdate = ({ icon, iconBg, iconColor, title, desc, time }) => (
+  <div className="flex gap-4 text-left hover:bg-slate-50 p-3 rounded-xl -mx-3 transition-colors cursor-pointer group">
+    <div className={`w-11 h-11 rounded-xl bg-${iconBg} shrink-0 flex items-center justify-center text-${iconColor} shadow-sm group-hover:scale-110 transition-transform`}>
+      <i className={`fa-solid ${icon}`}></i>
+    </div>
+    <div className="grow">
+      <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{title}</p>
+      <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+      <p className="text-[10px] text-slate-400 mt-2 italic flex items-center gap-1">
+        <i className="fa-regular fa-clock"></i>
+        {time}
+      </p>
+    </div>
+  </div>
+);
+
+const ChatMessage = ({ initials, name, content, left, right, me, textClass }) => (
+  <div className={`flex gap-3 ${right ? 'flex-row-reverse' : ''} animate-fadeIn`}>
+    <div className={`w-9 h-9 rounded-full ${me ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg' : 'bg-gradient-to-br from-blue-400 to-purple-500 text-white shadow-md'} shrink-0 flex items-center justify-center text-[11px] font-bold`}>{initials}</div>
+    <div className={`${me ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl rounded-tr-none shadow-md' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none shadow-sm'} p-3 text-left max-w-[75%]`}>
+      {name && <p className={`text-[10px] font-bold mb-1 ${me ? 'text-green-100' : 'text-slate-500'}`}>{name}</p>}
+      <p className={`text-xs ${textClass || ''}`}>{content}</p>
+    </div>
+  </div>
+);
+
+const Progress = ({ label, value, barColor }) => (
+  <div className="space-y-3 mb-5 last:mb-0">
+    <div className="flex justify-between text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+      <span>{label}</span>
+      <span className={`text-${barColor}-600`}>{value}</span>
+    </div>
+    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+      <div className={`h-full bg-gradient-to-r from-${barColor}-400 to-${barColor}-600 rounded-full transition-all duration-500 shadow-md`} style={{ width: value }}></div>
+    </div>
+  </div>
+);
+
+export default EmployeeDashboard;
