@@ -26,41 +26,6 @@ export default function Channels() {
     const storedCompanyId = localStorage.getItem('companyId');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
-    } else {
-      // Sample channels fallback when no company is selected
-      const sample = [
-        {
-          _id: 'c1',
-          name: 'general',
-          type: 'public',
-          members: ['u1', 'u2', 'u3'],
-          messages: [
-            { user: { _id: 'u1', firstName: 'Alice', lastName: 'Lopez' }, text: 'Welcome to general!', createdAt: new Date() },
-            { user: { _id: 'u2', firstName: 'Marcus', lastName: 'King' }, text: "Let's plan the sprint.", createdAt: new Date() },
-          ],
-        },
-        {
-          _id: 'c2',
-          name: 'design',
-          type: 'public',
-          members: ['u2', 'u4'],
-          messages: [
-            { user: { _id: 'u2', firstName: 'Marcus', lastName: 'King' }, text: 'New palette proposal uploaded.', createdAt: new Date() },
-          ],
-        },
-        {
-          _id: 'c3',
-          name: 'leadership',
-          type: 'private',
-          members: ['u1', 'u5'],
-          messages: [
-            { user: { _id: 'u1', firstName: 'Alice', lastName: 'Lopez' }, text: 'Drafting Q2 strategy.', createdAt: new Date() },
-          ],
-        },
-      ];
-      setChannels(sample);
-      setSelected(sample[0]);
-      setLoading(false);
     }
   }, []);
 
@@ -131,7 +96,7 @@ export default function Channels() {
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-slate-50">
+    <div className="grow flex flex-col overflow-hidden bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-8 py-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -150,7 +115,7 @@ export default function Channels() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-grow flex overflow-hidden">
+      <div className="grow flex overflow-hidden">
         {/* Channels Sidebar */}
         <div className="w-80 bg-white border-r border-slate-200 flex flex-col">
           {/* Search */}
@@ -166,7 +131,7 @@ export default function Channels() {
           </div>
 
           {/* Channel List */}
-          <div className="flex-grow overflow-y-auto p-4">
+          <div className="grow overflow-y-auto p-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -196,7 +161,7 @@ export default function Channels() {
                     }`}
                   >
                     <IoRadioButtonOnOutline className="text-lg shrink-0" />
-                    <span className="truncate flex-grow">{channel.name}</span>
+                    <span className="truncate grow">{channel.name}</span>
                     {channel.type === 'private' && (
                       <IoLockClosedOutline className="text-sm text-slate-400" />
                     )}
@@ -208,13 +173,13 @@ export default function Channels() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow flex flex-col bg-slate-50">
+        <div className="grow flex flex-col bg-slate-50">
           {selected ? (
             <>
               {/* Chat Header */}
               <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white">
                     <IoChatbubblesOutline className="text-xl" />
                   </div>
                   <div>
@@ -236,7 +201,7 @@ export default function Channels() {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-grow overflow-y-auto p-6 space-y-4 custom-scrollbar">
+              <div className="grow overflow-y-auto p-6 space-y-4 custom-scrollbar">
                 {(selected.messages || []).length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
@@ -258,8 +223,8 @@ export default function Channels() {
                         {/* Avatar */}
                         <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white ${
                           isOwnMessage 
-                            ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
-                            : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                            ? 'bg-linear-to-br from-green-500 to-emerald-600'
+                            : 'bg-linear-to-br from-blue-500 to-purple-600'
                         }`}>
                           {msg.user?.profilePic ? (
                             <img src={msg.user.profilePic} alt="" className="w-full h-full rounded-full object-cover" />
@@ -307,7 +272,7 @@ export default function Channels() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={`Message #${selected.name}`}
-                    className="flex-grow px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="grow px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                   <button
                     type="submit"

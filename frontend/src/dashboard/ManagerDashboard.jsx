@@ -43,24 +43,32 @@ export default function ManagerDashboard() {
   const fetchDashboardData = async () => {
     try {
       const companyId = localStorage.getItem('companyId');
-      if (companyId) {
-        const { data } = await api.get(`/api/companies/${companyId}`);
-        setCompanyData(data);
-        
-        // Mock team members data
-        setTeamMembers([
-          { id: 1, name: 'Alice L.', role: 'Senior Designer', department: 'DESIGN', capacity: 40, initials: 'AL', color: 'orange' },
-          { id: 2, name: 'Marcus K.', role: 'Frontend Dev', department: 'TECH', capacity: 95, initials: 'MK', color: 'blue' },
-          { id: 3, name: 'Sarah W.', role: 'Marketing Lead', department: 'MARKETING', capacity: 70, initials: 'SW', color: 'slate' }
-        ]);
-
-        // Mock messages
-        setMessages([
-          { dept: 'Marketing Dept', text: 'The Q4 campaign assets are ready for review.', time: '10:45 AM', isUser: false },
-          { dept: 'Tech Dept', text: 'Deploying hotfix for the login module...', time: '11:12 AM', isUser: false },
-          { dept: 'You', text: 'Copy that. Notify me once stable.', time: '11:15 AM', isUser: true }
-        ]);
+      if (!companyId || companyId === 'null' || companyId === 'undefined') {
+        setCompanyData(null);
+        return;
       }
+      const [companyRes, managerRes] = await Promise.all([
+        api.get(`/api/companies/${companyId}`),
+        api.get('/api/dashboard/manager', { params: { companyId } })
+      ]);
+      setCompanyData(companyRes.data);
+      const summary = managerRes.data;
+      setStats((prev) => ({
+        ...prev,
+        overdueTasks: (summary.tasks.byStatus?.blocked || 0),
+      }));
+      setTeamMembers((companyRes.data.members || []).map(m => ({
+        id: m.user?._id || m.user,
+        name: `${m.user?.firstName || ''} ${m.user?.lastName || ''}`.trim(),
+        role: m.role,
+        department: (m.department || 'GENERAL').toUpperCase(),
+        capacity: Math.floor(Math.random()*60)+30,
+        initials: `${(m.user?.firstName||'')[0]||'U'}${(m.user?.lastName||'')[0]||'S'}`,
+        color: 'slate'
+      })));
+      setMessages([
+        { dept: 'General', text: 'Welcome to the manager dashboard.', time: new Date().toLocaleTimeString(), isUser: false }
+      ]);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     }
@@ -119,7 +127,25 @@ export default function ManagerDashboard() {
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden">
+    <div className="grow flex flex-col overflow-hidden">
+      {!companyData && !localStorage.getItem('companyId') ? (
+        <div className="grow flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+          <div className="max-w-md">
+            <div className="mb-6">
+              <i className="fa-solid fa-building text-6xl text-slate-300"></i>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-3">Welcome to WorkPro!</h2>
+            <p className="text-slate-600 mb-6">To get started as a manager, create your company profile. You'll become the owner and can invite team members.</p>
+            <div className="flex gap-3 justify-center">
+              <a href="/company/create" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition inline-flex items-center gap-2">
+                <i className="fa-solid fa-plus"></i>
+                <span>Create Company</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Header */}
       <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
@@ -152,9 +178,9 @@ export default function ManagerDashboard() {
       </header>
 
       {/* Scrollable Dashboard Content */}
-      <div className="flex-grow overflow-y-auto p-8 bg-slate-50">
+      <div className="grow overflow-y-auto p-8 bg-slate-50">
         {/* Company Profile Quick Info */}
-        <div className="mb-10 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white flex flex-col md:flex-row justify-between items-center shadow-xl relative overflow-hidden">
+        <div className="mb-10 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white flex flex-col md:flex-row justify-between items-center shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
           <div className="relative z-10">
             <h2 className="text-3xl font-bold mb-2">{companyData?.name || 'TechFlow Systems'} HQ</h2>
@@ -298,7 +324,7 @@ export default function ManagerDashboard() {
               </div>
               <IoPeopleOutline className="text-slate-300 text-xl" />
             </div>
-            <div className="flex-grow overflow-y-auto p-6 space-y-4">
+            <div className="grow overflow-y-auto p-6 space-y-4">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex gap-3 ${msg.isUser ? 'flex-row-reverse' : ''}`}>
                   <div className={`w-8 h-8 rounded-full shrink-0 ${msg.isUser ? 'bg-blue-600' : 'bg-slate-100'}`}></div>
@@ -316,7 +342,7 @@ export default function ManagerDashboard() {
               <input 
                 type="text" 
                 placeholder="Send a global broadcast..." 
-                className="flex-grow bg-slate-100 border-none rounded-lg py-2 px-3 text-xs focus:ring-0"
+                className="grow bg-slate-100 border-none rounded-lg py-2 px-3 text-xs focus:ring-0"
               />
               <button className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition">
                 <IoSendOutline className="text-xs" />
@@ -432,6 +458,8 @@ export default function ManagerDashboard() {
             </form>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

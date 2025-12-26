@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
@@ -8,21 +8,27 @@ const LandingPage = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) return;
-        
-        setIsSearching(true);
-        try {
-            const { data } = await api.get('/api/companies/search', { params: { query: searchQuery } });
-            setSearchResults(data);
-        } catch (err) {
-            console.error('Search failed:', err);
+    const debounceRef = useRef();
+    useEffect(() => {
+        if (!searchQuery.trim()) {
             setSearchResults([]);
-        } finally {
-            setIsSearching(false);
+            return;
         }
-    };
+        setIsSearching(true);
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(async () => {
+            try {
+                const { data } = await api.get('/api/companies/search', { params: { query: searchQuery } });
+                setSearchResults(data);
+            } catch (err) {
+                console.error('Search failed:', err);
+                setSearchResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 350);
+        return () => clearTimeout(debounceRef.current);
+    }, [searchQuery]);
 
     return (
         <div className="bg-slate-50 text-slate-900">
@@ -39,7 +45,7 @@ const LandingPage = () => {
                     </p>
 
                     {/* Global Company Search */}
-                    <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-6 relative">
+                    <form onSubmit={(e)=>e.preventDefault()} className="max-w-xl mx-auto mb-6 relative">
                         <div className="flex items-center bg-white rounded-2xl p-2 shadow-2xl border border-slate-200 group focus-within:ring-2 focus-within:ring-blue-500 transition-all">
                             <div className="pl-4 text-slate-400">
                                 <i className="fa-solid fa-magnifying-glass"></i>
@@ -51,15 +57,9 @@ const LandingPage = () => {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <button 
-                                type="submit"
-                                className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-800 transition disabled:opacity-50"
-                                disabled={isSearching}
-                            >
-                                {isSearching ? 'Searching...' : 'Search'}
-                            </button>
+                            <span className="px-3 py-1 text-xs text-slate-500">{isSearching ? 'Searching…' : 'Invite-only joining'}</span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-3 italic">Example: "TechFlow Systems" or "Global Creative Lab"</p>
+                        <p className="text-xs text-slate-400 mt-3 italic">Search companies and request an invitation from managers.</p>
                     </form>
 
                     {/* Search Results */}
@@ -92,16 +92,16 @@ const LandingPage = () => {
                     {/* Quick Actions */}
                     <div className="flex gap-4 justify-center mb-16">
                         <button 
-                            onClick={() => navigate('/auth')}
+                            onClick={() => navigate('/login')}
                             className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg"
                         >
-                            Join Existing Company
+                            Get Started
                         </button>
                         <button 
-                            onClick={() => navigate('/company/create')}
+                            onClick={() => navigate('/signup')}
                             className="bg-white text-blue-600 px-8 py-3 rounded-full font-bold border-2 border-blue-600 hover:bg-blue-50 transition"
                         >
-                            Create Your Company
+                            Sign Up Free
                         </button>
                     </div>
 

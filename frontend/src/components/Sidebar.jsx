@@ -63,6 +63,7 @@ const Sidebar = () => {
     { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/teams' },
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/tasks' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/departments' },
+    { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/groups' },
     { name: 'Invite Members', icon: IoPersonAddOutline, path: '/dashboard/invite' },
   ];
 

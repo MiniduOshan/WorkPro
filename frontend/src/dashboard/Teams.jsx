@@ -6,7 +6,8 @@ import {
   IoCallOutline,
   IoBusinessOutline,
   IoSearchOutline,
-  IoFilterOutline
+  IoFilterOutline,
+  IoPeopleOutline
 } from 'react-icons/io5';
 
 export default function Teams() {
@@ -15,19 +16,21 @@ export default function Teams() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('all');
+  const [company, setCompany] = useState(null);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('employee');
+  const [inviteDept, setInviteDept] = useState('');
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const [inviteResult, setInviteResult] = useState(null);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
-    if (storedCompanyId) {
+    if (storedCompanyId && storedCompanyId !== 'null' && storedCompanyId !== 'undefined') {
       setCompanyId(storedCompanyId);
       fetchTeamMembers(storedCompanyId);
+      fetchCompany(storedCompanyId);
     } else {
-      // Sample members fallback when no company is selected
-      setMembers([
-        { _id: 'm1', firstName: 'Alice', lastName: 'Lopez', email: 'alice@example.com', role: 'manager', department: 'Engineering', mobileNumber: '555-1010', profilePic: '', },
-        { _id: 'm2', firstName: 'Marcus', lastName: 'King', email: 'marcus@example.com', role: 'employee', department: 'Design', mobileNumber: '555-2020', profilePic: '', },
-        { _id: 'm3', firstName: 'Sarah', lastName: 'Wong', email: 'sarah@example.com', role: 'employee', department: 'Marketing', mobileNumber: '555-3030', profilePic: '', },
-      ]);
       setLoading(false);
     }
   }, []);
@@ -36,11 +39,52 @@ export default function Teams() {
     try {
       setLoading(true);
       const { data } = await api.get(`/api/companies/${id}/members`);
-      setMembers(data);
+      setMembers(data.map(m => ({
+        _id: m.user?._id || m.user,
+        firstName: m.user?.firstName || '',
+        lastName: m.user?.lastName || '',
+        email: m.user?.email || '',
+        role: m.role,
+        department: m.department || '',
+        mobileNumber: m.user?.mobileNumber || '',
+        profilePic: m.user?.profilePic || ''
+      })));
     } catch (err) {
       console.error('Failed to fetch team members:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCompany = async (id) => {
+    try {
+      const { data } = await api.get(`/api/companies/${id}`);
+      setCompany(data);
+    } catch (err) {
+      console.error('Failed to fetch company details:', err);
+    }
+  };
+
+  const sendInvite = async (e) => {
+    e.preventDefault();
+    if (!companyId || !inviteEmail.trim()) return;
+    setSendingInvite(true);
+    setInviteResult(null);
+    try {
+      const { data } = await api.post(`/api/companies/${companyId}/invitations`, {
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        department: inviteDept || ''
+      });
+      setInviteResult({ link: data.link });
+      setInviteEmail('');
+      setInviteDept('');
+      setInviteRole('employee');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to send invitation';
+      setInviteResult({ error: msg });
+    } finally {
+      setSendingInvite(false);
     }
   };
 
@@ -68,7 +112,7 @@ export default function Teams() {
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-slate-50">
+    <div className="grow flex flex-col overflow-hidden bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-8 py-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -76,7 +120,7 @@ export default function Teams() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Team Members</h1>
             <p className="text-slate-600">Manage and view your team members</p>
           </div>
-          <button className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95">
+          <button onClick={()=>setShowInvite(true)} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95">
             <IoPersonAddOutline className="text-xl" />
             <span>Invite Member</span>
           </button>
@@ -84,7 +128,7 @@ export default function Teams() {
 
         {/* Search and Filter Bar */}
         <div className="mt-6 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-grow">
+          <div className="relative grow">
             <IoSearchOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl" />
             <input
               type="text"
@@ -111,7 +155,7 @@ export default function Teams() {
       </div>
 
       {/* Members Grid */}
-      <div className="flex-grow overflow-y-auto p-8">
+      <div className="grow overflow-y-auto p-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -131,7 +175,7 @@ export default function Teams() {
               >
                 {/* Avatar and Role Badge */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform">
                     {member.profilePic ? (
                       <img
                         src={member.profilePic}
@@ -179,8 +223,15 @@ export default function Teams() {
                   <button className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold hover:bg-blue-100 transition text-sm">
                     View Profile
                   </button>
-                  <button className="flex-1 px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-semibold hover:bg-slate-200 transition text-sm">
-                    Message
+                  <button onClick={async ()=>{
+                    try {
+                      await api.delete(`/api/companies/${companyId}/members/${member._id}`);
+                      setMembers(prev=>prev.filter(m=>m._id!==member._id));
+                    } catch(e){
+                      console.error('Failed to remove member', e);
+                    }
+                  }} className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
+                    Remove
                   </button>
                 </div>
               </div>
@@ -188,6 +239,52 @@ export default function Teams() {
           </div>
         )}
       </div>
+
+      {/* Invite Modal */}
+      {showInvite && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Invite Member</h2>
+              <button onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
+            </div>
+            <form onSubmit={sendInvite}>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                <input type="email" value={inviteEmail} onChange={(e)=>setInviteEmail(e.target.value)} className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="user@example.com" required />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Role</label>
+                  <select value={inviteRole} onChange={(e)=>setInviteRole(e.target.value)} className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white">
+                    <option value="employee">Employee</option>
+                    <option value="manager">Manager</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Department</label>
+                  <select value={inviteDept} onChange={(e)=>setInviteDept(e.target.value)} className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white">
+                    <option value="">None</option>
+                    {(company?.departments||[]).map((d)=>(
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {inviteResult?.error && (
+                <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{inviteResult.error}</div>
+              )}
+              {inviteResult?.link && (
+                <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm break-all">Invite Link: {inviteResult.link}</div>
+              )}
+              <div className="flex gap-3">
+                <button type="button" onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" disabled={sendingInvite} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50">{sendingInvite? 'Sending…':'Send Invite'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../api/axios';
 
 const EmployeeDashboard = () => {
+  const [summary, setSummary] = useState({ tasks: { total: 0, byStatus: {}, upcoming: [] } });
+  const [companyId, setCompanyId] = useState('');
+
+  useEffect(() => {
+    const storedCompanyId = localStorage.getItem('companyId');
+    setCompanyId(storedCompanyId || '');
+    if (!storedCompanyId || storedCompanyId === 'null' || storedCompanyId === 'undefined') return;
+    api.get('/api/dashboard/user', { params: { companyId: storedCompanyId } })
+      .then(({ data }) => setSummary(data))
+      .catch(() => {});
+  }, []);
+
+  if (!companyId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+        <div className="max-w-md">
+          <div className="mb-6">
+            <i className="fa-solid fa-building text-6xl text-slate-300"></i>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-3">Welcome to WorkPro!</h2>
+          <p className="text-slate-600 mb-6">To get started, create your company profile or wait for an invitation to join an existing company.</p>
+          <div className="flex gap-3 justify-center">
+            <a href="/company/create" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition inline-flex items-center gap-2">
+              <i className="fa-solid fa-plus"></i>
+              <span>Create Company</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col overflow-hidden">
       {/* Header inside layout already renders; keep content only */}
@@ -15,7 +48,7 @@ const EmployeeDashboard = () => {
               <i className="fa-solid fa-hand-wave text-yellow-300"></i>
               Good morning!
             </h2>
-            <p className="text-green-100">You have <span className="text-yellow-300 font-bold">4 tasks</span> to focus on today.</p>
+            <p className="text-green-100">You have <span className="text-yellow-300 font-bold">{summary.tasks.total} tasks</span> to focus on today.</p>
           </div>
           <div className="mt-6 md:mt-0 flex gap-3 z-10">
             <button className="bg-white text-green-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-transform shadow-lg">

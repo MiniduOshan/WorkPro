@@ -20,6 +20,7 @@ import TasksBoard from './dashboard/TasksBoard.jsx';
 import Channels from './dashboard/Channels.jsx';
 import Teams from './dashboard/Teams.jsx';
 import Departments from './dashboard/Departments.jsx';
+import Groups from './dashboard/Groups.jsx';
 import Announcements from './dashboard/Announcements.jsx';
 import Settings from './dashboard/Settings.jsx';
 import CompanyCreate from './pages/CompanyCreate.jsx';
@@ -91,6 +92,7 @@ function App() {
                     <Route path="channels" element={<Channels />} />
                     <Route path="teams" element={<Teams />} />
                     <Route path="departments" element={<Departments />} />
+                    <Route path="groups" element={<Groups />} />
                     <Route path="announcements" element={<Announcements />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="invite" element={<Invite />} />

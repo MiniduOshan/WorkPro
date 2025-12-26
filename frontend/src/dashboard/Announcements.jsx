@@ -16,52 +16,17 @@ export default function Announcements() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({ title: '', content: '', priority: 'normal' });
+  const [companyRole, setCompanyRole] = useState(localStorage.getItem('companyRole') || '');
+  const [viewItem, setViewItem] = useState(null);
 
-  const sampleAnnouncements = () => ([
-    {
-      _id: '1',
-      title: 'Q4 All-Hands Meeting Scheduled',
-      content: "Join us for the quarterly all-hands meeting this Friday at 3 PM. We'll discuss company goals, achievements, and upcoming initiatives.",
-      author: 'Sarah Johnson',
-      authorRole: 'CEO',
-      priority: 'high',
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      pinned: true
-    },
-    {
-      _id: '2',
-      title: 'New Benefits Package Available',
-      content: "We're excited to announce an enhanced benefits package for all employees. Check your email for detailed information about health insurance upgrades and retirement plan improvements.",
-      author: 'Michael Chen',
-      authorRole: 'HR Manager',
-      priority: 'high',
-      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      pinned: false
-    },
-    {
-      _id: '3',
-      title: 'Office Maintenance This Weekend',
-      content: 'The office will undergo scheduled maintenance this Saturday from 9 AM to 5 PM. Please ensure all devices are powered off before leaving on Friday.',
-      author: 'Admin Team',
-      authorRole: 'Operations',
-      priority: 'normal',
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      pinned: false
-    },
-    {
-      _id: '4',
-      title: 'Team Building Event Next Month',
-      content: "Mark your calendars! We're organizing a team building event on the 15th. More details to follow soon.",
-      author: 'Lisa Martinez',
-      authorRole: 'HR',
-      priority: 'low',
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      pinned: false
-    }
-  ]);
+  const canManageAnnouncements = companyRole === 'manager' || companyRole === 'owner';
+
+  const sampleAnnouncements = () => ([]);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
+    const storedRole = localStorage.getItem('companyRole');
+    if (storedRole) setCompanyRole(storedRole);
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
       fetchAnnouncements(storedCompanyId);
@@ -74,9 +39,17 @@ export default function Announcements() {
   const fetchAnnouncements = async (id) => {
     try {
       setLoading(true);
-      // Mock data for now - replace with actual API call
-      // const { data } = await api.get(`/api/companies/${id}/announcements`);
-      setAnnouncements(sampleAnnouncements());
+      const { data } = await api.get('/api/announcements', { params: { companyId: id } });
+      setAnnouncements(data.map(a => ({
+        _id: a._id,
+        title: a.title,
+        content: a.message,
+        author: `${a.createdBy?.firstName || ''} ${a.createdBy?.lastName || ''}`.trim(),
+        authorRole: 'Manager',
+        priority: a.priority || 'normal',
+        createdAt: a.createdAt,
+        pinned: !!a.pinned,
+      })));
     } catch (err) {
       console.error('Failed to fetch announcements:', err);
     } finally {
@@ -86,13 +59,41 @@ export default function Announcements() {
 
   const handleAddAnnouncement = async (e) => {
     e.preventDefault();
+    if (!canManageAnnouncements) return;
     try {
-      // await api.post(`/api/companies/${companyId}/announcements`, newAnnouncement);
+      await api.post('/api/announcements', { companyId, title: newAnnouncement.title, message: newAnnouncement.content, priority: newAnnouncement.priority });
       setShowAddModal(false);
       setNewAnnouncement({ title: '', content: '', priority: 'normal' });
       fetchAnnouncements(companyId);
     } catch (err) {
       console.error('Failed to add announcement:', err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!canManageAnnouncements) return;
+    try {
+      await api.delete(`/api/announcements/${id}`);
+      setAnnouncements((prev) => prev.filter((a) => a._id !== id));
+    } catch (err) {
+      console.error('Failed to delete announcement:', err);
+    }
+  };
+
+  const openView = async (id) => {
+    try {
+      const { data } = await api.get(`/api/announcements/${id}`);
+      setViewItem({
+        _id: data._id,
+        title: data.title,
+        content: data.message,
+        author: `${data.createdBy?.firstName || ''} ${data.createdBy?.lastName || ''}`.trim(),
+        priority: data.priority,
+        createdAt: data.createdAt,
+        pinned: !!data.pinned,
+      });
+    } catch (err) {
+      console.error('Failed to load announcement:', err);
     }
   };
 
@@ -135,7 +136,7 @@ export default function Announcements() {
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-slate-50">
+    <div className="grow flex flex-col overflow-hidden bg-slate-50">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-8 py-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -143,18 +144,20 @@ export default function Announcements() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Announcements</h1>
             <p className="text-slate-600">Company-wide updates and news</p>
           </div>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
-          >
-            <IoAddOutline className="text-xl" />
-            <span>New Announcement</span>
-          </button>
+          {canManageAnnouncements && (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+            >
+              <IoAddOutline className="text-xl" />
+              <span>New Announcement</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Announcements List */}
-      <div className="flex-grow overflow-y-auto p-8">
+      <div className="grow overflow-y-auto p-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -164,13 +167,15 @@ export default function Announcements() {
             <IoMegaphoneOutline className="mx-auto text-6xl text-slate-300 mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No announcements yet</h3>
             <p className="text-slate-500 mb-6">Create your first announcement to keep your team informed</p>
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition"
-            >
-              <IoAddOutline className="text-xl" />
-              <span>New Announcement</span>
-            </button>
+            {canManageAnnouncements && (
+              <button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition"
+              >
+                <IoAddOutline className="text-xl" />
+                <span>New Announcement</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="max-w-4xl mx-auto space-y-6">
@@ -215,13 +220,14 @@ export default function Announcements() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 pt-4 border-t border-slate-200">
-                  <button className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold hover:bg-blue-100 transition text-sm flex items-center gap-2">
-                    <IoCheckmarkCircleOutline />
-                    Mark as Read
+                  <button onClick={() => openView(announcement._id)} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold hover:bg-blue-100 transition text-sm">
+                    View
                   </button>
-                  <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-semibold hover:bg-slate-200 transition text-sm">
-                    Share
-                  </button>
+                  {canManageAnnouncements && (
+                    <button onClick={() => handleDelete(announcement._id)} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -230,7 +236,7 @@ export default function Announcements() {
       </div>
 
       {/* Add Announcement Modal */}
-      {showAddModal && (
+      {showAddModal && canManageAnnouncements && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div className="flex items-center justify-between mb-6">
@@ -309,6 +315,22 @@ export default function Announcements() {
           </div>
         </div>
       )}
+
+          {/* View Announcement Modal */}
+          {viewItem && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-slate-800">{viewItem.title}</h2>
+                  <button onClick={() => setViewItem(null)} className="p-2 hover:bg-slate-100 rounded-lg transition">
+                    <IoCloseCircleOutline className="text-2xl text-slate-400" />
+                  </button>
+                </div>
+                <div className="text-sm text-slate-500 mb-4">By {viewItem.author} · {new Date(viewItem.createdAt).toLocaleString()}</div>
+                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{viewItem.content}</p>
+              </div>
+            </div>
+          )}
     </div>
   );
 }

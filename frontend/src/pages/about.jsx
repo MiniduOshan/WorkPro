@@ -13,7 +13,7 @@ const About = () => {
             About Our Platform
           </h1>
           <p className="text-gray-500 mt-3 text-lg">
-            Designed to make learning easier, faster, and more collaborative.
+            Designed to make work easier, faster, and more collaborative.
           </p>
         </header>
 
@@ -26,7 +26,7 @@ const About = () => {
                 Our Mission
               </h2>
               <p className="text-gray-600 leading-relaxed mt-2">
-                We aim to simplify academic life by offering a clean, organized,
+                We aim to simplify work life by offering a clean, organized,
                 and powerful platform for managing tasks, collaborating with
                 groups, and tracking course progress — all in one place.
               </p>
@@ -53,7 +53,7 @@ const About = () => {
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>•</span>
-                  <span>Course management with progress tracking.</span>
+                  <span>Task management with progress tracking.</span>
                 </li>
                 <li className="flex items-center space-x-2">
                   <span>•</span>

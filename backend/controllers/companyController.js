@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import Company from '../models/Company.js';
 import Invitation from '../models/Invitation.js';
+import { sendInvitationEmail } from '../config/email.js';
 
 // Search companies by name, industry, or description
 export const searchCompanies = async (req, res) => {
@@ -84,6 +85,12 @@ export const createInvitation = async (req, res) => {
     if (!inviterRole) return res.status(403).json({ message: 'Not a member' });
     if (!['owner', 'manager'].includes(inviterRole)) return res.status(403).json({ message: 'Insufficient role' });
 
+    // Auto-add department to company if it doesn't exist
+    if (department && department.trim() && !company.departments.includes(department.trim())) {
+      company.departments.push(department.trim());
+      await company.save();
+    }
+
     const token = crypto.randomBytes(24).toString('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
     const invitation = await Invitation.create({ 
@@ -96,6 +103,17 @@ export const createInvitation = async (req, res) => {
       expiresAt 
     });
     const inviteLink = `${process.env.APP_BASE_URL || ''}/invite/accept?token=${token}`;
+    // Try sending email, but respond even if sending fails
+    try {
+      await sendInvitationEmail({
+        to: email,
+        companyName: company.name,
+        inviterName: `${req.user.firstName} ${req.user.lastName}`,
+        link: inviteLink,
+      });
+    } catch (mailErr) {
+      console.error('Invitation email failed:', mailErr.message);
+    }
     res.status(201).json({ invitation, link: inviteLink });
   } catch (e) {
     res.status(500).json({ message: e.message });

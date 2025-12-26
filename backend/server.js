@@ -14,6 +14,11 @@ import companyRoutes from './routes/companyRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import channelRoutes from './routes/channelRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import teamRoutes from './routes/teamRoutes.js';
+import groupRoutes from './routes/groupRoutes.js';
+import announcementRoutes from './routes/announcementRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -82,6 +87,11 @@ app.use('/api/companies', companyRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/channels', channelRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {

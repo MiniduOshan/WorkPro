@@ -17,6 +17,14 @@ export default function CompanyCreate() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [createdCompanyId, setCreatedCompanyId] = useState('');
 
+  // Check if user is authenticated
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
   const addDepartment = () => {
     if (newDept.trim() && !departments.includes(newDept.trim())) {
       setDepartments([...departments, newDept.trim()]);
@@ -95,7 +103,7 @@ export default function CompanyCreate() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+              <label className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
                 <IoGlobeOutline className="w-4 h-4" />
                 Website (Optional)
               </label>
@@ -128,7 +136,7 @@ export default function CompanyCreate() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+              <label className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
                 <IoDocumentTextOutline className="w-4 h-4" />
                 Company Description
               </label>

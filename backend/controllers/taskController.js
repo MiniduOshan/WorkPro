@@ -10,7 +10,7 @@ const ensureMember = async (companyId, userId) => {
 };
 
 export const createTask = async (req, res) => {
-  const { title, description, companyId, project, assignee, status, priority, dueDate, category } = req.body;
+  const { title, description, companyId, project, assignee, status, priority, dueDate, category, team, group, department } = req.body;
   if (!title || !companyId) return res.status(400).json({ message: 'title and companyId required' });
   try {
     const { company, role, error } = await ensureMember(companyId, req.user._id);
@@ -29,6 +29,9 @@ export const createTask = async (req, res) => {
       priority: priority || 'medium',
       dueDate: dueDate || undefined,
       category: category || '',
+      team: team || undefined,
+      group: group || undefined,
+      department: department || '',
     });
     res.status(201).json(task);
   } catch (e) {
@@ -37,7 +40,7 @@ export const createTask = async (req, res) => {
 };
 
 export const listTasks = async (req, res) => {
-  const { companyId, project, assignee } = req.query;
+  const { companyId, project, assignee, team, group, department, status } = req.query;
   if (!companyId) return res.status(400).json({ message: 'companyId required' });
   try {
     const { error } = await ensureMember(companyId, req.user._id);
@@ -45,6 +48,10 @@ export const listTasks = async (req, res) => {
     const q = { company: companyId };
     if (project) q.project = project;
     if (assignee) q.assignee = assignee;
+    if (team) q.team = team;
+    if (group) q.group = group;
+    if (department) q.department = department;
+    if (status) q.status = status;
     const tasks = await Task.find(q).sort({ createdAt: -1 });
     res.json(tasks);
   } catch (e) {
@@ -75,7 +82,7 @@ export const updateTask = async (req, res) => {
     const canManage = ['owner', 'manager'].includes(role);
 
     // Assignee can update status; managers can update anything
-    const { title, description, status, priority, dueDate, category, assignee } = req.body;
+    const { title, description, status, priority, dueDate, category, assignee, team, group, department } = req.body;
     if (canManage) {
       if (title !== undefined) task.title = title;
       if (description !== undefined) task.description = description;
@@ -83,6 +90,9 @@ export const updateTask = async (req, res) => {
       if (dueDate !== undefined) task.dueDate = dueDate;
       if (category !== undefined) task.category = category;
       if (assignee !== undefined) task.assignee = assignee;
+      if (team !== undefined) task.team = team;
+      if (group !== undefined) task.group = group;
+      if (department !== undefined) task.department = department;
     }
     if (status !== undefined) {
       if (!isAssignee && !canManage) return res.status(403).json({ message: 'Only assignee or manager can change status' });
