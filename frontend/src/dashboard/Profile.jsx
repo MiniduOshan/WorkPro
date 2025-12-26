@@ -52,6 +52,14 @@ const Profile = () => {
                 setProfileData(initialData);
                 setTempPicUrl(initialData.profilePic); // Initialize temp URL
                 
+                // Store in localStorage for sidebar and header
+                localStorage.setItem('userProfile', JSON.stringify({
+                    firstName: initialData.firstName,
+                    lastName: initialData.lastName,
+                    email: initialData.email,
+                    profilePic: initialData.profilePic
+                }));
+                
             } catch (err) {
                 console.error("Failed to fetch profile:", err);
                 setError("Failed to load profile data.");
@@ -72,7 +80,7 @@ const Profile = () => {
             firstName: profileData.firstName,
             lastName: profileData.lastName,
             mobileNumber: profileData.mobileNumber === 'Add number' ? '' : profileData.mobileNumber,
-            // Note: profilePic is now handled separately via file upload
+            profilePic: profileData.profilePic
         };
 
         try {
@@ -86,6 +94,18 @@ const Profile = () => {
             
             // FIX: Update local state with the saved data
             setProfileData({ ...profileData, ...dataToSave });
+            
+            // Update localStorage for header display
+            const updatedProfile = {
+                firstName: profileData.firstName,
+                lastName: profileData.lastName,
+                email: profileData.email,
+                profilePic: profileData.profilePic
+            };
+            localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+            
+            // Trigger profile update event
+            window.dispatchEvent(new Event('profileUpdated'));
             
             setIsEditing(false);
             alert('Profile Updated Successfully!');
@@ -136,6 +156,7 @@ const Profile = () => {
         formData.append('profilePic', file);
 
         try {
+            // Use backend upload route that is wired with multer
             const { data } = await api.post('/api/users/upload-profile-pic', formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -143,9 +164,23 @@ const Profile = () => {
                 },
             });
 
-            // Update profile data with new image
-            setProfileData({ ...profileData, profilePic: data.profilePic });
-            setTempPicUrl(data.profilePic);
+            const updatedProfilePic = data.profilePic;
+            if (!updatedProfilePic) {
+                throw new Error('Upload did not return profilePic');
+            }
+
+            // Update profile data with new image URL
+            setProfileData({ ...profileData, profilePic: updatedProfilePic });
+            setTempPicUrl(updatedProfilePic);
+
+            // Update localStorage to reflect changes in header and sidebar
+            const currentProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            const mergedProfile = { ...currentProfile, profilePic: updatedProfilePic };
+            localStorage.setItem('userProfile', JSON.stringify(mergedProfile));
+
+            // Trigger a refresh by dispatching a custom event
+            window.dispatchEvent(new Event('profileUpdated'));
+
             alert('Profile picture updated successfully!');
         } catch (err) {
             console.error('Picture upload failed:', err);

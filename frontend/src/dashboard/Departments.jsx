@@ -16,11 +16,23 @@ export default function Departments() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newDepartment, setNewDepartment] = useState({ name: '', description: '' });
 
+  const sampleDepartments = () => ([
+    { _id: '1', name: 'Engineering', description: 'Software development and technical operations', memberCount: 24, projectCount: 8 },
+    { _id: '2', name: 'Design', description: 'UI/UX design and creative work', memberCount: 12, projectCount: 5 },
+    { _id: '3', name: 'Marketing', description: 'Marketing campaigns and brand management', memberCount: 15, projectCount: 10 },
+    { _id: '4', name: 'Sales', description: 'Customer acquisition and business development', memberCount: 18, projectCount: 6 },
+    { _id: '5', name: 'HR', description: 'Human resources and talent management', memberCount: 6, projectCount: 3 },
+    { _id: '6', name: 'Finance', description: 'Financial planning and accounting', memberCount: 8, projectCount: 4 }
+  ]);
+
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
       fetchDepartments(storedCompanyId);
+    } else {
+      setDepartments(sampleDepartments());
+      setLoading(false);
     }
   }, []);
 
@@ -29,15 +41,7 @@ export default function Departments() {
       setLoading(true);
       // Mock data for now - replace with actual API call
       // const { data } = await api.get(`/api/companies/${id}/departments`);
-      const mockData = [
-        { _id: '1', name: 'Engineering', description: 'Software development and technical operations', memberCount: 24, projectCount: 8 },
-        { _id: '2', name: 'Design', description: 'UI/UX design and creative work', memberCount: 12, projectCount: 5 },
-        { _id: '3', name: 'Marketing', description: 'Marketing campaigns and brand management', memberCount: 15, projectCount: 10 },
-        { _id: '4', name: 'Sales', description: 'Customer acquisition and business development', memberCount: 18, projectCount: 6 },
-        { _id: '5', name: 'HR', description: 'Human resources and talent management', memberCount: 6, projectCount: 3 },
-        { _id: '6', name: 'Finance', description: 'Financial planning and accounting', memberCount: 8, projectCount: 4 }
-      ];
-      setDepartments(mockData);
+      setDepartments(sampleDepartments());
     } catch (err) {
       console.error('Failed to fetch departments:', err);
     } finally {
@@ -48,6 +52,19 @@ export default function Departments() {
   const handleAddDepartment = async (e) => {
     e.preventDefault();
     try {
+      if (!companyId) {
+        const localDept = {
+          _id: `temp-${Date.now()}`,
+          name: newDepartment.name,
+          description: newDepartment.description,
+          memberCount: 0,
+          projectCount: 0
+        };
+        setDepartments((prev) => [...prev, localDept]);
+        setShowAddModal(false);
+        setNewDepartment({ name: '', description: '' });
+        return;
+      }
       // await api.post(`/api/companies/${companyId}/departments`, newDepartment);
       setShowAddModal(false);
       setNewDepartment({ name: '', description: '' });

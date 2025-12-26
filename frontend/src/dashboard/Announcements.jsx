@@ -17,11 +17,57 @@ export default function Announcements() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({ title: '', content: '', priority: 'normal' });
 
+  const sampleAnnouncements = () => ([
+    {
+      _id: '1',
+      title: 'Q4 All-Hands Meeting Scheduled',
+      content: "Join us for the quarterly all-hands meeting this Friday at 3 PM. We'll discuss company goals, achievements, and upcoming initiatives.",
+      author: 'Sarah Johnson',
+      authorRole: 'CEO',
+      priority: 'high',
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      pinned: true
+    },
+    {
+      _id: '2',
+      title: 'New Benefits Package Available',
+      content: "We're excited to announce an enhanced benefits package for all employees. Check your email for detailed information about health insurance upgrades and retirement plan improvements.",
+      author: 'Michael Chen',
+      authorRole: 'HR Manager',
+      priority: 'high',
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      pinned: false
+    },
+    {
+      _id: '3',
+      title: 'Office Maintenance This Weekend',
+      content: 'The office will undergo scheduled maintenance this Saturday from 9 AM to 5 PM. Please ensure all devices are powered off before leaving on Friday.',
+      author: 'Admin Team',
+      authorRole: 'Operations',
+      priority: 'normal',
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      pinned: false
+    },
+    {
+      _id: '4',
+      title: 'Team Building Event Next Month',
+      content: "Mark your calendars! We're organizing a team building event on the 15th. More details to follow soon.",
+      author: 'Lisa Martinez',
+      authorRole: 'HR',
+      priority: 'low',
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      pinned: false
+    }
+  ]);
+
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
       fetchAnnouncements(storedCompanyId);
+    } else {
+      setAnnouncements(sampleAnnouncements());
+      setLoading(false);
     }
   }, []);
 
@@ -30,49 +76,7 @@ export default function Announcements() {
       setLoading(true);
       // Mock data for now - replace with actual API call
       // const { data } = await api.get(`/api/companies/${id}/announcements`);
-      const mockData = [
-        {
-          _id: '1',
-          title: 'Q4 All-Hands Meeting Scheduled',
-          content: 'Join us for the quarterly all-hands meeting this Friday at 3 PM. We\'ll discuss company goals, achievements, and upcoming initiatives.',
-          author: 'Sarah Johnson',
-          authorRole: 'CEO',
-          priority: 'high',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          pinned: true
-        },
-        {
-          _id: '2',
-          title: 'New Benefits Package Available',
-          content: 'We\'re excited to announce an enhanced benefits package for all employees. Check your email for detailed information about health insurance upgrades and retirement plan improvements.',
-          author: 'Michael Chen',
-          authorRole: 'HR Manager',
-          priority: 'high',
-          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-          pinned: false
-        },
-        {
-          _id: '3',
-          title: 'Office Maintenance This Weekend',
-          content: 'The office will undergo scheduled maintenance this Saturday from 9 AM to 5 PM. Please ensure all devices are powered off before leaving on Friday.',
-          author: 'Admin Team',
-          authorRole: 'Operations',
-          priority: 'normal',
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          pinned: false
-        },
-        {
-          _id: '4',
-          title: 'Team Building Event Next Month',
-          content: 'Mark your calendars! We\'re organizing a team building event on the 15th. More details to follow soon.',
-          author: 'Lisa Martinez',
-          authorRole: 'HR',
-          priority: 'low',
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          pinned: false
-        }
-      ];
-      setAnnouncements(mockData);
+      setAnnouncements(sampleAnnouncements());
     } catch (err) {
       console.error('Failed to fetch announcements:', err);
     } finally {

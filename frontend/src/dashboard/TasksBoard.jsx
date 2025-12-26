@@ -20,10 +20,48 @@ export default function TasksBoard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const sampleTasks = () => ([
+    {
+      _id: 't1',
+      title: 'Set up sprint backlog',
+      description: 'Collect stories from product and estimate scope for Sprint 12.',
+      status: 'to-do',
+      assignedTo: { firstName: 'Alice' },
+      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+    },
+    {
+      _id: 't2',
+      title: 'Design system tokens',
+      description: 'Align colors, spacing, and typography for the new dashboard.',
+      status: 'in-progress',
+      assignedTo: { firstName: 'Marcus' },
+      dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000)
+    },
+    {
+      _id: 't3',
+      title: 'API contract review',
+      description: 'Review task service responses and update client typings.',
+      status: 'blocked',
+      assignedTo: { firstName: 'Sarah' },
+      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
+    },
+    {
+      _id: 't4',
+      title: 'QA smoke tests',
+      description: 'Run regression on Task Oversight flow before release.',
+      status: 'done',
+      assignedTo: { firstName: 'Leo' },
+      dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+    }
+  ]);
+
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
+    } else {
+      setTasks(sampleTasks());
+      setLoading(false);
     }
   }, []);
 
@@ -44,7 +82,23 @@ export default function TasksBoard() {
 
   const create = async (e) => {
     e.preventDefault();
-    if (!companyId || !title) return;
+    if (!title) return;
+    if (!companyId) {
+      const newTask = {
+        _id: `temp-${Date.now()}`,
+        title,
+        description,
+        status,
+        assignedTo: { firstName: 'You' },
+        dueDate: null
+      };
+      setTasks((prev) => [...prev, newTask]);
+      setTitle('');
+      setDescription('');
+      setStatus('to-do');
+      setShowAddModal(false);
+      return;
+    }
     try {
       await api.post('/api/tasks', { title, description, companyId, status });
       setTitle('');
@@ -58,6 +112,10 @@ export default function TasksBoard() {
   };
 
   const updateStatus = async (taskId, newStatus) => {
+    if (!companyId) {
+      setTasks((prev) => prev.map((t) => t._id === taskId ? { ...t, status: newStatus } : t));
+      return;
+    }
     try {
       await api.put(`/api/tasks/${taskId}`, { status: newStatus });
       load();
@@ -68,6 +126,10 @@ export default function TasksBoard() {
 
   const deleteTask = async (taskId) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
+    if (!companyId) {
+      setTasks((prev) => prev.filter((t) => t._id !== taskId));
+      return;
+    }
     try {
       await api.delete(`/api/tasks/${taskId}`);
       load();

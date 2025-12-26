@@ -21,6 +21,14 @@ export default function Teams() {
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
       fetchTeamMembers(storedCompanyId);
+    } else {
+      // Sample members fallback when no company is selected
+      setMembers([
+        { _id: 'm1', firstName: 'Alice', lastName: 'Lopez', email: 'alice@example.com', role: 'manager', department: 'Engineering', mobileNumber: '555-1010', profilePic: '', },
+        { _id: 'm2', firstName: 'Marcus', lastName: 'King', email: 'marcus@example.com', role: 'employee', department: 'Design', mobileNumber: '555-2020', profilePic: '', },
+        { _id: 'm3', firstName: 'Sarah', lastName: 'Wong', email: 'sarah@example.com', role: 'employee', department: 'Marketing', mobileNumber: '555-3030', profilePic: '', },
+      ]);
+      setLoading(false);
     }
   }, []);
 

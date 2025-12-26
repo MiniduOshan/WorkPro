@@ -78,12 +78,24 @@ const DashboardLayout = () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${token}` } };
                 const { data } = await api.get('/api/users/profile', config);
-                setProfile(data); 
+                setProfile(data);
+                // Update localStorage
+                localStorage.setItem('userProfile', JSON.stringify(data));
             } catch (err) {
                 console.error("Failed to fetch user profile for header:", err);
             }
         };
         fetchProfile();
+
+        // Listen for profile updates
+        const handleProfileUpdate = () => {
+            fetchProfile();
+        };
+        window.addEventListener('profileUpdated', handleProfileUpdate);
+
+        return () => {
+            window.removeEventListener('profileUpdated', handleProfileUpdate);
+        };
     }, []);
 
     // Determine current company and role, then route to proper dashboard

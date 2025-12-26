@@ -26,6 +26,41 @@ export default function Channels() {
     const storedCompanyId = localStorage.getItem('companyId');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
+    } else {
+      // Sample channels fallback when no company is selected
+      const sample = [
+        {
+          _id: 'c1',
+          name: 'general',
+          type: 'public',
+          members: ['u1', 'u2', 'u3'],
+          messages: [
+            { user: { _id: 'u1', firstName: 'Alice', lastName: 'Lopez' }, text: 'Welcome to general!', createdAt: new Date() },
+            { user: { _id: 'u2', firstName: 'Marcus', lastName: 'King' }, text: "Let's plan the sprint.", createdAt: new Date() },
+          ],
+        },
+        {
+          _id: 'c2',
+          name: 'design',
+          type: 'public',
+          members: ['u2', 'u4'],
+          messages: [
+            { user: { _id: 'u2', firstName: 'Marcus', lastName: 'King' }, text: 'New palette proposal uploaded.', createdAt: new Date() },
+          ],
+        },
+        {
+          _id: 'c3',
+          name: 'leadership',
+          type: 'private',
+          members: ['u1', 'u5'],
+          messages: [
+            { user: { _id: 'u1', firstName: 'Alice', lastName: 'Lopez' }, text: 'Drafting Q2 strategy.', createdAt: new Date() },
+          ],
+        },
+      ];
+      setChannels(sample);
+      setSelected(sample[0]);
+      setLoading(false);
     }
   }, []);
 
@@ -44,6 +79,7 @@ export default function Channels() {
   };
 
   const loadMessages = async (ch) => {
+    if (!companyId) return;
     try {
       const { data } = await api.get(`/api/channels/${ch._id}/messages`);
       setSelected({ ...ch, messages: data });
@@ -53,7 +89,7 @@ export default function Channels() {
   };
 
   useEffect(() => { loadChannels(); }, [companyId]);
-  useEffect(() => { if (selected) loadMessages(selected); }, [selected?._id]);
+  useEffect(() => { if (selected && companyId) loadMessages(selected); }, [selected?._id, companyId]);
 
   const send = async (e) => {
     e.preventDefault();
