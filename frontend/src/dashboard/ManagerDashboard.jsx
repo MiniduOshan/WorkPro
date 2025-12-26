@@ -12,7 +12,8 @@ import {
   IoCopyOutline,
   IoLinkOutline,
   IoNotificationsOutline,
-  IoAddOutline
+  IoAddOutline,
+  IoCloseCircleOutline
 } from 'react-icons/io5';
 
 export default function ManagerDashboard() {
@@ -26,6 +27,14 @@ export default function ManagerDashboard() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    status: 'to-do',
+    priority: 'normal',
+    assignedTo: ''
+  });
 
   useEffect(() => {
     fetchDashboardData();
@@ -60,6 +69,29 @@ export default function ManagerDashboard() {
   const copyInviteLink = () => {
     const link = `join.workpro.io/${companyData?.name?.toLowerCase().replace(/\s+/g, '-') || 'company'}-2024`;
     navigator.clipboard.writeText(link);
+  };
+
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    const companyId = localStorage.getItem('companyId');
+    try {
+      await api.post('/api/tasks', {
+        ...newTask,
+        companyId
+      });
+      setShowTaskModal(false);
+      setNewTask({
+        title: '',
+        description: '',
+        status: 'to-do',
+        priority: 'normal',
+        assignedTo: ''
+      });
+      alert('Task created successfully!');
+    } catch (err) {
+      console.error('Failed to create task:', err);
+      alert('Failed to create task');
+    }
   };
 
   const getCapacityColor = (capacity) => {
@@ -109,7 +141,10 @@ export default function ManagerDashboard() {
             <IoNotificationsOutline className="text-xl" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition active:scale-95 shadow-lg shadow-blue-200">
+          <button 
+            onClick={() => setShowTaskModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition active:scale-95 shadow-lg shadow-blue-200"
+          >
             <IoAddOutline className="text-lg" />
             <span className="hidden md:inline">Assign New Task</span>
           </button>
@@ -290,6 +325,114 @@ export default function ManagerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Task Assignment Modal */}
+      {showTaskModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Assign New Task</h2>
+              <button 
+                onClick={() => setShowTaskModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition"
+              >
+                <IoCloseCircleOutline className="text-2xl text-slate-400" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateTask}>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Task Title
+                </label>
+                <input
+                  type="text"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                  placeholder="Enter task title"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"
+                  placeholder="Add task details..."
+                  rows="4"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Priority
+                  </label>
+                  <select
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
+                  >
+                    <option value="low">Low</option>
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={newTask.status}
+                    onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
+                  >
+                    <option value="to-do">To Do</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Assign To
+                </label>
+                <select
+                  value={newTask.assignedTo}
+                  onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
+                >
+                  <option value="">Select team member...</option>
+                  {teamMembers.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name} - {member.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowTaskModal(false)}
+                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                >
+                  Create Task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

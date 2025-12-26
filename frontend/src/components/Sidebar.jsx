@@ -3,13 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   IoGridOutline,
   IoPeopleOutline,
-//   IoChecklistOutline,
+  IoClipboardOutline,
   IoLayersOutline,
   IoChatbubblesOutline,
   IoMegaphoneOutline,
   IoSettingsOutline,
   IoLogOutOutline,
-  IoBriefcaseOutline
+  IoBriefcaseOutline,
+  IoPersonAddOutline
 } from 'react-icons/io5';
 
 const Sidebar = () => {
@@ -47,8 +48,9 @@ const Sidebar = () => {
   const managementLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard' },
     { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/teams' },
-    { name: 'Task Oversight', icon: IoPeopleOutline, path: '/dashboard/tasks' },
+    { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/tasks' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/departments' },
+    { name: 'Invite Members', icon: IoPersonAddOutline, path: '/dashboard/invite' },
   ];
 
   const communicationLinks = [

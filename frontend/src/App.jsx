@@ -18,6 +18,10 @@ import ManagerDashboard from './dashboard/ManagerDashboard.jsx';
 import Profile from './dashboard/Profile.jsx';
 import TasksBoard from './dashboard/TasksBoard.jsx';
 import Channels from './dashboard/Channels.jsx';
+import Teams from './dashboard/Teams.jsx';
+import Departments from './dashboard/Departments.jsx';
+import Announcements from './dashboard/Announcements.jsx';
+import Settings from './dashboard/Settings.jsx';
 import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/Invite.jsx';
@@ -85,6 +89,10 @@ function App() {
                     <Route path="profile" element={<Profile />} />
                     <Route path="tasks" element={<TasksBoard />} />
                     <Route path="channels" element={<Channels />} />
+                    <Route path="teams" element={<Teams />} />
+                    <Route path="departments" element={<Departments />} />
+                    <Route path="announcements" element={<Announcements />} />
+                    <Route path="settings" element={<Settings />} />
                     <Route path="invite" element={<Invite />} />
                 </Route>
 

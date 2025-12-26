@@ -6,22 +6,22 @@ const EmployeeDashboard = () => {
       {/* Header inside layout already renders; keep content only */}
 
       {/* Scrollable Content */}
-      <div className="grow overflow-y-auto p-6 md:p-8 custom-scrollbar bg-gradient-to-br from-slate-50 to-blue-50/30">
+      <div className="grow overflow-y-auto p-6 md:p-8 custom-scrollbar bg-gradient-to-br from-slate-50 to-green-50/30">
         {/* Welcome Card */}
-        <div className="mb-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 border border-blue-500/20 shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden hover:shadow-2xl transition-all duration-300">
+        <div className="mb-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl p-8 border border-green-500/20 shadow-xl flex flex-col md:flex-row justify-between items-center relative overflow-hidden hover:shadow-2xl transition-all duration-300">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-48 -mt-48 animate-pulse"></div>
           <div className="z-10 text-left text-white">
             <h2 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
               <i className="fa-solid fa-hand-wave text-yellow-300"></i>
               Good morning!
             </h2>
-            <p className="text-blue-100">You have <span className="text-yellow-300 font-bold">4 tasks</span> to focus on today.</p>
+            <p className="text-green-100">You have <span className="text-yellow-300 font-bold">4 tasks</span> to focus on today.</p>
           </div>
           <div className="mt-6 md:mt-0 flex gap-3 z-10">
-            <button className="bg-white text-blue-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-transform shadow-lg">
+            <button className="bg-white text-green-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-105 transition-transform shadow-lg">
               <i className="fa-solid fa-clock mr-2"></i>Clock In
             </button>
-            <button className="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-800 transition border border-blue-500">
+            <button className="bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-green-800 transition border border-green-500">
               <i className="fa-solid fa-users mr-2"></i>View Team
             </button>
           </div>
@@ -29,9 +29,9 @@ const EmployeeDashboard = () => {
 
         {/* Stats Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <StatCard icon="fa-fire-flame-curved" color="blue" label="Weekly Streak" value="5 Days" />
-          <StatCard icon="fa-circle-check" color="green" label="Completed" value="18 Tasks" />
-          <StatCard icon="fa-trophy" color="amber" label="Rank" value="Top 10%" />
+          <StatCard icon="fa-fire-flame-curved" color="green" label="Weekly Streak" value="5 Days" />
+          <StatCard icon="fa-circle-check" color="emerald" label="Completed" value="18 Tasks" />
+          <StatCard icon="fa-trophy" color="teal" label="Rank" value="Top 10%" />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -49,15 +49,15 @@ const EmployeeDashboard = () => {
 
             {/* Department Updates */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-md hover:shadow-xl transition-shadow">
-              <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50/50">
+              <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-green-50/50">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <i className="fa-solid fa-bell text-blue-600"></i>
+                  <i className="fa-solid fa-bell text-green-600"></i>
                   Department Feed (Tech)
                 </h3>
               </div>
               <div className="p-6 space-y-6">
                 <DeptUpdate icon="fa-code" iconBg="slate-100" iconColor="slate-400" title="Deployment Successful" desc="V2.4.0 was pushed to production by Sarah. All systems stable." time="2 hours ago" />
-                <DeptUpdate icon="fa-calendar-check" iconBg="blue-50" iconColor="blue-500" title="Sprint Planning Meeting" desc="New tasks will be assigned tomorrow at 9:00 AM." time="Yesterday" />
+                <DeptUpdate icon="fa-calendar-check" iconBg="green-50" iconColor="green-500" title="Sprint Planning Meeting" desc="New tasks will be assigned tomorrow at 9:00 AM." time="Yesterday" />
               </div>
             </div>
           </div>
@@ -66,18 +66,18 @@ const EmployeeDashboard = () => {
           <div className="space-y-8">
             {/* Group Works Chat */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-md flex flex-col h-[500px] hover:shadow-xl transition-shadow">
-              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-gradient-to-r from-green-50 to-emerald-50">
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-gradient-to-r from-emerald-50 to-green-50">
                 <div className="text-left">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                    <i className="fa-solid fa-comments text-green-600"></i>
+                    <i className="fa-solid fa-comments text-emerald-600"></i>
                     Group Works
                   </h3>
-                  <p className="text-[10px] text-green-600 font-bold uppercase flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase flex items-center gap-1">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                     #tech-frontend
                   </p>
                 </div>
-                <button className="text-slate-400 hover:text-green-600 transition-colors">
+                <button className="text-slate-400 hover:text-emerald-600 transition-colors">
                   <i className="fa-solid fa-expand"></i>
                 </button>
               </div>
@@ -100,7 +100,7 @@ const EmployeeDashboard = () => {
             {/* Personal Performance */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-md text-left hover:shadow-xl transition-shadow">
               <h4 className="font-bold text-slate-800 mb-5 flex items-center gap-2">
-                <i className="fa-solid fa-chart-line text-blue-600"></i>
+                <i className="fa-solid fa-chart-line text-green-600"></i>
                 My Productivity
               </h4>
               <Progress label="Task Accuracy" value="94%" barColor="green" />
@@ -114,19 +114,19 @@ const EmployeeDashboard = () => {
 };
 
 const StatCard = ({ icon, color, label, value }) => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 text-left hover:shadow-lg hover:border-blue-300 transition-all duration-300 cursor-pointer group">
+  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 text-left hover:shadow-lg hover:border-green-300 transition-all duration-300 cursor-pointer group">
     <div className={`w-14 h-14 bg-gradient-to-br from-${color}-400 to-${color}-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform`}>
       <i className={`fa-solid ${icon}`}></i>
     </div>
     <div>
       <p className="text-slate-500 text-xs font-semibold uppercase tracking-wide">{label}</p>
-      <h3 className="text-2xl font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{value}</h3>
+      <h3 className="text-2xl font-bold text-slate-800 group-hover:text-green-600 transition-colors">{value}</h3>
     </div>
   </div>
 );
 
 const TaskCard = ({ badge, badgeColor, leftBorder, title, due, by, action, muted }) => (
-  <div className={`task-card bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-md border-l-4 ${leftBorder ? `border-l-${leftBorder}-500` : ''} text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group`}>
+  <div className={`task-card bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-md border-l-4 ${leftBorder ? `border-l-${leftBorder}-500` : ''} text-left hover:shadow-xl hover:border-green-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer group`}>
     <div className="flex justify-between mb-4">
       <span className={`px-3 py-1 bg-${badgeColor}-100 text-${badgeColor}-700 text-[10px] font-bold rounded-lg uppercase tracking-wide`}>{badge}</span>
       <span className="text-[11px] text-slate-400 flex items-center gap-1">
@@ -134,7 +134,7 @@ const TaskCard = ({ badge, badgeColor, leftBorder, title, due, by, action, muted
         {due}
       </span>
     </div>
-    <h4 className="font-bold text-slate-800 mb-2 text-lg group-hover:text-blue-600 transition-colors">{title}</h4>
+    <h4 className="font-bold text-slate-800 mb-2 text-lg group-hover:text-green-600 transition-colors">{title}</h4>
     <p className="text-xs text-slate-500 mb-6 leading-relaxed">The burger menu isn't triggering on iOS Safari. Needs a CSS fix.</p>
     <div className="flex justify-between items-center">
       <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ const DeptUpdate = ({ icon, iconBg, iconColor, title, desc, time }) => (
       <i className={`fa-solid ${icon}`}></i>
     </div>
     <div className="grow">
-      <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{title}</p>
+      <p className="text-sm font-bold text-slate-800 group-hover:text-green-600 transition-colors">{title}</p>
       <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
       <p className="text-[10px] text-slate-400 mt-2 italic flex items-center gap-1">
         <i className="fa-regular fa-clock"></i>
