@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import { 
   IoCheckmarkDoneOutline, 
@@ -13,11 +14,18 @@ import {
   IoLinkOutline,
   IoNotificationsOutline,
   IoAddOutline,
-  IoCloseCircleOutline
+  IoCloseCircleOutline,
+  IoBusinessOutline,
+  IoGlobeOutline,
+  IoRocketOutline
 } from 'react-icons/io5';
 
 export default function ManagerDashboard() {
+  const [searchParams] = useSearchParams();
+  const isFirstTime = searchParams.get('first-time') === 'true';
+  
   const [companyData, setCompanyData] = useState(null);
+  const [showCompanyModal, setShowCompanyModal] = useState(isFirstTime);
   const [stats, setStats] = useState({
     completedProjects: 124,
     avgCompletionTime: '3.4 Days',
@@ -28,12 +36,28 @@ export default function ManagerDashboard() {
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
     status: 'to-do',
     priority: 'normal',
     assignedTo: ''
+  });
+  const [companyForm, setCompanyForm] = useState({
+    name: '',
+    description: '',
+    website: '',
+    mission: '',
+    vision: '',
+    industry: '',
+    departments: ['Tech', 'Marketing', 'HR']
+  });
+  const [newDept, setNewDept] = useState('');
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    role: 'employee',
+    department: ''
   });
 
   useEffect(() => {
@@ -71,6 +95,72 @@ export default function ManagerDashboard() {
       ]);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
+    }
+  };
+
+  const handleCreateCompany = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await api.post('/api/companies', companyForm);
+      localStorage.setItem('companyId', data._id);
+      localStorage.setItem('companyRole', 'owner');
+      setShowCompanyModal(false);
+      setCompanyData(data);
+      // Update team members from created company
+      setTeamMembers((data.members || []).map(m => ({
+        id: m.user?._id || m.user,
+        name: `${m.user?.firstName || ''} ${m.user?.lastName || ''}`.trim(),
+        role: m.role,
+        department: (m.department || 'GENERAL').toUpperCase(),
+        capacity: Math.floor(Math.random()*60)+30,
+        initials: `${(m.user?.firstName||'')[0]||'U'}${(m.user?.lastName||'')[0]||'S'}`,
+        color: 'slate'
+      })));
+      // Reset company form
+      setCompanyForm({
+        name: '',
+        description: '',
+        website: '',
+        mission: '',
+        vision: '',
+        industry: '',
+        departments: ['Tech', 'Marketing', 'HR']
+      });
+      alert('✓ Company created successfully! You can now add team members.');
+    } catch (err) {
+      console.error('Failed to create company:', err);
+      alert(err.response?.data?.message || 'Failed to create company');
+    }
+  };
+
+  const handleAddDepartment = () => {
+    if (newDept.trim() && !companyForm.departments.includes(newDept.trim())) {
+      setCompanyForm({
+        ...companyForm,
+        departments: [...companyForm.departments, newDept.trim()]
+      });
+      setNewDept('');
+    }
+  };
+
+  const handleRemoveDepartment = (dept) => {
+    setCompanyForm({
+      ...companyForm,
+      departments: companyForm.departments.filter(d => d !== dept)
+    });
+  };
+
+  const handleInviteEmployee = async (e) => {
+    e.preventDefault();
+    try {
+      const companyId = localStorage.getItem('companyId');
+      await api.post(`/api/companies/${companyId}/invitations`, inviteForm);
+      setShowInviteModal(false);
+      setInviteForm({ email: '', role: 'employee', department: '' });
+      alert('Invitation sent successfully!');
+    } catch (err) {
+      console.error('Failed to send invitation:', err);
+      alert(err.response?.data?.message || 'Failed to send invitation');
     }
   };
 
@@ -126,8 +216,226 @@ export default function ManagerDashboard() {
     return colors[color] || 'bg-slate-100 text-slate-600';
   };
 
+  // Company Creation Modal Component
+  const CompanyCreationModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+          <h2 className="text-2xl font-bold flex items-center gap-3">
+            <IoBusinessOutline className="w-7 h-7" />
+            Create Your Company
+          </h2>
+          <p className="text-blue-100 mt-1">Set up your organization to get started</p>
+        </div>
+        
+        <form onSubmit={handleCreateCompany} className="p-6 space-y-6">
+          {/* Company Name */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Company Name *</label>
+            <input 
+              type="text"
+              required
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="e.g., TechFlow Systems"
+              value={companyForm.name}
+              onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+            <textarea 
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Brief description of your company"
+              rows="3"
+              value={companyForm.description}
+              onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
+            />
+          </div>
+
+          {/* Website */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+              <IoGlobeOutline className="w-5 h-5" />
+              Website
+            </label>
+            <input 
+              type="url"
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="https://example.com"
+              value={companyForm.website}
+              onChange={(e) => setCompanyForm({...companyForm, website: e.target.value})}
+            />
+          </div>
+
+          {/* Mission & Vision */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Mission</label>
+              <input 
+                type="text"
+                className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Our mission..."
+                value={companyForm.mission}
+                onChange={(e) => setCompanyForm({...companyForm, mission: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <IoRocketOutline className="w-5 h-5" />
+                Vision
+              </label>
+              <input 
+                type="text"
+                className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Our vision..."
+                value={companyForm.vision}
+                onChange={(e) => setCompanyForm({...companyForm, vision: e.target.value})}
+              />
+            </div>
+          </div>
+
+          {/* Industry */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Industry</label>
+            <input 
+              type="text"
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="e.g., Technology, Healthcare"
+              value={companyForm.industry}
+              onChange={(e) => setCompanyForm({...companyForm, industry: e.target.value})}
+            />
+          </div>
+
+          {/* Departments */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Departments</label>
+            <div className="flex gap-2 mb-3">
+              <input 
+                type="text"
+                className="flex-1 border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Add new department"
+                value={newDept}
+                onChange={(e) => setNewDept(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddDepartment())}
+              />
+              <button 
+                type="button"
+                onClick={handleAddDepartment}
+                className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {companyForm.departments.map(dept => (
+                <span key={dept} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                  {dept}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDepartment(dept)}
+                    className="text-blue-600 hover:text-blue-800 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
+            <button 
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:opacity-90 transition-all font-bold"
+            >
+              Create Company
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  // Invite Employee Modal Component
+  const InviteEmployeeModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+          <h2 className="text-2xl font-bold">Add Team Member</h2>
+          <p className="text-blue-100 mt-1">Send invitation to join your company</p>
+        </div>
+        
+        <form onSubmit={handleInviteEmployee} className="p-6 space-y-4">
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Email Address *</label>
+            <input 
+              type="email"
+              required
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="employee@example.com"
+              value={inviteForm.email}
+              onChange={(e) => setInviteForm({...inviteForm, email: e.target.value})}
+            />
+          </div>
+
+          {/* Role */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Role *</label>
+            <select 
+              required
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              value={inviteForm.role}
+              onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
+            >
+              <option value="employee">Employee</option>
+              <option value="manager">Manager</option>
+            </select>
+          </div>
+
+          {/* Department */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Department</label>
+            <select 
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              value={inviteForm.department}
+              onChange={(e) => setInviteForm({...inviteForm, department: e.target.value})}
+            >
+              <option value="">Select Department</option>
+              {companyData?.members && [...new Set(companyData.members.map(m => m.department))].map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
+            <button 
+              type="button"
+              onClick={() => setShowInviteModal(false)}
+              className="flex-1 border-2 border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-all font-semibold"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg hover:opacity-90 transition-all font-semibold"
+            >
+              Send Invitation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="grow flex flex-col overflow-hidden">
+    <>
+      {showCompanyModal && <CompanyCreationModal />}
+      {showInviteModal && <InviteEmployeeModal />}
+      <div className="grow flex flex-col overflow-hidden">
       {!companyData && !localStorage.getItem('companyId') ? (
         <div className="grow flex flex-col items-center justify-center p-8 text-center bg-slate-50">
           <div className="max-w-md">
@@ -263,6 +571,13 @@ export default function ManagerDashboard() {
                 </button>
                 <button className="p-1.5 rounded bg-slate-100 text-slate-500 hover:text-blue-600 transition">
                   <IoSwapVerticalOutline className="text-xs" />
+                </button>
+                <button 
+                  onClick={() => setShowInviteModal(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded bg-blue-600 text-white hover:bg-blue-700 transition text-xs font-semibold"
+                >
+                  <IoAddOutline className="text-sm" />
+                  Add Member
                 </button>
               </div>
             </div>
@@ -461,6 +776,7 @@ export default function ManagerDashboard() {
       )}
       </>
       )}
-    </div>
+      </div>
+    </>
   );
 }

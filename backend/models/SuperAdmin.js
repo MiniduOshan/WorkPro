@@ -1,0 +1,66 @@
+import mongoose from 'mongoose';
+
+const SuperAdminSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+    totalCompanies: { type: Number, default: 0 },
+    totalUsers: { type: Number, default: 0 },
+    totalTasks: { type: Number, default: 0 },
+    totalTeams: { type: Number, default: 0 },
+    totalDepartments: { type: Number, default: 0 },
+    totalAnnouncements: { type: Number, default: 0 },
+    
+    // Analytics breakdown
+    analyticsData: {
+      tasksByStatus: {
+        todo: { type: Number, default: 0 },
+        inProgress: { type: Number, default: 0 },
+        blocked: { type: Number, default: 0 },
+        done: { type: Number, default: 0 },
+      },
+      tasksByPriority: {
+        low: { type: Number, default: 0 },
+        medium: { type: Number, default: 0 },
+        high: { type: Number, default: 0 },
+        urgent: { type: Number, default: 0 },
+      },
+      usersByRole: {
+        owner: { type: Number, default: 0 },
+        manager: { type: Number, default: 0 },
+        employee: { type: Number, default: 0 },
+      },
+    },
+    
+    // Pricing and monetization
+    pricingPlans: [
+      {
+        name: { type: String }, // e.g., "Free", "Pro", "Enterprise"
+        price: { type: Number },
+        features: [String],
+        activeCompanies: { type: Number, default: 0 },
+      },
+    ],
+    
+    // Activity tracking for future monetization
+    activityLog: [
+      {
+        action: { type: String }, // e.g., "plan_change", "task_created", "user_joined"
+        company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+        details: mongoose.Schema.Types.Mixed,
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
+    
+    lastUpdated: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+// Update timestamp before saving
+SuperAdminSchema.pre('save', function (next) {
+  this.lastUpdated = Date.now();
+  next();
+});
+
+const SuperAdmin = mongoose.model('SuperAdmin', SuperAdminSchema);
+export default SuperAdmin;

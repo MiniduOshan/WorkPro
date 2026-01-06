@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import CompanySwitcher from '../components/CompanySwitcher';
 import { 
     IoNotificationsOutline, 
     IoChevronDown,
@@ -157,7 +158,10 @@ const DashboardLayout = () => {
             <div className="flex flex-col grow">
                 {/* Top Header Bar */}
                 <header className="flex justify-between items-center bg-white p-4 border-b border-gray-200 shadow-sm sticky top-0 z-10">
-                    <h1 className="text-2xl font-bold text-gray-800">{formatTitle(currentPage)}</h1>
+                    <div className="flex items-center gap-6">
+                        <h1 className="text-2xl font-bold text-gray-800">{formatTitle(currentPage)}</h1>
+                        <CompanySwitcher currentCompanyId={companyId} />
+                    </div>
                     
                     <div className="flex items-center space-x-4 relative">
                         

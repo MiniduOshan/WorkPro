@@ -7,14 +7,19 @@ const InvitationSchema = new mongoose.Schema(
     email: { type: String, required: true },
     role: { type: String, enum: ['manager', 'employee'], required: true },
     department: { type: String, default: '' },
-    token: { type: String, required: true, unique: true },
+    token: { type: String, required: true, unique: true }, // Unique invitation token for URL
+    invitationLink: { type: String }, // Full invitation URL, auto-generated
     status: { type: String, enum: ['pending', 'accepted', 'revoked', 'expired'], default: 'pending' },
     expiresAt: { type: Date, required: true },
+    acceptedAt: { type: Date },
+    acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who accepted the invitation
   },
   { timestamps: true }
 );
 
 InvitationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+InvitationSchema.index({ token: 1 }, { unique: true });
+InvitationSchema.index({ email: 1, company: 1 });
 
 const Invitation = mongoose.model('Invitation', InvitationSchema);
 export default Invitation;

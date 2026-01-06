@@ -19,6 +19,7 @@ import teamRoutes from './routes/teamRoutes.js';
 import groupRoutes from './routes/groupRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import superAdminRoutes from './routes/superAdminRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -92,6 +93,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {

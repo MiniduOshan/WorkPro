@@ -72,7 +72,33 @@ const Auth = ({ type }) => {
       const { data } = await api.post(endpoint, formData);
 
       localStorage.setItem('token', data.token); // Save token
-      navigate('/dashboard');
+
+      // Check if user has multiple companies
+      if (isLogin) {
+        try {
+          const { data: companiesData } = await api.get('/api/companies/my-companies', {
+            headers: { Authorization: `Bearer ${data.token}` }
+          });
+
+          if (companiesData.companies && companiesData.companies.length > 1) {
+            // User has multiple companies - show company selection
+            navigate('/select-company', { state: { companies: companiesData.companies, defaultCompany: companiesData.defaultCompany } });
+          } else if (companiesData.companies && companiesData.companies.length === 1) {
+            // User has one company - set it and navigate
+            localStorage.setItem('companyId', companiesData.companies[0]._id);
+            navigate('/dashboard');
+          } else {
+            // No companies - show company creation flow
+            navigate('/dashboard?create-company=true');
+          }
+        } catch (err) {
+          console.error('Failed to fetch companies:', err);
+          navigate('/dashboard');
+        }
+      } else {
+        // New signup - go directly to manager dashboard
+        navigate('/dashboard/manager?first-time=true');
+      }
     } catch (err) {
       console.error('Login error:', err);
       console.error('Error response:', err.response);

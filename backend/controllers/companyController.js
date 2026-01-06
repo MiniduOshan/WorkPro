@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import Company from '../models/Company.js';
 import Invitation from '../models/Invitation.js';
+import User from '../models/User.js';
 import { sendInvitationEmail } from '../config/email.js';
 
 // Search companies by name, industry, or description
@@ -142,8 +143,20 @@ export const acceptInvitation = async (req, res) => {
       });
     }
 
+    // Update user's companies array
+    const user = await User.findById(req.user._id);
+    if (user && !user.companies.includes(company._id)) {
+      user.companies.push(company._id);
+      if (!user.defaultCompany) {
+        user.defaultCompany = company._id; // Set as default if first company
+      }
+      await user.save();
+    }
+
     await company.save();
     inv.status = 'accepted';
+    inv.acceptedAt = new Date();
+    inv.acceptedBy = req.user._id;
     await inv.save();
     res.json({ message: 'Joined company', companyId: company._id, role: inv.role });
   } catch (e) {
@@ -234,6 +247,98 @@ export const myRole = async (req, res) => {
     const role = company.getMemberRole(req.user._id);
     if (!role) return res.status(403).json({ message: 'Not a member of this company' });
     res.json({ role });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Public endpoint: Accept invitation and join company after signup
+// This is for new users signing up via invitation link
+export const acceptInvitationPublic = async (req, res) => {
+  const { token, userId } = req.body; // userId is the newly created user's ID after signup
+  if (!token || !userId) return res.status(400).json({ message: 'token and userId are required' });
+  try {
+    const inv = await Invitation.findOne({ token });
+    if (!inv) return res.status(404).json({ message: 'Invitation not found' });
+    if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
+    if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
+
+    const company = await Company.findById(inv.company);
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Add user to company members
+    const already = company.members.find((m) => m.user.toString() === userId);
+    if (!already) {
+      company.members.push({ 
+        user: userId, 
+        role: inv.role,
+        department: inv.department || ''
+      });
+    }
+
+    // Update user's companies array
+    if (!user.companies.includes(company._id)) {
+      user.companies.push(company._id);
+      user.defaultCompany = company._id; // Set as default for new user
+      await user.save();
+    }
+
+    await company.save();
+    inv.status = 'accepted';
+    inv.acceptedAt = new Date();
+    inv.acceptedBy = userId;
+    await inv.save();
+
+    res.json({ 
+      message: 'Successfully joined company', 
+      companyId: company._id, 
+      role: inv.role,
+      company: { _id: company._id, name: company.name }
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get user's companies (all companies user belongs to)
+export const getUserCompanies = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('companies', 'name description industry owner');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({
+      companies: user.companies,
+      defaultCompany: user.defaultCompany
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Switch user's default company
+export const switchCompany = async (req, res) => {
+  const { companyId } = req.body;
+  if (!companyId) return res.status(400).json({ message: 'companyId is required' });
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Verify user belongs to this company
+    const company = await Company.findById(companyId);
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+    const role = company.getMemberRole(req.user._id);
+    if (!role) return res.status(403).json({ message: 'Not a member of this company' });
+
+    user.defaultCompany = companyId;
+    await user.save();
+    
+    res.json({ 
+      message: 'Company switched successfully',
+      defaultCompany: companyId,
+      company: { _id: company._id, name: company.name }
+    });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
