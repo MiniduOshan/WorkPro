@@ -130,7 +130,7 @@ export default function Departments() {
             <IoLayersOutline className="mx-auto text-6xl text-slate-300 mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No Company Found</h3>
             <p className="text-slate-500 mb-6">You need to create or join a company first</p>
-            <a href="/company/create" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition">
+            <a href="/dashboard/manager?first-time=true" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition">
               <IoAddOutline className="text-xl" />
               <span>Create Company</span>
             </a>

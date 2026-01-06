@@ -4,15 +4,52 @@ import api from '../api/axios';
 const EmployeeDashboard = () => {
   const [summary, setSummary] = useState({ tasks: { total: 0, byStatus: {}, upcoming: [] } });
   const [companyId, setCompanyId] = useState('');
+  const [tasks, setTasks] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
     setCompanyId(storedCompanyId || '');
-    if (!storedCompanyId || storedCompanyId === 'null' || storedCompanyId === 'undefined') return;
-    api.get('/api/dashboard/user', { params: { companyId: storedCompanyId } })
-      .then(({ data }) => setSummary(data))
-      .catch(() => {});
+    if (!storedCompanyId || storedCompanyId === 'null' || storedCompanyId === 'undefined') {
+      setLoading(false);
+      return;
+    }
+    
+    fetchDashboardData(storedCompanyId);
   }, []);
+
+  const fetchDashboardData = async (cid) => {
+    try {
+      setLoading(true);
+      
+      // Get current user ID
+      const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      const userId = userProfile._id;
+      
+      // Fetch dashboard summary
+      const summaryRes = await api.get('/api/dashboard/user', { params: { companyId: cid } });
+      setSummary(summaryRes.data);
+
+      // Fetch tasks assigned to the current user
+      const tasksRes = await api.get('/api/tasks', { 
+        params: { 
+          companyId: cid,
+          assignee: userId // Only get tasks assigned to this user
+        } 
+      });
+      setTasks(tasksRes.data || []);
+
+      // Fetch company announcements
+      const announcementsRes = await api.get('/api/announcements', { params: { companyId: cid } });
+      setAnnouncements(announcementsRes.data || []);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+      setLoading(false);
+    }
+  };
 
   if (!companyId) {
     return (
@@ -24,7 +61,7 @@ const EmployeeDashboard = () => {
           <h2 className="text-2xl font-bold text-slate-800 mb-3">Welcome to WorkPro!</h2>
           <p className="text-slate-600 mb-6">To get started, create your company profile or wait for an invitation to join an existing company.</p>
           <div className="flex gap-3 justify-center">
-            <a href="/company/create" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition inline-flex items-center gap-2">
+            <a href="/dashboard/manager?first-time=true" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition inline-flex items-center gap-2">
               <i className="fa-solid fa-plus"></i>
               <span>Create Company</span>
             </a>
@@ -63,8 +100,8 @@ const EmployeeDashboard = () => {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <StatCard icon="fa-fire-flame-curved" color="green" label="Weekly Streak" value="5 Days" />
-          <StatCard icon="fa-circle-check" color="emerald" label="Completed" value="18 Tasks" />
-          <StatCard icon="fa-trophy" color="teal" label="Rank" value="Top 10%" />
+          <StatCard icon="fa-circle-check" color="emerald" label="Completed" value={`${summary.tasks.byStatus?.done || 0} Tasks`} />
+          <StatCard icon="fa-trophy" color="teal" label="Total Tasks" value={`${tasks.length} Tasks`} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -75,22 +112,47 @@ const EmployeeDashboard = () => {
               <button className="text-sm font-bold text-green-600 hover:underline">View All</button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <TaskCard badge="HIGH PRIORITY" badgeColor="red" leftBorder="red" title="Fix Mobile Navigation Bug" due="Due in 3h" by="Assigned by John" action="Start" />
-              <TaskCard badge="DEVELOPMENT" badgeColor="blue" leftBorder="blue" title="API Integration: Auth" due="Due Tomorrow" by="Assigned by John" action="Waiting..." muted />
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                <i className="fa-solid fa-clipboard-list text-5xl text-slate-300 mb-4"></i>
+                <p className="text-slate-500 font-semibold">No tasks assigned yet</p>
+                <p className="text-slate-400 text-sm mt-2">Tasks assigned to you will appear here</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {tasks.slice(0, 4).map((task) => (
+                  <TaskCardDynamic key={task._id} task={task} />
+                ))}
+              </div>
+            )}
 
-            {/* Department Updates */}
+            {/* Announcements Section */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-md hover:shadow-xl transition-shadow">
               <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-green-50/50">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
                   <i className="fa-solid fa-bell text-green-600"></i>
-                  Department Feed (Tech)
+                  Company Announcements
                 </h3>
               </div>
               <div className="p-6 space-y-6">
-                <DeptUpdate icon="fa-code" iconBg="slate-100" iconColor="slate-400" title="Deployment Successful" desc="V2.4.0 was pushed to production by Sarah. All systems stable." time="2 hours ago" />
-                <DeptUpdate icon="fa-calendar-check" iconBg="green-50" iconColor="green-500" title="Sprint Planning Meeting" desc="New tasks will be assigned tomorrow at 9:00 AM." time="Yesterday" />
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                  </div>
+                ) : announcements.length === 0 ? (
+                  <div className="text-center py-8">
+                    <i className="fa-solid fa-megaphone text-4xl text-slate-300 mb-3"></i>
+                    <p className="text-slate-500 text-sm">No announcements yet</p>
+                  </div>
+                ) : (
+                  announcements.slice(0, 5).map((announcement) => (
+                    <AnnouncementItem key={announcement._id} announcement={announcement} />
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -220,5 +282,105 @@ const Progress = ({ label, value, barColor }) => (
     </div>
   </div>
 );
+
+const TaskCardDynamic = ({ task }) => {
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'urgent': return { badge: 'red', border: 'red' };
+      case 'high': return { badge: 'orange', border: 'orange' };
+      case 'medium': return { badge: 'blue', border: 'blue' };
+      case 'low': return { badge: 'green', border: 'green' };
+      default: return { badge: 'slate', border: 'slate' };
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'to-do': return 'Start';
+      case 'in-progress': return 'Continue';
+      case 'blocked': return 'Blocked';
+      case 'done': return 'Completed';
+      default: return 'View';
+    }
+  };
+
+  const formatDueDate = (dueDate) => {
+    if (!dueDate) return 'No due date';
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diffTime = due - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 'Overdue';
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return 'Due tomorrow';
+    if (diffDays < 7) return `Due in ${diffDays} days`;
+    return due.toLocaleDateString();
+  };
+
+  const colors = getPriorityColor(task.priority);
+  const isDone = task.status?.toLowerCase() === 'done';
+
+  return (
+    <div className={`task-card bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-md border-l-4 border-l-${colors.border}-500 text-left hover:shadow-xl hover:border-green-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer group`}>
+      <div className="flex justify-between mb-4">
+        <span className={`px-3 py-1 bg-${colors.badge}-100 text-${colors.badge}-700 text-[10px] font-bold rounded-lg uppercase tracking-wide`}>
+          {task.priority || 'Medium'}
+        </span>
+        <span className="text-[11px] text-slate-400 flex items-center gap-1">
+          <i className="fa-regular fa-clock"></i>
+          {formatDueDate(task.dueDate)}
+        </span>
+      </div>
+      <h4 className="font-bold text-slate-800 mb-2 text-lg group-hover:text-green-600 transition-colors">{task.title}</h4>
+      <p className="text-xs text-slate-500 mb-6 leading-relaxed line-clamp-2">{task.description || 'No description provided.'}</p>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+            {task.createdBy?.firstName?.[0] || 'M'}{task.createdBy?.lastName?.[0] || 'G'}
+          </div>
+          <span className="text-[10px] font-bold text-slate-600">
+            Assigned by {task.createdBy?.firstName || 'Manager'}
+          </span>
+        </div>
+        <button className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${isDone ? 'text-slate-400 bg-slate-50' : 'text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-md'}`}>
+          {getStatusText(task.status)} {!isDone && <i className="fa-solid fa-play ml-1"></i>}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const AnnouncementItem = ({ announcement }) => {
+  const formatTime = (date) => {
+    if (!date) return 'Recently';
+    const announcementDate = new Date(date);
+    const now = new Date();
+    const diffTime = now - announcementDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return announcementDate.toLocaleDateString();
+  };
+
+  return (
+    <div className="flex gap-4 text-left hover:bg-slate-50 p-3 rounded-xl -mx-3 transition-colors cursor-pointer group">
+      <div className="w-11 h-11 rounded-xl bg-green-50 shrink-0 flex items-center justify-center text-green-500 shadow-sm group-hover:scale-110 transition-transform">
+        <i className="fa-solid fa-megaphone"></i>
+      </div>
+      <div className="grow">
+        <p className="text-sm font-bold text-slate-800 group-hover:text-green-600 transition-colors">{announcement.title}</p>
+        <p className="text-xs text-slate-500 leading-relaxed mt-1">{announcement.message}</p>
+        <p className="text-[10px] text-slate-400 mt-2 italic flex items-center gap-1">
+          <i className="fa-regular fa-clock"></i>
+          {formatTime(announcement.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+};
 
 export default EmployeeDashboard;

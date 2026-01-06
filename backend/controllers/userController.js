@@ -8,7 +8,15 @@ const getUserResponse = (user) => ({
     lastName: user.lastName,
     username: `${user.firstName} ${user.lastName}`, // The combined name
     email: user.email,
+    isSuperAdmin: user.isSuperAdmin || false,
     token: generateToken(user._id),
+    user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        isSuperAdmin: user.isSuperAdmin || false,
+    }
 });
 
 // @desc 	Register a new user (Sign Up)

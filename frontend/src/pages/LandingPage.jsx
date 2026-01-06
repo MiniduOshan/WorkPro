@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { IoShieldCheckmarkOutline } from 'react-icons/io5';
 import api from '../api/axios';
 
 const LandingPage = () => {
@@ -7,6 +8,16 @@ const LandingPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+    useEffect(() => {
+        // Check if user is super admin
+        const userProfile = localStorage.getItem('userProfile');
+        if (userProfile) {
+            const profile = JSON.parse(userProfile);
+            setIsSuperAdmin(profile.isSuperAdmin || false);
+        }
+    }, []);
 
     const debounceRef = useRef();
     useEffect(() => {
@@ -32,6 +43,24 @@ const LandingPage = () => {
 
     return (
         <div className="bg-slate-50 text-slate-900">
+            {/* Super Admin Quick Access Banner */}
+            {isSuperAdmin && (
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <IoShieldCheckmarkOutline className="w-6 h-6" />
+                            <span className="font-semibold">Super Admin Access Active</span>
+                        </div>
+                        <button
+                            onClick={() => navigate('/dashboard/super-admin')}
+                            className="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-purple-50 transition text-sm"
+                        >
+                            Go to Admin Panel →
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Hero Section */}
             <header className="pt-24 md:pt-40 pb-20 hero-pattern border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

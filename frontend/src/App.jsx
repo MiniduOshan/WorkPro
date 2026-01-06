@@ -12,9 +12,17 @@ import Contact from './pages/contact.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth.jsx';
 
-import DashboardLayout from './dashboard/Dashboard.jsx';
+import EmployeeDashboardLayout from './dashboard/EmployeeDashboardLayout.jsx';
+import ManagerDashboardLayout from './dashboard/ManagerDashboardLayout.jsx';
+import SuperAdminDashboardLayout from './dashboard/SuperAdminDashboardLayout.jsx';
 import EmployeeDashboard from './dashboard/EmployeeDashboard.jsx';
 import ManagerDashboard from './dashboard/ManagerDashboard.jsx';
+import SuperAdminDashboard from './dashboard/SuperAdminDashboard.jsx';
+import SuperAdminAnalytics from './dashboard/SuperAdminAnalytics.jsx';
+import SuperAdminCompanies from './dashboard/SuperAdminCompanies.jsx';
+import SuperAdminUsers from './dashboard/SuperAdminUsers.jsx';
+import SuperAdminPricing from './dashboard/SuperAdminPricing.jsx';
+import SuperAdminSettings from './dashboard/SuperAdminSettings.jsx';
 import Profile from './dashboard/Profile.jsx';
 import TasksBoard from './dashboard/TasksBoard.jsx';
 import Channels from './dashboard/Channels.jsx';
@@ -74,19 +82,34 @@ function App() {
                     <Route path="/invite/join" element={<InviteJoin />} />
                 </Route>
 
-                {/* 3. PROTECTED ROUTES (Routes using DashboardLayout - No public Header/Footer) */}
+                {/* 3. PROTECTED ROUTES - Employee Dashboard */}
                 <Route
                     path="/dashboard"
                     element={
                         <ProtectedRoute>
-                            <DashboardLayout />
+                            <EmployeeDashboardLayout />
                         </ProtectedRoute>
                     }
                 >
-                    {/* Nested Routes inside the DashboardLayout */}
-                    <Route index element={<EmployeeDashboard />} /> 
-                    <Route path="manager" element={<ManagerDashboard />} />
-                    {/* WorkPro dashboard routes */}
+                    <Route index element={<EmployeeDashboard />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="tasks" element={<TasksBoard />} />
+                    <Route path="channels" element={<Channels />} />
+                    <Route path="teams" element={<Teams />} />
+                    <Route path="announcements" element={<Announcements />} />
+                    <Route path="settings" element={<Settings />} />
+                </Route>
+
+                {/* 4. PROTECTED ROUTES - Manager Dashboard */}
+                <Route
+                    path="/dashboard/manager"
+                    element={
+                        <ProtectedRoute>
+                            <ManagerDashboardLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<ManagerDashboard />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="tasks" element={<TasksBoard />} />
                     <Route path="channels" element={<Channels />} />
@@ -96,6 +119,23 @@ function App() {
                     <Route path="announcements" element={<Announcements />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="invite" element={<Invite />} />
+                </Route>
+
+                {/* 5. PROTECTED ROUTES - Super Admin Dashboard */}
+                <Route
+                    path="/dashboard/super-admin"
+                    element={
+                        <ProtectedRoute>
+                            <SuperAdminDashboardLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<SuperAdminDashboard />} />
+                    <Route path="analytics" element={<SuperAdminAnalytics />} />
+                    <Route path="companies" element={<SuperAdminCompanies />} />
+                    <Route path="users" element={<SuperAdminUsers />} />
+                    <Route path="pricing" element={<SuperAdminPricing />} />
+                    <Route path="settings" element={<SuperAdminSettings />} />
                 </Route>
 
                 {/* Catch-all for 404 */}

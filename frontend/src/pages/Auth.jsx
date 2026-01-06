@@ -72,6 +72,17 @@ const Auth = ({ type }) => {
       const { data } = await api.post(endpoint, formData);
 
       localStorage.setItem('token', data.token); // Save token
+      
+      // Store user profile if available
+      if (data.user) {
+        localStorage.setItem('userProfile', JSON.stringify(data.user));
+      }
+
+      // Check if user is super admin and redirect accordingly
+      if (data.user?.isSuperAdmin) {
+        navigate('/dashboard/super-admin');
+        return;
+      }
 
       // Check if user has multiple companies
       if (isLogin) {

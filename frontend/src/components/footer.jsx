@@ -1,9 +1,20 @@
 // src/components/Footer.jsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { IoShieldCheckmarkOutline } from 'react-icons/io5';
 
 function Footer() {
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+    useEffect(() => {
+        const userProfile = localStorage.getItem('userProfile');
+        if (userProfile) {
+            const profile = JSON.parse(userProfile);
+            setIsSuperAdmin(profile.isSuperAdmin || false);
+        }
+    }, []);
+
     return (
         <footer className="bg-gray-800 text-white mt-auto">
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -15,7 +26,14 @@ function Footer() {
                             <li><Link to="/" className="hover:text-blue-400">Home</Link></li>
                             <li><Link to="/about" className="hover:text-blue-400">About Us</Link></li>
                             <li><Link to="/contact" className="hover:text-blue-400">Contact</Link></li>
-                            
+                            {isSuperAdmin && (
+                                <li>
+                                    <Link to="/dashboard/super-admin" className="flex items-center gap-1 text-purple-400 hover:text-purple-300">
+                                        <IoShieldCheckmarkOutline className="w-4 h-4" />
+                                        Super Admin
+                                    </Link>
+                                </li>
+                            )}
                         </ul>
                     </div>
                     {/* Column 2: Resources */}

@@ -52,7 +52,10 @@ export const listTasks = async (req, res) => {
     if (group) q.group = group;
     if (department) q.department = department;
     if (status) q.status = status;
-    const tasks = await Task.find(q).sort({ createdAt: -1 });
+    const tasks = await Task.find(q)
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 });
     res.json(tasks);
   } catch (e) {
     res.status(500).json({ message: e.message });
