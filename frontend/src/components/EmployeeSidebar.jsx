@@ -11,7 +11,8 @@ import {
   IoBriefcaseOutline,
   IoShieldCheckmarkOutline,
   IoFlashOutline,
-  IoDocumentTextOutline
+  IoDocumentTextOutline,
+  IoBusinessOutline
 } from 'react-icons/io5';
 
 const EmployeeSidebar = () => {
@@ -62,6 +63,7 @@ const EmployeeSidebar = () => {
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard' },
     { name: 'My Tasks', icon: IoClipboardOutline, path: '/dashboard/tasks' },
     { name: 'Teams', icon: IoPeopleOutline, path: '/dashboard/teams' },
+    { name: 'Departments', icon: IoBusinessOutline, path: '/dashboard/departments' },
     { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/documents' },
   ];
 
@@ -79,7 +81,7 @@ const EmployeeSidebar = () => {
       to={path}
       className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
         isActive
-          ? 'active bg-blue-50 text-blue-600'
+          ? 'active bg-green-50 text-green-600'
           : 'text-slate-500 hover:bg-slate-50'
       }`}
     >
@@ -97,7 +99,7 @@ const EmployeeSidebar = () => {
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden lg:flex">
       {/* Header */}
       <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
+        <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center text-white">
           <IoBriefcaseOutline className="text-sm" />
         </div>
         <span className="text-xl font-bold text-slate-800 tracking-tight">WorkPro</span>
@@ -199,9 +201,9 @@ const EmployeeSidebar = () => {
 
       <style>{`
         .sidebar-link.active {
-          background: #eff6ff;
-          color: #2563eb;
-          border-right: 4px solid #2563eb;
+          background: #f0fdf4;
+          color: #16a34a;
+          border-right: 4px solid #16a34a;
         }
       `}</style>
     </aside>

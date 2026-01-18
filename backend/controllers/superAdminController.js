@@ -228,7 +228,7 @@ export const getPublicPricingPlans = async (req, res) => {
         {
           name: 'Enterprise',
           price: 99,
-          features: ['Unlimited team members', 'Advanced security', 'Dedicated support', 'Custom workflows', 'API access']
+          features: ['Unlimited team members', 'Advanced security', 'Dedicated support', 'Advanced reporting', 'API access']
         }
       ]);
     }

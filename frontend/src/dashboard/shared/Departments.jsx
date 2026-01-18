@@ -8,8 +8,10 @@ import {
   IoCreateOutline,
   IoTrashOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Departments() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +116,7 @@ export default function Departments() {
           {companyId && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
             >
               <IoAddOutline className="text-xl" />
               <span>Create Department</span>
@@ -130,7 +132,7 @@ export default function Departments() {
             <IoLayersOutline className="mx-auto text-6xl text-slate-300 mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No Company Found</h3>
             <p className="text-slate-500 mb-6">You need to create or join a company first</p>
-            <a href="/dashboard/manager?first-time=true" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition">
+            <a href="/dashboard/manager?first-time=true" className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}>
               <IoAddOutline className="text-xl" />
               <span>Create Company</span>
             </a>
@@ -146,7 +148,7 @@ export default function Departments() {
             <p className="text-slate-500 mb-6">Create your first department to organize your team</p>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition"
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}
             >
               <IoAddOutline className="text-xl" />
               <span>Create Department</span>
@@ -250,7 +252,7 @@ export default function Departments() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50`}
                 >
                   {creating ? 'Creating…' : 'Create'}
                 </button>

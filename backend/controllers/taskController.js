@@ -1,6 +1,5 @@
 import Task from '../models/Task.js';
 import Company from '../models/Company.js';
-import automationEngine from '../services/AutomationEngine.js';
 
 const ensureMember = async (companyId, userId) => {
   const company = await Company.findById(companyId);
@@ -37,9 +36,6 @@ export const createTask = async (req, res) => {
           ? checklist.map((item) => ({ title: item.title || item, done: !!item.done }))
           : [],
     });
-    
-      // Trigger automation for task creation
-      await automationEngine.notify('task_created', task.toObject());
     
     res.status(201).json(task);
   } catch (e) {
@@ -95,7 +91,6 @@ export const updateTask = async (req, res) => {
     // Assignee can update status; managers can update anything
     const { title, description, status, priority, dueDate, category, assignee, team, group, department, checklist } = req.body;
 
-    // Track changes for automation triggers
     const oldStatus = task.status;
     const oldPriority = task.priority;
     const oldAssignee = task.assignee?.toString();
@@ -120,18 +115,6 @@ export const updateTask = async (req, res) => {
     }
 
     const updated = await task.save();
-
-    // Trigger automations based on changes
-    if (status !== undefined && status !== oldStatus) {
-      await automationEngine.notify('task_status_change', updated.toObject());
-    }
-    if (priority !== undefined && priority !== oldPriority) {
-      await automationEngine.notify('task_priority_change', updated.toObject());
-    }
-    if (assignee !== undefined && assignee?.toString() !== oldAssignee) {
-      await automationEngine.notify('task_assigned', updated.toObject());
-    }
-
     res.json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });

@@ -10,8 +10,10 @@ import {
   IoCreateOutline,
   IoPersonOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function TasksBoard() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
@@ -166,7 +168,7 @@ export default function TasksBoard() {
           </div>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+            className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
           >
             <IoAddOutline className="text-xl" />
             <span>Create Task</span>
@@ -178,7 +180,7 @@ export default function TasksBoard() {
       <div className="flex-grow overflow-x-auto overflow-y-hidden p-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme.primary}`}></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 h-full">
@@ -209,7 +211,7 @@ export default function TasksBoard() {
                       >
                         {/* Task Content */}
                         <div className="mb-3">
-                          <h4 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                          <h4 className={`font-bold text-slate-800 mb-2 group-hover:text-${theme.primary} transition-colors`}>
                             {task.title}
                           </h4>
                           {task.description && (
@@ -281,7 +283,7 @@ export default function TasksBoard() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                  className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
                   placeholder="Enter task title"
                   required
                 />
@@ -293,7 +295,7 @@ export default function TasksBoard() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"
+                  className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
                   placeholder="Add task details..."
                   rows="3"
                 />
@@ -305,7 +307,7 @@ export default function TasksBoard() {
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
+                  className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
                 >
                   <option value="to-do">To Do</option>
                   <option value="in-progress">In Progress</option>
@@ -323,7 +325,7 @@ export default function TasksBoard() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
                 >
                   Create Task
                 </button>

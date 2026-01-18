@@ -11,8 +11,10 @@ import {
   IoRadioButtonOnOutline,
   IoLockClosedOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Channels() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [channels, setChannels] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -106,7 +108,7 @@ export default function Channels() {
           </div>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+            className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
           >
             <IoAddOutline className="text-xl" />
             <span>New Channel</span>
@@ -134,7 +136,7 @@ export default function Channels() {
           <div className="grow overflow-y-auto p-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.primary}`}></div>
               </div>
             ) : channels.length === 0 ? (
               <div className="text-center py-8">
@@ -142,7 +144,7 @@ export default function Channels() {
                 <p className="text-sm text-slate-500">No channels yet</p>
                 <button 
                   onClick={() => setShowAddModal(true)}
-                  className="mt-4 text-sm text-blue-600 font-semibold hover:underline"
+                  className={`mt-4 text-sm text-${theme.primary} font-semibold hover:underline`}
                 >
                   Create your first channel
                 </button>
@@ -156,7 +158,7 @@ export default function Channels() {
                     onClick={() => setSelected(channel)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${
                       selected?._id === channel._id
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                        ? `bg-${theme.primaryLight} text-${theme.primary} font-semibold`
                         : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >
@@ -277,7 +279,7 @@ export default function Channels() {
                   <button
                     type="submit"
                     disabled={!message.trim()}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                   >
                     <IoSendOutline className="text-lg" />
                     <span className="hidden sm:inline">Send</span>
@@ -357,7 +359,7 @@ export default function Channels() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
                 >
                   Create
                 </button>

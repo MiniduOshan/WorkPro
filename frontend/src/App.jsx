@@ -32,7 +32,6 @@ import Departments from './dashboard/shared/Departments.jsx';
 import Groups from './dashboard/shared/Groups.jsx';
 import Announcements from './dashboard/shared/Announcements.jsx';
 import Settings from './dashboard/shared/Settings.jsx';
-import Automations from './dashboard/shared/Automations.jsx';
 import DocumentLibrary from './dashboard/shared/DocumentLibrary.jsx';
 import AIInsights from './dashboard/manager/AIInsights.jsx';
 import CompanyCreate from './pages/CompanyCreate.jsx';
@@ -112,6 +111,7 @@ function App() {
                     <Route path="tasks" element={<TasksBoard />} />
                     <Route path="channels" element={<Channels />} />
                     <Route path="teams" element={<Teams />} />
+                    <Route path="departments" element={<Departments />} />
                     <Route path="announcements" element={<Announcements />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="documents" element={<DocumentLibrary />} />
@@ -154,7 +154,8 @@ function App() {
                     <Route path="companies" element={<SuperAdminCompanies />} />
                     <Route path="users" element={<SuperAdminUsers />} />
                     <Route path="pricing" element={<SuperAdminPricing />} />
-                    <Route path="platform-content" element={<PlatformContent />} />                    <Route path="chatbot" element={<SuperAdminChatbot />} />                    <Route path="chatbot" element={<SuperAdminChatbot />} />
+                    <Route path="platform-content" element={<PlatformContent />} />
+                    <Route path="chatbot" element={<SuperAdminChatbot />} />
                     <Route path="settings" element={<SuperAdminSettings />} />
                 </Route>
 

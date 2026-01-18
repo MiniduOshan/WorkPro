@@ -14,7 +14,7 @@ import api from '../../api/axios';
 const ProfileDropdown = ({ profile, onLogout, onClose, onGoToProfile }) => (
     <div className="absolute right-0 top-14 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-4">
         <div className="flex items-center pb-3 border-b border-gray-100">
-            <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 overflow-hidden">
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 overflow-hidden">
                 <img 
                     src={profile.profilePic || '/images/default_avatar.png'} 
                     alt="User" 
@@ -29,7 +29,7 @@ const ProfileDropdown = ({ profile, onLogout, onClose, onGoToProfile }) => (
         
         <button 
             onClick={() => { onClose(); onGoToProfile(); }}
-            className="w-full flex items-center text-primary-500 hover:text-primary-700 mt-3 p-2 rounded-lg hover:bg-primary-50 transition-colors text-sm"
+            className="w-full flex items-center text-green-600 hover:text-green-700 mt-3 p-2 rounded-lg hover:bg-green-50 transition-colors text-sm"
         >
             <IoPencilOutline className="w-5 h-5 mr-2" />
             <span>Go to Profile</span>

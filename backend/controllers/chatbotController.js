@@ -94,7 +94,7 @@ function getDefaultResponses(type) {
       },
       {
         keywords: ['feature', 'what can', 'capabilities', 'functions'],
-        response: 'WorkPro provides task management, team collaboration, real-time chat, document sharing, automation workflows, and AI-powered insights. Everything you need to manage your team!',
+        response: 'WorkPro provides task management, team collaboration, real-time chat, document sharing, and AI-powered insights. Everything you need to manage your team!',
         priority: 9
       },
       {

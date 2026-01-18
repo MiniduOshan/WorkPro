@@ -61,7 +61,7 @@ const EmployeeDashboard = () => {
           <h2 className="text-2xl font-bold text-slate-800 mb-3">Welcome to WorkPro!</h2>
           <p className="text-slate-600 mb-6">To get started, create your company profile or wait for an invitation to join an existing company.</p>
           <div className="flex gap-3 justify-center">
-            <a href="/dashboard/manager?first-time=true" className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition inline-flex items-center gap-2">
+            <a href="/dashboard/manager?first-time=true" className="bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition inline-flex items-center gap-2">
               <i className="fa-solid fa-plus"></i>
               <span>Create Company</span>
             </a>
@@ -233,7 +233,7 @@ const TaskCard = ({ badge, badgeColor, leftBorder, title, due, by, action, muted
     <p className="text-xs text-slate-500 mb-6 leading-relaxed">The burger menu isn't triggering on iOS Safari. Needs a CSS fix.</p>
     <div className="flex justify-between items-center">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
           JD
         </div>
         <span className="text-[10px] font-bold text-slate-600">{by}</span>
@@ -263,7 +263,7 @@ const DeptUpdate = ({ icon, iconBg, iconColor, title, desc, time }) => (
 
 const ChatMessage = ({ initials, name, content, left, right, me, textClass }) => (
   <div className={`flex gap-3 ${right ? 'flex-row-reverse' : ''} animate-fadeIn`}>
-    <div className={`w-9 h-9 rounded-full ${me ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg' : 'bg-gradient-to-br from-blue-400 to-purple-500 text-white shadow-md'} shrink-0 flex items-center justify-center text-[11px] font-bold`}>{initials}</div>
+    <div className={`w-9 h-9 rounded-full ${me ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg' : 'bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-md'} shrink-0 flex items-center justify-center text-[11px] font-bold`}>{initials}</div>
     <div className={`${me ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl rounded-tr-none shadow-md' : 'bg-slate-100 text-slate-700 rounded-2xl rounded-tl-none shadow-sm'} p-3 text-left max-w-[75%]`}>
       {name && <p className={`text-[10px] font-bold mb-1 ${me ? 'text-green-100' : 'text-slate-500'}`}>{name}</p>}
       <p className={`text-xs ${textClass || ''}`}>{content}</p>
@@ -336,7 +336,7 @@ const TaskCardDynamic = ({ task }) => {
       <p className="text-xs text-slate-500 mb-6 leading-relaxed line-clamp-2">{task.description || 'No description provided.'}</p>
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
             {task.createdBy?.firstName?.[0] || 'M'}{task.createdBy?.lastName?.[0] || 'G'}
           </div>
           <span className="text-[10px] font-bold text-slate-600">

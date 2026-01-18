@@ -12,8 +12,10 @@ import {
   IoFolderOutline,
 } from 'react-icons/io5';
 import api from '../../api/axios';
+import { useThemeColors } from '../../utils/themeHelper';
 
 const DocumentLibrary = () => {
+  const theme = useThemeColors();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -157,7 +159,7 @@ const DocumentLibrary = () => {
     } else if (['.pdf'].includes(type)) {
       return <IoDocumentTextOutline className="w-8 h-8 text-red-600" />;
     } else if (['.doc', '.docx', '.txt'].includes(type)) {
-      return <IoDocumentOutline className="w-8 h-8 text-blue-600" />;
+      return <IoDocumentOutline className={`w-8 h-8 text-${theme.primary}`} />;
     }
     return <IoFileTrayFullOutline className="w-8 h-8 text-gray-600" />;
   };
@@ -180,7 +182,7 @@ const DocumentLibrary = () => {
         </div>
         <button
           onClick={() => setShowUploadModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+          className={`flex items-center gap-2 ${theme.bgPrimary} text-white px-6 py-3 rounded-lg ${theme.bgPrimaryHover} transition`}
         >
           <IoCloudUploadOutline className="w-5 h-5" />
           Upload Document
@@ -195,8 +197,8 @@ const DocumentLibrary = () => {
               <p className="text-sm text-gray-600 font-medium">Total Documents</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalDocuments || 0}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <IoDocumentOutline className="w-6 h-6 text-blue-600" />
+            <div className={`w-12 h-12 bg-${theme.primaryLight} rounded-lg flex items-center justify-center`}>
+              <IoDocumentOutline className={`w-6 h-6 text-${theme.primary}`} />
             </div>
           </div>
         </div>
@@ -256,7 +258,7 @@ const DocumentLibrary = () => {
           </select>
           <button
             onClick={fetchDocuments}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-lg ${theme.bgPrimaryHover} transition`}
           >
             Search
           </button>
@@ -278,7 +280,7 @@ const DocumentLibrary = () => {
             <p className="text-gray-500 mb-4">No documents found</p>
             <button
               onClick={() => setShowUploadModal(true)}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className={`text-${theme.primary} hover:text-${theme.primaryTextDark} font-medium`}
             >
               Upload your first document
             </button>
@@ -288,7 +290,7 @@ const DocumentLibrary = () => {
             {documents.map((doc) => (
               <div
                 key={doc._id}
-                className="p-4 border border-gray-200 rounded-lg hover:shadow-lg transition-all hover:border-blue-300"
+                className={`p-4 border border-gray-200 rounded-lg hover:shadow-lg transition-all hover:border-${theme.primaryBorderLight}`}
               >
                 <div className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-3">
@@ -298,7 +300,7 @@ const DocumentLibrary = () => {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleDownload(doc._id, doc.originalName)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                        className={`p-1.5 text-${theme.primary} hover:bg-${theme.primaryLight} rounded`}
                         title="Download"
                       >
                         <IoDownloadOutline className="w-4 h-4" />
@@ -332,7 +334,7 @@ const DocumentLibrary = () => {
                         {doc.tags.slice(0, 2).map((tag, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium"
+                            className={`px-2 py-0.5 bg-${theme.primaryLight} text-${theme.primary} rounded-full text-[10px] font-medium`}
                           >
                             {tag}
                           </span>
@@ -435,7 +437,7 @@ const DocumentLibrary = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  className={`flex-1 px-4 py-3 ${theme.bgPrimary} text-white rounded-lg ${theme.bgPrimaryHover} font-medium`}
                 >
                   Upload
                 </button>

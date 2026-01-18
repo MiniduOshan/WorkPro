@@ -10,8 +10,10 @@ import {
   IoPersonOutline,
   IoGlobeOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Settings() {
+  const theme = useThemeColors();
   const [activeTab, setActiveTab] = useState('company');
   const [companySettings, setCompanySettings] = useState({
     name: '',
@@ -106,7 +108,7 @@ export default function Settings() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-8 py-6">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className={`w-12 h-12 ${theme.bgPrimary} rounded-xl flex items-center justify-center`}>
             <IoSettingsOutline className="text-2xl text-white" />
           </div>
           <div>
@@ -128,7 +130,7 @@ export default function Settings() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
                     activeTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-lg'
+                      ? `${theme.bgPrimary} text-white shadow-lg`
                       : 'bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200'
                   }`}
                 >
@@ -152,7 +154,7 @@ export default function Settings() {
                     type="text"
                     value={companySettings.name}
                     onChange={(e) => setCompanySettings({ ...companySettings, name: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
                     placeholder="Your Company Name"
                   />
                 </div>
@@ -163,7 +165,7 @@ export default function Settings() {
                   <textarea
                     value={companySettings.description}
                     onChange={(e) => setCompanySettings({ ...companySettings, description: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
                     placeholder="Brief description of your company"
                     rows="4"
                   />
@@ -177,7 +179,7 @@ export default function Settings() {
                       type="url"
                       value={companySettings.website}
                       onChange={(e) => setCompanySettings({ ...companySettings, website: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
                       placeholder="https://example.com"
                     />
                   </div>
@@ -188,7 +190,7 @@ export default function Settings() {
                     <select
                       value={companySettings.industry}
                       onChange={(e) => setCompanySettings({ ...companySettings, industry: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
                     >
                       <option value="">Select Industry</option>
                       <option value="technology">Technology</option>
@@ -204,7 +206,7 @@ export default function Settings() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className={`w-full ${theme.bgPrimary} text-white px-6 py-3 rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2 disabled:opacity-50`}
                 >
                   <IoSaveOutline className="text-xl" />
                   {loading ? 'Saving...' : 'Save Changes'}
@@ -236,7 +238,7 @@ export default function Settings() {
                           onChange={(e) => setNotificationSettings({ ...notificationSettings, [key]: e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${theme.primaryRing} rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${theme.primary}`}></div>
                       </label>
                     </div>
                   ))}
@@ -244,7 +246,7 @@ export default function Settings() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className={`w-full ${theme.bgPrimary} text-white px-6 py-3 rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2 disabled:opacity-50`}
                 >
                   <IoSaveOutline className="text-xl" />
                   {loading ? 'Saving...' : 'Save Preferences'}
@@ -285,7 +287,7 @@ export default function Settings() {
                         onChange={(e) => setPrivacySettings({ ...privacySettings, showEmail: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${theme.primaryRing} rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${theme.primary}`}></div>
                     </label>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
@@ -300,14 +302,14 @@ export default function Settings() {
                         onChange={(e) => setPrivacySettings({ ...privacySettings, showPhone: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${theme.primaryRing} rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${theme.primary}`}></div>
                     </label>
                   </div>
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className={`w-full ${theme.bgPrimary} text-white px-6 py-3 rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2 disabled:opacity-50`}
                 >
                   <IoSaveOutline className="text-xl" />
                   {loading ? 'Saving...' : 'Save Privacy Settings'}
@@ -324,9 +326,9 @@ export default function Settings() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-4">Theme</label>
                   <div className="grid grid-cols-3 gap-4">
-                    <button className="p-6 border-2 border-blue-600 bg-blue-50 rounded-xl text-center hover:shadow-lg transition">
+                    <button className={`p-6 border-2 border-${theme.primary} bg-${theme.primaryLight} rounded-xl text-center hover:shadow-lg transition`}>
                       <div className="w-12 h-12 bg-white rounded-lg mx-auto mb-2"></div>
-                      <p className="font-semibold text-blue-600">Light</p>
+                      <p className={`font-semibold text-${theme.primary}`}>Light</p>
                     </button>
                     <button className="p-6 border-2 border-slate-200 rounded-xl text-center hover:shadow-lg transition">
                       <div className="w-12 h-12 bg-slate-800 rounded-lg mx-auto mb-2"></div>
@@ -338,7 +340,7 @@ export default function Settings() {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-slate-500 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className={`text-sm text-slate-500 bg-${theme.primaryLight} border border-${theme.primaryBorderLight} rounded-xl p-4`}>
                   🎨 More appearance customization options coming soon!
                 </p>
               </div>
