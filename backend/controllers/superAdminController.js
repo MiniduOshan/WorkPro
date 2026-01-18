@@ -207,6 +207,59 @@ export const getPricingPlans = async (req, res) => {
   }
 };
 
+// Get public pricing plans (no auth required)
+export const getPublicPricingPlans = async (req, res) => {
+  try {
+    // Get the first super admin's pricing plans
+    const superAdminRecord = await SuperAdmin.findOne().select('pricingPlans');
+    if (!superAdminRecord || !superAdminRecord.pricingPlans.length) {
+      // Return default pricing plans if none exist
+      return res.json([
+        {
+          name: 'Free',
+          price: 0,
+          features: ['Up to 5 team members', 'Basic task management', 'Community support']
+        },
+        {
+          name: 'Pro',
+          price: 29,
+          features: ['Up to 50 team members', 'Advanced analytics', 'Priority support', 'Custom integrations']
+        },
+        {
+          name: 'Enterprise',
+          price: 99,
+          features: ['Unlimited team members', 'Advanced security', 'Dedicated support', 'Custom workflows', 'API access']
+        }
+      ]);
+    }
+
+    res.json(superAdminRecord.pricingPlans);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get public platform stats (no auth required)
+export const getPublicStats = async (req, res) => {
+  try {
+    const [totalCompanies, totalUsers, totalTasks, completedTasks] = await Promise.all([
+      Company.countDocuments(),
+      User.countDocuments(),
+      Task.countDocuments(),
+      Task.countDocuments({ status: 'done' }),
+    ]);
+
+    res.json({
+      companies: totalCompanies,
+      users: totalUsers,
+      tasksCompleted: completedTasks,
+      uptime: '99.9%'
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 // Log activity for monetization tracking
 export const logActivity = async (req, res) => {
   const { action, companyId, details } = req.body;
@@ -290,6 +343,86 @@ export const getUserAnalytics = async (req, res) => {
       usersWithCompanies,
       companyMemberships: companyMemberships[0] || {},
     });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Update platform content settings
+export const updatePlatformContent = async (req, res) => {
+  const { hero, features, stats } = req.body;
+
+  try {
+    if (!await isSuperAdmin(req.user._id)) {
+      return res.status(403).json({ message: 'Only super admins can access this' });
+    }
+
+    let superAdminRecord = await SuperAdmin.findOne({ user: req.user._id });
+    if (!superAdminRecord) {
+      superAdminRecord = new SuperAdmin({ user: req.user._id });
+    }
+
+    if (hero) superAdminRecord.platformContent.hero = hero;
+    if (features) superAdminRecord.platformContent.features = features;
+    if (stats) superAdminRecord.platformContent.stats = stats;
+
+    await superAdminRecord.save();
+
+    res.json({ message: 'Platform content updated', platformContent: superAdminRecord.platformContent });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get platform content settings
+export const getPlatformContent = async (req, res) => {
+  try {
+    if (!await isSuperAdmin(req.user._id)) {
+      return res.status(403).json({ message: 'Only super admins can access this' });
+    }
+
+    let superAdminRecord = await SuperAdmin.findOne({ user: req.user._id });
+    if (!superAdminRecord) {
+      superAdminRecord = new SuperAdmin({ user: req.user._id });
+      await superAdminRecord.save();
+    }
+
+    res.json(superAdminRecord.platformContent || {});
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get public platform content (no auth required)
+export const getPublicPlatformContent = async (req, res) => {
+  try {
+    const superAdminRecord = await SuperAdmin.findOne().select('platformContent');
+    
+    if (!superAdminRecord || !superAdminRecord.platformContent) {
+      // Return default content
+      return res.json({
+        hero: {
+          badge: 'Trusted by Companies',
+          headline: 'Everything you need to scale your company.',
+          subheadline: 'WorkPro is the unified operating system for your team. Track tasks, manage people, and drive growth from one intuitive platform.',
+        },
+        features: [
+          { title: 'Task Boards', description: 'Organize work visually with drag-and-drop Kanban boards that keep everyone in sync.', icon: 'IoLayersOutline' },
+          { title: 'Instant Sync', description: 'Real-time updates mean your team is always working on the most current version.', icon: 'IoFlashOutline' },
+          { title: 'Team Hub', description: 'Centralize communications and documents in a unified workspace for your whole company.', icon: 'IoPeopleCircleOutline' },
+          { title: 'Analytics', description: 'Get deep insights into team productivity and project progress with automated reports.', icon: 'IoStatsChartOutline' }
+        ],
+        stats: {
+          uptime: '99.9%',
+          uptimeLabel: 'System Uptime',
+          companiesLabel: 'Global Companies',
+          usersLabel: 'Active Users',
+          tasksLabel: 'Tasks Completed',
+        },
+      });
+    }
+
+    res.json(superAdminRecord.platformContent);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

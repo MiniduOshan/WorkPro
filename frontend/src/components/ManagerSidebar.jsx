@@ -10,13 +10,17 @@ import {
   IoSettingsOutline,
   IoLogOutOutline,
   IoBriefcaseOutline,
-  IoPersonAddOutline
+  IoPersonAddOutline,
+  IoShieldCheckmarkOutline,
+  IoFlashOutline,
+  IoDocumentTextOutline,
+  IoSparklesOutline
 } from 'react-icons/io5';
 
 const ManagerSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '' });
+  const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '', isSuperAdmin: false });
   const companyRole = localStorage.getItem('companyRole') || 'manager';
 
   useEffect(() => {
@@ -59,10 +63,13 @@ const ManagerSidebar = () => {
 
   const managementLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/manager' },
+      { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
     { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },
+      { name: 'Automations', icon: IoFlashOutline, path: '/dashboard/manager/automations' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
     { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
+      { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },
     { name: 'Invite Members', icon: IoPersonAddOutline, path: '/dashboard/manager/invite' },
   ];
 
@@ -151,6 +158,17 @@ const ManagerSidebar = () => {
                 isActive={isLinkActive(link.path)}
               />
             ))}
+            
+            {/* Super Admin Link */}
+            {profile.isSuperAdmin && (
+              <Link
+                to="/dashboard/super-admin"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-purple-600 hover:bg-purple-50 border border-purple-200"
+              >
+                <IoShieldCheckmarkOutline className="w-5 h-5" />
+                <span>Super Admin Panel</span>
+              </Link>
+            )}
           </div>
         </div>
       </nav>

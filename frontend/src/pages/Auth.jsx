@@ -81,14 +81,7 @@ const Auth = ({ type }) => {
         return;
       }
 
-      // 3. Handle Employee Redirection
-      // Check for 'employee' role specifically
-      if (data.user?.role === 'employee') {
-        navigate('/dashboard/employee');
-        return;
-      }
-
-      // 4. Handle Manager/Owner Redirection
+      // 3. Handle Company-based Redirection
       if (isLogin) {
         try {
           const { data: companiesData } = await api.get('/api/companies/my-companies', {
@@ -96,7 +89,7 @@ const Auth = ({ type }) => {
           });
 
           if (companiesData.companies && companiesData.companies.length > 1) {
-            // Select screen for users with multiple companies
+            // Multiple companies - let user select
             navigate('/select-company', { 
               state: { 
                 companies: companiesData.companies, 
@@ -104,20 +97,27 @@ const Auth = ({ type }) => {
               } 
             });
           } else if (companiesData.companies && companiesData.companies.length === 1) {
-            // Auto-select the only company and go to manager dashboard
-            localStorage.setItem('companyId', companiesData.companies[0]._id);
-            navigate('/dashboard/manager');
+            // Single company - auto-select and route based on role
+            const company = companiesData.companies[0];
+            localStorage.setItem('companyId', company._id);
+            localStorage.setItem('companyRole', company.role);
+            
+            // Route based on role
+            if (company.role === 'employee') {
+              navigate('/dashboard');
+            } else {
+              navigate('/dashboard/manager');
+            }
           } else {
-            // Manager logged in but has no company yet
+            // No companies yet - create first company
             navigate('/dashboard/manager?first-time=true');
           }
         } catch (err) {
-          console.error('Company fetch failed, defaulting to manager dashboard:', err);
-          navigate('/dashboard/manager');
+          console.error('Company fetch failed:', err);
+          navigate('/dashboard/manager?first-time=true');
         }
       } else {
-        // 5. New Manager Signup
-        // Redirect to manager dashboard with the 'create company' modal trigger
+        // 4. New User Signup
         navigate('/dashboard/manager?first-time=true');
       }
 

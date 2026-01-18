@@ -26,8 +26,14 @@ const SelectCompany = () => {
       const selected = companies.find(c => c._id === companyId);
       localStorage.setItem('companyId', companyId);
       localStorage.setItem('companyName', selected?.name);
+      localStorage.setItem('companyRole', selected?.role);
 
-      navigate('/dashboard');
+      // Route based on role
+      if (selected?.role === 'employee') {
+        navigate('/dashboard');
+      } else {
+        navigate('/dashboard/manager');
+      }
     } catch (err) {
       console.error('Failed to switch company:', err);
     } finally {

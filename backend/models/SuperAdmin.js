@@ -41,6 +41,29 @@ const SuperAdminSchema = new mongoose.Schema(
       },
     ],
     
+    // Platform content settings for landing page
+    platformContent: {
+      hero: {
+        badge: { type: String, default: 'Trusted by Companies' },
+        headline: { type: String, default: 'Everything you need to scale your company.' },
+        subheadline: { type: String, default: 'WorkPro is the unified operating system for your team. Track tasks, manage people, and drive growth from one intuitive platform.' },
+      },
+      features: [
+        {
+          title: { type: String },
+          description: { type: String },
+          icon: { type: String }, // icon name from react-icons
+        },
+      ],
+      stats: {
+        uptime: { type: String, default: '99.9%' },
+        uptimeLabel: { type: String, default: 'System Uptime' },
+        companiesLabel: { type: String, default: 'Global Companies' },
+        usersLabel: { type: String, default: 'Active Users' },
+        tasksLabel: { type: String, default: 'Tasks Completed' },
+      },
+    },
+    
     // Activity tracking for future monetization
     activityLog: [
       {

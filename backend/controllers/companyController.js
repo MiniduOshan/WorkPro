@@ -306,10 +306,27 @@ export const acceptInvitationPublic = async (req, res) => {
 // Get user's companies (all companies user belongs to)
 export const getUserCompanies = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('companies', 'name description industry owner');
+    const companies = await Company.find({ 'members.user': req.user._id })
+      .select('name description industry owner members');
+    
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Map companies with user's role
+    const companiesWithRole = companies.map(company => {
+      const member = company.members.find(m => m.user.toString() === req.user._id.toString());
+      return {
+        _id: company._id,
+        name: company.name,
+        description: company.description,
+        industry: company.industry,
+        owner: company.owner,
+        role: member ? member.role : 'employee'
+      };
+    });
+
     res.json({
-      companies: user.companies,
+      companies: companiesWithRole,
       defaultCompany: user.defaultCompany
     });
   } catch (e) {

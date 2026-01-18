@@ -9,12 +9,15 @@ import {
   IoSettingsOutline,
   IoLogOutOutline,
   IoBriefcaseOutline,
+  IoShieldCheckmarkOutline,
+  IoFlashOutline,
+  IoDocumentTextOutline
 } from 'react-icons/io5';
 
 const EmployeeSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '' });
+  const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '', isSuperAdmin: false });
   const companyRole = localStorage.getItem('companyRole') || 'employee';
 
   useEffect(() => {
@@ -58,7 +61,9 @@ const EmployeeSidebar = () => {
   const workLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard' },
     { name: 'My Tasks', icon: IoClipboardOutline, path: '/dashboard/tasks' },
+      { name: 'Automations', icon: IoFlashOutline, path: '/dashboard/automations' },
     { name: 'Teams', icon: IoPeopleOutline, path: '/dashboard/teams' },
+    { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/documents' },
   ];
 
   const communicationLinks = [
@@ -146,6 +151,17 @@ const EmployeeSidebar = () => {
                 isActive={isLinkActive(link.path)}
               />
             ))}
+            
+            {/* Super Admin Link */}
+            {profile.isSuperAdmin && (
+              <Link
+                to="/dashboard/super-admin"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-purple-600 hover:bg-purple-50 border border-purple-200"
+              >
+                <IoShieldCheckmarkOutline className="w-5 h-5" />
+                <span>Super Admin Panel</span>
+              </Link>
+            )}
           </div>
         </div>
       </nav>
