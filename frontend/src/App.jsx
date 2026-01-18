@@ -12,28 +12,28 @@ import Contact from './pages/contact.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth.jsx';
 
-import EmployeeDashboardLayout from './dashboard/EmployeeDashboardLayout.jsx';
-import ManagerDashboardLayout from './dashboard/ManagerDashboardLayout.jsx';
-import SuperAdminDashboardLayout from './dashboard/SuperAdminDashboardLayout.jsx';
-import EmployeeDashboard from './dashboard/EmployeeDashboard.jsx';
-import ManagerDashboard from './dashboard/ManagerDashboard.jsx';
-import SuperAdminDashboard from './dashboard/SuperAdminDashboard.jsx';
-import SuperAdminAnalytics from './dashboard/SuperAdminAnalytics.jsx';
-import SuperAdminCompanies from './dashboard/SuperAdminCompanies.jsx';
-import SuperAdminUsers from './dashboard/SuperAdminUsers.jsx';
-import SuperAdminPricing from './dashboard/SuperAdminPricing.jsx';
-import SuperAdminSettings from './dashboard/SuperAdminSettings.jsx';
-import Profile from './dashboard/Profile.jsx';
-import TasksBoard from './dashboard/TasksBoard.jsx';
-import Channels from './dashboard/Channels.jsx';
-import Teams from './dashboard/Teams.jsx';
-import Departments from './dashboard/Departments.jsx';
-import Groups from './dashboard/Groups.jsx';
-import Announcements from './dashboard/Announcements.jsx';
-import Settings from './dashboard/Settings.jsx';
+import EmployeeDashboardLayout from './dashboard/employee/EmployeeDashboardLayout.jsx';
+import ManagerDashboardLayout from './dashboard/manager/ManagerDashboardLayout.jsx';
+import SuperAdminDashboardLayout from './dashboard/superadmin/SuperAdminDashboardLayout.jsx';
+import EmployeeDashboard from './dashboard/employee/EmployeeDashboard.jsx';
+import ManagerDashboard from './dashboard/manager/ManagerDashboard.jsx';
+import SuperAdminDashboard from './dashboard/superadmin/SuperAdminDashboard.jsx';
+import SuperAdminAnalytics from './dashboard/superadmin/SuperAdminAnalytics.jsx';
+import SuperAdminCompanies from './dashboard/superadmin/SuperAdminCompanies.jsx';
+import SuperAdminUsers from './dashboard/superadmin/SuperAdminUsers.jsx';
+import SuperAdminPricing from './dashboard/superadmin/SuperAdminPricing.jsx';
+import SuperAdminSettings from './dashboard/superadmin/SuperAdminSettings.jsx';
+import Profile from './dashboard/shared/Profile.jsx';
+import TasksBoard from './dashboard/shared/TasksBoard.jsx';
+import Channels from './dashboard/shared/Channels.jsx';
+import Teams from './dashboard/shared/Teams.jsx';
+import Departments from './dashboard/shared/Departments.jsx';
+import Groups from './dashboard/shared/Groups.jsx';
+import Announcements from './dashboard/shared/Announcements.jsx';
+import Settings from './dashboard/shared/Settings.jsx';
 import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
-import Invite from './dashboard/Invite.jsx';
+import Invite from './dashboard/shared/Invite.jsx';
 
 
 // Simple Auth Check Simulation

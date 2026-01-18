@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import ManagerSidebar from '../components/ManagerSidebar';
-import CompanySwitcher from '../components/CompanySwitcher';
+import ManagerSidebar from '../../components/ManagerSidebar';
+import CompanySwitcher from '../../components/CompanySwitcher';
 import { 
     IoNotificationsOutline, 
     IoChevronDown,
@@ -8,7 +8,7 @@ import {
     IoPencilOutline 
 } from 'react-icons/io5';
 import React, { useState, useEffect } from 'react';
-import api from '../api/axios'; 
+import api from '../../api/axios'; 
 
 const ProfileDropdown = ({ profile, onLogout, onClose, onGoToProfile }) => (
     <div className="absolute right-0 top-14 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-4">

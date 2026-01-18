@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import SuperAdminSidebar from '../components/SuperAdminSidebar';
+import SuperAdminSidebar from '../../components/SuperAdminSidebar';
 import { IoNotificationsOutline, IoChevronDownOutline } from 'react-icons/io5';
 
 const SuperAdminDashboardLayout = () => {

@@ -7,7 +7,7 @@ import {
   IoTrendingUpOutline,
   IoStatsChartOutline,
 } from 'react-icons/io5';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 const SuperAdminAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);

@@ -7,7 +7,7 @@ import {
   IoClose,
   IoAddOutline,
 } from 'react-icons/io5';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 const SuperAdminDashboard = () => {
   const [analytics, setAnalytics] = useState(null);

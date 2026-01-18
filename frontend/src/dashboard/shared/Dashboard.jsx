@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import CompanySwitcher from '../components/CompanySwitcher';
+import Sidebar from '../../components/Sidebar';
+import CompanySwitcher from '../../components/CompanySwitcher';
 import { 
     IoNotificationsOutline, 
     IoChevronDown,
@@ -9,7 +9,7 @@ import {
     IoPencilOutline 
 } from 'react-icons/io5';
 import React, { useState, useEffect } from 'react';
-import api from '../api/axios'; 
+import api from '../../api/axios'; 
 
 
 // --- Sub-Component: Profile Dropdown (Retained) ---

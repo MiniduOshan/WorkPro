@@ -6,7 +6,7 @@ import {
   IoCheckmarkCircle,
   IoClose,
 } from 'react-icons/io5';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 const SuperAdminPricing = () => {
   const [pricingPlans, setPricingPlans] = useState([]);

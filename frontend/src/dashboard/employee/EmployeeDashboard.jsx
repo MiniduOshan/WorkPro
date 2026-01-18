@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 const EmployeeDashboard = () => {
   const [summary, setSummary] = useState({ tasks: { total: 0, byStatus: {}, upcoming: [] } });

@@ -1,7 +1,7 @@
 import { IoPencilOutline, IoCameraOutline, IoSaveOutline, IoCloseOutline } from 'react-icons/io5';
 import { useState, useEffect } from 'react';
 import React from 'react';
-import api from '../api/axios'; 
+import api from '../../api/axios'; 
 
 // 🎨 HIGH-CONTRAST COLOR MAPPINGS
 const ACCENT_PURPLE = 'purple-700'; // Used for Avatar, Focus states

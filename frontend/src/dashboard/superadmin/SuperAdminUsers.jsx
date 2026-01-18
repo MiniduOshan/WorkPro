@@ -6,7 +6,7 @@ import {
   IoPersonOutline,
   IoShieldCheckmarkOutline,
 } from 'react-icons/io5';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 const SuperAdminUsers = () => {
   const [userAnalytics, setUserAnalytics] = useState(null);

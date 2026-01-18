@@ -6,7 +6,7 @@ import {
   IoCheckmarkCircle,
   IoEyeOutline,
 } from 'react-icons/io5';
-import api from '../api/axios';
+import api from '../../api/axios';
 
 const SuperAdminCompanies = () => {
   const [companies, setCompanies] = useState([]);

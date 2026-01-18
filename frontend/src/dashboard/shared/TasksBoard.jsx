@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api/axios';
+import api from '../../api/axios';
 import { 
   IoAddOutline, 
   IoCheckmarkCircleOutline,
@@ -141,7 +141,7 @@ export default function TasksBoard() {
   const columns = [
     { id: 'to-do', label: 'To Do', icon: IoTimeOutline, color: 'slate', count: tasks.filter(t => t.status === 'to-do').length },
     { id: 'in-progress', label: 'In Progress', icon: IoCreateOutline, color: 'blue', count: tasks.filter(t => t.status === 'in-progress').length },
-    { id: 'blocked', label: 'Blocked', icon: IoAlertCircleOutline, color: 'red', count: tasks.filter(t => t.status === 'blocked').length },
+    { id: 'blocked', label: 'Cancel', icon: IoAlertCircleOutline, color: 'red', count: tasks.filter(t => t.status === 'blocked').length },
     { id: 'done', label: 'Done', icon: IoCheckmarkDoneOutline, color: 'green', count: tasks.filter(t => t.status === 'done').length },
   ];
 
