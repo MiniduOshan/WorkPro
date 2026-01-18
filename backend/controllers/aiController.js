@@ -1,6 +1,7 @@
 import Task from '../models/Task.js';
 import Announcement from '../models/Announcement.js';
 import Channel from '../models/Channel.js';
+import { generateAIResponse } from '../services/aiService.js';
 
 // Aggregate daily data for AI summary
 export const getDailySummaryData = async (req, res) => {
@@ -18,7 +19,7 @@ export const getDailySummaryData = async (req, res) => {
       company: companyId,
       status: 'done',
       updatedAt: { $gte: yesterday },
-    }).populate('assignedTo', 'firstName lastName');
+    }).populate('assignee', 'firstName lastName');
 
     // Get new announcements
     const announcements = await Announcement.find({
@@ -50,7 +51,7 @@ export const getDailySummaryData = async (req, res) => {
       tasksCompleted: tasksCompleted.length,
       tasksCompletedDetails: tasksCompleted.slice(0, 10).map((t) => ({
         title: t.title,
-        assignee: t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName}` : 'Unassigned',
+        assignee: t.assignee ? `${t.assignee.firstName} ${t.assignee.lastName}` : 'Unassigned',
       })),
       announcements: announcements.length,
       announcementTitles: announcements.map((a) => a.title),
@@ -84,7 +85,7 @@ export const generateAISummary = async (req, res) => {
       company: companyId,
       status: 'done',
       updatedAt: { $gte: yesterday },
-    }).populate('assignedTo', 'firstName lastName');
+    }).populate('assignee', 'firstName lastName');
 
     const announcements = await Announcement.find({
       company: companyId,
@@ -99,7 +100,7 @@ export const generateAISummary = async (req, res) => {
 
     const activeTasks = await Task.countDocuments({
       company: companyId,
-      status: { $in: ['todo', 'inProgress', 'review'] },
+      status: { $in: ['to-do', 'in-progress', 'blocked'] },
     });
 
     // Build text summary for AI
@@ -117,39 +118,16 @@ Announcements:
 ${announcements.map((a) => `- ${a.title}`).join('\n')}
     `.trim();
 
-    /* 
-    // Uncomment this when you have OpenAI API key
-    const OpenAI = require('openai');
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are an executive assistant providing daily pulse summaries for a company. Be concise, professional, and highlight key metrics and achievements."
-        },
-        {
-          role: "user",
-          content: `Generate an executive summary based on this data:\n\n${summaryText}`
-        }
-      ],
-      max_tokens: 200
-    });
-    
-    const aiSummary = completion.choices[0].message.content;
-    */
+    const aiResult = await generateAIResponse(
+      'You are an executive assistant providing concise, friendly daily pulse summaries for a company. Mention the numbers given and highlight risk areas briefly.',
+      `Generate an executive summary based on this data:\n\n${summaryText}`,
+      {
+        maxTokens: 220,
+        fallback: `Daily Pulse Summary\n\nTasks completed: ${tasksCompleted.length}\nActive tasks: ${activeTasks}\nOverdue: ${overdueTasks}\nAnnouncements: ${announcements.length}`,
+      }
+    );
 
-    // Mock AI response for now
-    const aiSummary = `📊 Daily Pulse Summary
-
-Your team completed ${tasksCompleted.length} tasks in the last 24 hours, showing strong productivity. You currently have ${activeTasks} active tasks in progress.
-
-${overdueTasks > 0 ? `⚠️ Attention needed: ${overdueTasks} tasks are overdue and require immediate action.` : '✅ Great news: No overdue tasks!'}
-
-${announcements.length > 0 ? `📢 ${announcements.length} new announcements were published to keep the team informed.` : ''}
-
-${tasksCompleted.length > 10 ? '🎉 Exceptional productivity today!' : tasksCompleted.length > 5 ? '👍 Solid progress made today.' : '💪 Keep pushing forward!'}`;
+    const aiSummary = aiResult.content;
 
     res.json({
       summary: aiSummary,
@@ -161,6 +139,100 @@ ${tasksCompleted.length > 10 ? '🎉 Exceptional productivity today!' : tasksCom
         announcements: announcements.length,
       },
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Generate a breakdown of subtasks for a task title
+export const breakdownTask = async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) return res.status(400).json({ message: 'Task title is required' });
+
+    const aiResult = await generateAIResponse(
+      'You are a project manager who breaks work into clear, action-oriented subtasks. Provide 5-7 short items with verbs up front.',
+      `Create subtasks for: ${title}. Return as a simple list.`,
+      { maxTokens: 180, fallback: 'Define requirements;Identify owners;Draft plan;Execute tasks;Review and close' }
+    );
+
+    const lines = aiResult.content
+      .split(/\n|\r/)
+      .map((l) => l.replace(/^[-*\d\.\s]+/, '').trim())
+      .filter(Boolean)
+      .slice(0, 7);
+
+    const subtasks = lines.length
+      ? lines
+      : ['Clarify goal', 'Identify dependencies', 'Draft timeline', 'Assign owners', 'Review deliverables'];
+
+    res.json({ subtasks });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Manager-focused executive summary using last 24h activity
+export const progressSummary = async (req, res) => {
+  try {
+    const companyId = req.headers['x-company-id'];
+    if (!companyId) return res.status(400).json({ message: 'Company ID is required' });
+
+    const since = new Date();
+    since.setDate(since.getDate() - 1);
+
+    const [completed, started, blocked, announcements] = await Promise.all([
+      Task.find({ company: companyId, status: 'done', updatedAt: { $gte: since } }).select('title assignee').populate('assignee', 'firstName lastName'),
+      Task.find({ company: companyId, status: 'in-progress', updatedAt: { $gte: since } }).select('title assignee').populate('assignee', 'firstName lastName'),
+      Task.find({ company: companyId, status: 'blocked', updatedAt: { $gte: since } }).select('title assignee blockerReason').populate('assignee', 'firstName lastName'),
+      Announcement.find({ company: companyId, createdAt: { $gte: since } }).select('title'),
+    ]);
+
+    const summaryText = `Last 24h updates for company ${companyId}.
+Completed: ${completed.length} -> ${completed.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
+Started: ${started.length} -> ${started.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
+Blocked: ${blocked.length} -> ${blocked.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
+Announcements: ${announcements.length}`;
+
+    const aiResult = await generateAIResponse(
+      'You are a chief-of-staff style assistant. Produce a crisp executive summary (3-5 bullet sentences) with tone: calm, directive, concise. Call out risks and wins.',
+      summaryText,
+      {
+        maxTokens: 260,
+        fallback: `Updates: Completed ${completed.length}, In-progress ${started.length}, Blocked ${blocked.length}, Announcements ${announcements.length}.`,
+      }
+    );
+
+    res.json({ summary: aiResult.content, generatedAt: new Date() });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Chat assistant with lightweight context
+export const chatAssistant = async (req, res) => {
+  try {
+    const companyId = req.headers['x-company-id'];
+    const userId = req.user?._id;
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ message: 'Message is required' });
+
+    const [tasks, announcements] = await Promise.all([
+      Task.find({ company: companyId, assignee: userId }).sort({ updatedAt: -1 }).limit(5).select('title status dueDate'),
+      Announcement.find({ company: companyId }).sort({ createdAt: -1 }).limit(5).select('title createdAt'),
+    ]);
+
+    const context = `You are WorkPro assistant. Current user tasks: ${tasks
+      .map((t) => `${t.title} [${t.status}] due ${t.dueDate ? new Date(t.dueDate).toDateString() : 'unscheduled'}`)
+      .join('; ') || 'no assigned tasks'}. Announcements: ${announcements.map((a) => a.title).join('; ') || 'none'}.`;
+
+    const aiResult = await generateAIResponse(
+      `${context} Keep answers under 120 words and be practical.`,
+      message,
+      { maxTokens: 200, temperature: 0.5, fallback: 'AI assistant unavailable right now. Please try again later.' }
+    );
+
+    res.json({ reply: aiResult.content, model: aiResult.model });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -85,7 +85,7 @@ class AutomationEngine {
       switch (rule.actionType) {
         case 'assign_to_user':
           if (rule.actionData.userId) {
-            task.assignedTo = rule.actionData.userId;
+            task.assignee = rule.actionData.userId;
             await task.save();
             console.log(`Task ${task._id} auto-assigned to ${rule.actionData.userId}`);
           }

@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import EmployeeSidebar from '../../components/EmployeeSidebar';
 import CompanySwitcher from '../../components/CompanySwitcher';
+import ChatAssistant from '../../components/ChatAssistant';
 import { 
     IoNotificationsOutline, 
     IoChevronDown,
@@ -161,6 +162,12 @@ const EmployeeDashboardLayout = () => {
                     <Outlet />
                 </main>
             </div>
+            
+            {/* Chat Assistant - Persistent across all pages */}
+            <ChatAssistant 
+                userType="employee" 
+                companyId={companyId} 
+            />
         </div>
     );
 };

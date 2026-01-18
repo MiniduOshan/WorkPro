@@ -11,7 +11,7 @@ const ensureMember = async (companyId, userId) => {
 };
 
 export const createTask = async (req, res) => {
-  const { title, description, companyId, project, assignee, status, priority, dueDate, category, team, group, department } = req.body;
+  const { title, description, companyId, project, assignee, status, priority, dueDate, category, team, group, department, checklist } = req.body;
   if (!title || !companyId) return res.status(400).json({ message: 'title and companyId required' });
   try {
     const { company, role, error } = await ensureMember(companyId, req.user._id);
@@ -33,6 +33,9 @@ export const createTask = async (req, res) => {
       team: team || undefined,
       group: group || undefined,
       department: department || '',
+        checklist: Array.isArray(checklist)
+          ? checklist.map((item) => ({ title: item.title || item, done: !!item.done }))
+          : [],
     });
     
       // Trigger automation for task creation
@@ -90,7 +93,13 @@ export const updateTask = async (req, res) => {
     const canManage = ['owner', 'manager'].includes(role);
 
     // Assignee can update status; managers can update anything
-    const { title, description, status, priority, dueDate, category, assignee, team, group, department } = req.body;
+    const { title, description, status, priority, dueDate, category, assignee, team, group, department, checklist } = req.body;
+
+    // Track changes for automation triggers
+    const oldStatus = task.status;
+    const oldPriority = task.priority;
+    const oldAssignee = task.assignee?.toString();
+
     if (canManage) {
       if (title !== undefined) task.title = title;
       if (description !== undefined) task.description = description;
@@ -101,19 +110,17 @@ export const updateTask = async (req, res) => {
       if (team !== undefined) task.team = team;
       if (group !== undefined) task.group = group;
       if (department !== undefined) task.department = department;
+      if (checklist !== undefined && Array.isArray(checklist)) {
+        task.checklist = checklist.map((item) => ({ title: item.title || item, done: !!item.done }));
+      }
     }
     if (status !== undefined) {
       if (!isAssignee && !canManage) return res.status(403).json({ message: 'Only assignee or manager can change status' });
       task.status = status;
     }
 
-    // Track changes for automation triggers
-    const oldStatus = task.status;
-    const oldPriority = task.priority;
-    const oldAssignee = task.assignee;
-
     const updated = await task.save();
-    
+
     // Trigger automations based on changes
     if (status !== undefined && status !== oldStatus) {
       await automationEngine.notify('task_status_change', updated.toObject());
@@ -121,10 +128,10 @@ export const updateTask = async (req, res) => {
     if (priority !== undefined && priority !== oldPriority) {
       await automationEngine.notify('task_priority_change', updated.toObject());
     }
-    if (assignee !== undefined && assignee !== oldAssignee) {
+    if (assignee !== undefined && assignee?.toString() !== oldAssignee) {
       await automationEngine.notify('task_assigned', updated.toObject());
     }
-    
+
     res.json(updated);
   } catch (e) {
     res.status(500).json({ message: e.message });

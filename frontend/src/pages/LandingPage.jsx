@@ -11,6 +11,7 @@ import {
     IoPeopleCircleOutline
 } from 'react-icons/io5';
 import api from '../api/axios';
+import ChatAssistant from '../components/ChatAssistant';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -274,6 +275,9 @@ const LandingPage = () => {
                     <StatItem value={stats.tasksCompleted} label={content.stats.tasksLabel} />
                 </div>
             </section>
+
+            {/* Chat Assistant */}
+            <ChatAssistant userType="guest" />
         </div>
     );
 };

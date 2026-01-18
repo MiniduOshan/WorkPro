@@ -66,7 +66,6 @@ const ManagerSidebar = () => {
       { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
     { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },
-      { name: 'Automations', icon: IoFlashOutline, path: '/dashboard/manager/automations' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
     { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
       { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },

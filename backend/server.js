@@ -23,6 +23,7 @@ import superAdminRoutes from './routes/superAdminRoutes.js';
 import automationRoutes from './routes/automationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import chatbotRoutes from './routes/chatbotRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -100,6 +101,7 @@ app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/automations', automationRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {

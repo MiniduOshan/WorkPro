@@ -18,7 +18,8 @@ import {
   IoBusinessOutline,
   IoGlobeOutline,
   IoRocketOutline,
-  IoPersonCircleOutline
+  IoPersonCircleOutline,
+  IoSparklesOutline
 } from 'react-icons/io5';
 
 // --- SUB-COMPONENTS MOVED OUTSIDE TO FIX INPUT FOCUS ISSUE ---
@@ -256,6 +257,8 @@ export default function ManagerDashboard() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   
   const [newTask, setNewTask] = useState({
     title: '', description: '', status: 'to-do', priority: 'medium', assignedTo: [], dueDate: ''
@@ -299,6 +302,7 @@ export default function ManagerDashboard() {
         ...prev,
         overdueTasks: (summary.tasks.byStatus?.blocked || 0),
       }));
+      fetchProgressSummary(companyId);
       setTeamMembers((companyRes.data.members || []).map(m => ({
         id: m.user?._id || m.user,
         name: `${m.user?.firstName || ''} ${m.user?.lastName || ''}`.trim(),
@@ -313,6 +317,20 @@ export default function ManagerDashboard() {
       ]);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
+    }
+  };
+
+  const fetchProgressSummary = async (companyId) => {
+    if (!companyId) return;
+    try {
+      setAiSummaryLoading(true);
+      const { data } = await api.get('/api/ai/progress-summary', { headers: { 'x-company-id': companyId } });
+      setAiSummary(data.summary);
+    } catch (err) {
+      console.error('Failed to fetch AI summary:', err);
+      setAiSummary('AI summary unavailable right now.');
+    } finally {
+      setAiSummaryLoading(false);
     }
   };
 
@@ -515,6 +533,28 @@ export default function ManagerDashboard() {
                   <p className="flex items-center gap-2">join.workpro.io/{companyData?.name?.toLowerCase().replace(/\s+/g, '-') || 'company'}-2024</p>
                </div>
                <button onClick={copyInviteLink} className="bg-white/20 p-2 rounded-lg hover:bg-white/30"><IoCopyOutline /></button>
+            </div>
+
+            <div className="mb-10">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-blue-600 font-semibold mb-2">Executive Summary</p>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">Last 24h AI Briefing</h3>
+                  <p className="text-slate-600 whitespace-pre-line text-sm leading-relaxed">
+                    {aiSummaryLoading ? 'Generating summary…' : aiSummary || 'No recent activity yet.'}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 min-w-[160px]">
+                  <button
+                    onClick={() => fetchProgressSummary(localStorage.getItem('companyId'))}
+                    disabled={aiSummaryLoading}
+                    className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2 justify-center"
+                  >
+                    <IoSparklesOutline /> {aiSummaryLoading ? 'Refreshing...' : 'Refresh AI'}
+                  </button>
+                  <span className="text-xs text-slate-500 text-center">Uses recent tasks & announcements</span>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">

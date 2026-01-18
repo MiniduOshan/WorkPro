@@ -1,4 +1,5 @@
 import WorkflowRule from '../models/WorkflowRule.js';
+import mongoose from 'mongoose';
 import Company from '../models/Company.js';
 
 // Get all workflow rules for a company

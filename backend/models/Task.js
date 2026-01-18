@@ -15,6 +15,12 @@ const TaskSchema = new mongoose.Schema(
     dueDate: { type: Date },
     category: { type: String, default: '' },
     department: { type: String, default: '' },
+    checklist: [
+      {
+        title: { type: String, required: true },
+        done: { type: Boolean, default: false },
+      },
+    ],
   },
   { timestamps: true }
 );

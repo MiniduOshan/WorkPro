@@ -2,6 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import Document from '../models/Document.js';
+import mongoose from 'mongoose';
 import Task from '../models/Task.js';
 
 // Configure multer storage

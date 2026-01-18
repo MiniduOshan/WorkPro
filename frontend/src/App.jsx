@@ -39,6 +39,7 @@ import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/shared/Invite.jsx';
 import SelectCompany from './pages/SelectCompany.jsx';
+import SuperAdminChatbot from './dashboard/SuperAdminChatbot.jsx';
 
 
 // Simple Auth Check Simulation
@@ -113,11 +114,7 @@ function App() {
                     <Route path="teams" element={<Teams />} />
                     <Route path="announcements" element={<Announcements />} />
                     <Route path="settings" element={<Settings />} />
-                                    <Route path="automations" element={<Automations />} />
-                                    <Route path="documents" element={<DocumentLibrary />} />
-                                    <Route path="automations" element={<Automations />} />
-                                    <Route path="documents" element={<DocumentLibrary />} />
-                                    <Route path="ai-insights" element={<AIInsights />} />
+                    <Route path="documents" element={<DocumentLibrary />} />
                 </Route>
 
                 {/* 4. PROTECTED ROUTES - Manager Dashboard */}
@@ -139,6 +136,8 @@ function App() {
                     <Route path="announcements" element={<Announcements />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="invite" element={<Invite />} />
+                    <Route path="documents" element={<DocumentLibrary />} />
+                    <Route path="ai-insights" element={<AIInsights />} />
                 </Route>
 
                 {/* 5. PROTECTED ROUTES - Super Admin Dashboard */}
@@ -155,7 +154,7 @@ function App() {
                     <Route path="companies" element={<SuperAdminCompanies />} />
                     <Route path="users" element={<SuperAdminUsers />} />
                     <Route path="pricing" element={<SuperAdminPricing />} />
-                    <Route path="platform-content" element={<PlatformContent />} />
+                    <Route path="platform-content" element={<PlatformContent />} />                    <Route path="chatbot" element={<SuperAdminChatbot />} />                    <Route path="chatbot" element={<SuperAdminChatbot />} />
                     <Route path="settings" element={<SuperAdminSettings />} />
                 </Route>
 
