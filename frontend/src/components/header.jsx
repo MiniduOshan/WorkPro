@@ -12,13 +12,43 @@ function Header() {
         // Check if user is logged in and is super admin
         const userProfile = localStorage.getItem('userProfile');
         if (userProfile) {
-            const profile = JSON.parse(userProfile);
-            setIsSuperAdmin(profile.isSuperAdmin || false);
+            try {
+                const profile = JSON.parse(userProfile);
+                setIsSuperAdmin(profile.isSuperAdmin === true);
+            } catch (err) {
+                console.error('Error parsing user profile', err);
+                setIsSuperAdmin(false);
+            }
+        } else {
+            setIsSuperAdmin(false);
         }
+        
+        // Listen for profile updates
+        const handleStorageChange = () => {
+            const updatedProfile = localStorage.getItem('userProfile');
+            if (updatedProfile) {
+                try {
+                    const profile = JSON.parse(updatedProfile);
+                    setIsSuperAdmin(profile.isSuperAdmin === true);
+                } catch (err) {
+                    setIsSuperAdmin(false);
+                }
+            } else {
+                setIsSuperAdmin(false);
+            }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('profileUpdated', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('profileUpdated', handleStorageChange);
+        };
     }, []);
 
     return (
-        <header className="sticky top-0 z-10 bg-white shadow-sm">
+        <header className="sticky top-0 z-50 bg-white shadow-sm">
             <div className="flex justify-between items-center py-4 px-6 max-w-7xl mx-auto">
                 {/* 1. Logo & App Name (Left-aligned) */}
                 <Link to="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80">

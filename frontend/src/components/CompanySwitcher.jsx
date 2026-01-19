@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { IoChevronDown, IoSwapHorizontal } from 'react-icons/io5';
+import { IoChevronDown, IoSwapHorizontal, IoAddCircleOutline } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentCompany, setCurrentCompany] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentRole, setCurrentRole] = useState(localStorage.getItem('companyRole') || 'employee');
 
   useEffect(() => {
     fetchCompanies();
@@ -63,7 +66,7 @@ const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
     }
   };
 
-  if (!currentCompany || companies.length <= 1) {
+  if (!currentCompany && companies.length === 0) {
     return null;
   }
 
@@ -89,7 +92,7 @@ const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
               <button
                 key={company._id}
                 onClick={() => handleCompanySelect(company._id)}
-                className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
                   company._id === currentCompany._id
                     ? 'bg-primary-50 border-l-4 border-l-primary-600'
                     : ''
@@ -101,13 +104,24 @@ const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
             ))}
           </div>
 
-          <div className="p-3 border-t border-gray-100 text-center">
-            <a
-              href="/dashboard?new-company=true"
-              className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+          {/* Create New Company Button */}
+          <div className="p-3 border-t border-gray-100">
+            <button
+              onClick={() => {
+                setShowDropdown(false);
+                // Navigate based on current dashboard
+                const isManager = currentRole === 'manager' || currentRole === 'owner';
+                if (isManager) {
+                  navigate('/dashboard/manager/create-company');
+                } else {
+                  navigate('/dashboard/create-company');
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium text-sm shadow-sm"
             >
-              + Create New Company
-            </a>
+              <IoAddCircleOutline className="w-5 h-5" />
+              <span>Create New Company</span>
+            </button>
           </div>
         </div>
       )}

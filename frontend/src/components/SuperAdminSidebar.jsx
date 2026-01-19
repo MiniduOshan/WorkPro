@@ -9,13 +9,17 @@ import {
   IoShieldCheckmarkOutline,
   IoSettingsOutline,
   IoLogOutOutline,
-  IoBriefcaseOutline
+  IoBriefcaseOutline,
+  IoArrowBackOutline,
+  IoDocumentTextOutline,
+  IoChatbubblesOutline
 } from 'react-icons/io5';
 
 const SuperAdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ firstName: 'Super', lastName: 'Admin', email: '' });
+  const companyRole = localStorage.getItem('companyRole');
 
   useEffect(() => {
     const storedProfile = localStorage.getItem('userProfile');
@@ -44,6 +48,24 @@ const SuperAdminSidebar = () => {
     navigate('/login');
   };
 
+  const handleBackToDashboard = () => {
+    const companyId = localStorage.getItem('companyId');
+    if (!companyId) {
+      alert('You are not currently associated with any company.');
+      return;
+    }
+    
+    // Go back to user's company dashboard based on their role
+    if (companyRole === 'employee') {
+      navigate('/dashboard');
+    } else if (companyRole === 'manager' || companyRole === 'owner') {
+      navigate('/dashboard/manager');
+    } else {
+      // If role is not clear, show select company page
+      navigate('/select-company');
+    }
+  };
+
   const isLinkActive = (path) => {
     if (path === '/dashboard/super-admin') {
       return location.pathname === '/dashboard/super-admin' || location.pathname === '/dashboard/super-admin/';
@@ -61,6 +83,7 @@ const SuperAdminSidebar = () => {
     { name: 'Companies', icon: IoBusinessOutline, path: '/dashboard/super-admin/companies' },
     { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/super-admin/users' },
     { name: 'Pricing Plans', icon: IoWalletOutline, path: '/dashboard/super-admin/pricing' },
+    { name: 'Platform Content', icon: IoDocumentTextOutline, path: '/dashboard/super-admin/platform-content' },
   ];
 
   const systemLinks = [
@@ -115,7 +138,7 @@ const SuperAdminSidebar = () => {
         </div>
 
         {/* System Section */}
-        <div className="px-4">
+        <div className="px-4 mb-6">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">
             System
           </p>
@@ -129,6 +152,19 @@ const SuperAdminSidebar = () => {
             ))}
           </div>
         </div>
+
+        {/* Back to Dashboard */}
+        {companyRole && (
+          <div className="px-4">
+            <button
+              onClick={handleBackToDashboard}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-blue-600 hover:bg-blue-50 border border-blue-200"
+            >
+              <IoArrowBackOutline className="w-5 h-5" />
+              <span>Back to My Dashboard</span>
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* Profile Section */}

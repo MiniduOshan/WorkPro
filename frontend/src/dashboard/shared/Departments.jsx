@@ -6,10 +6,14 @@ import {
   IoPeopleOutline,
   IoFolderOpenOutline,
   IoCreateOutline,
-  IoTrashOutline
+  IoTrashOutline,
+  IoClipboardOutline,
+  IoCloseOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Departments() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,10 +87,18 @@ export default function Departments() {
 
   const openView = async (dept) => {
     try {
-      const { data: teams } = await api.get('/api/teams', { params: { companyId, department: dept._id } });
-      setViewDept({ ...dept, teams });
+      const [teamsRes, tasksRes] = await Promise.all([
+        api.get('/api/teams', { params: { companyId, department: dept._id } }),
+        api.get('/api/tasks', { params: { companyId, department: dept._id } })
+      ]);
+      setViewDept({ 
+        ...dept, 
+        teams: teamsRes.data,
+        tasks: tasksRes.data
+      });
     } catch (err) {
-      setViewDept({ ...dept, teams: [] });
+      console.error('Failed to load department details:', err);
+      setViewDept({ ...dept, teams: [], tasks: [] });
     }
   };
 
@@ -114,7 +126,7 @@ export default function Departments() {
           {companyId && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
             >
               <IoAddOutline className="text-xl" />
               <span>Create Department</span>
@@ -130,7 +142,7 @@ export default function Departments() {
             <IoLayersOutline className="mx-auto text-6xl text-slate-300 mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No Company Found</h3>
             <p className="text-slate-500 mb-6">You need to create or join a company first</p>
-            <a href="/dashboard/manager?first-time=true" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition">
+            <a href="/dashboard/manager?first-time=true" className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}>
               <IoAddOutline className="text-xl" />
               <span>Create Company</span>
             </a>
@@ -146,7 +158,7 @@ export default function Departments() {
             <p className="text-slate-500 mb-6">Create your first department to organize your team</p>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition"
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}
             >
               <IoAddOutline className="text-xl" />
               <span>Create Department</span>
@@ -182,9 +194,9 @@ export default function Departments() {
                       <p className="text-xs text-slate-600">Members</p>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-xl">
-                      <IoFolderOpenOutline className="mx-auto text-2xl text-purple-600 mb-1" />
+                      <IoClipboardOutline className="mx-auto text-2xl text-purple-600 mb-1" />
                       <p className="text-2xl font-bold text-slate-800">—</p>
-                      <p className="text-xs text-slate-600">Projects</p>
+                      <p className="text-xs text-slate-600">Tasks</p>
                     </div>
                   </div>
 
@@ -250,7 +262,7 @@ export default function Departments() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50`}
                 >
                   {creating ? 'Creating…' : 'Create'}
                 </button>
@@ -263,26 +275,70 @@ export default function Departments() {
       {/* View Department Modal */}
       {viewDept && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-800">{viewDept.name}</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">{viewDept.name}</h2>
+                <p className="text-slate-600 text-sm mt-1">{viewDept.description}</p>
+              </div>
               <button onClick={() => setViewDept(null)} className="p-2 hover:bg-slate-100 rounded-lg transition">
-                <IoCreateOutline className="text-2xl text-slate-400" />
+                <IoCloseOutline className="text-2xl text-slate-400" />
               </button>
             </div>
-            <p className="text-slate-700 mb-6">{viewDept.description}</p>
-            <h4 className="text-sm font-bold text-slate-600 mb-2">Teams in this department</h4>
-            {viewDept.teams?.length ? (
-              <ul className="space-y-2">
-                {viewDept.teams.map(t => (
-                  <li key={t._id} className="px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
-                    {t.name} · {t.members?.length || 0} members
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-500">No teams found.</p>
-            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Teams Section */}
+              <div>
+                <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                  <IoPeopleOutline className="text-blue-600" />
+                  Teams ({viewDept.teams?.length || 0})
+                </h4>
+                {viewDept.teams?.length ? (
+                  <div className="space-y-2">
+                    {viewDept.teams.map(t => (
+                      <div key={t._id} className="px-4 py-3 bg-blue-50 rounded-xl border border-blue-200">
+                        <p className="font-semibold text-slate-800">{t.name}</p>
+                        <p className="text-xs text-slate-600">{t.members?.length || 0} members</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No teams in this department yet.</p>
+                )}
+              </div>
+
+              {/* Tasks Section */}
+              <div>
+                <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                  <IoClipboardOutline className="text-purple-600" />
+                  Tasks ({viewDept.tasks?.length || 0})
+                </h4>
+                {viewDept.tasks?.length ? (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {viewDept.tasks.map(task => (
+                      <div key={task._id} className="px-4 py-3 bg-purple-50 rounded-xl border border-purple-200">
+                        <p className="font-semibold text-slate-800">{task.title}</p>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-600">
+                          <span className={`px-2 py-0.5 rounded-full ${
+                            task.status === 'done' ? 'bg-green-100 text-green-700' :
+                            task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                            task.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
+                            {task.status}
+                          </span>
+                          {task.assignee && (
+                            <span>👤 {task.assignee.firstName} {task.assignee.lastName}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No tasks assigned to this department yet.</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

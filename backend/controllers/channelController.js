@@ -67,3 +67,17 @@ export const listMessages = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
+
+export const deleteChannel = async (req, res) => {
+  try {
+    const channel = await Channel.findById(req.params.id);
+    if (!channel) return res.status(404).json({ message: 'Channel not found' });
+    const { role, error } = await ensureMember(channel.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can delete channels' });
+    await Channel.deleteOne({ _id: channel._id });
+    res.json({ message: 'Channel deleted' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};

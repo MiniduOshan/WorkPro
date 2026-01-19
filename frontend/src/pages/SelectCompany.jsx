@@ -11,6 +11,22 @@ const SelectCompany = () => {
   const companies = location.state?.companies || [];
   const defaultCompanyId = location.state?.defaultCompany;
 
+  // Check if user is SuperAdmin
+  React.useEffect(() => {
+    const userProfile = localStorage.getItem('userProfile');
+    if (userProfile) {
+      try {
+        const profile = JSON.parse(userProfile);
+        if (profile.isSuperAdmin === true) {
+          console.log('SuperAdmin detected in SelectCompany, redirecting to admin dashboard');
+          navigate('/dashboard/super-admin');
+        }
+      } catch (err) {
+        console.error('Error parsing user profile', err);
+      }
+    }
+  }, [navigate]);
+
   const handleSelectCompany = async (companyId) => {
     try {
       setLoading(true);
@@ -26,8 +42,14 @@ const SelectCompany = () => {
       const selected = companies.find(c => c._id === companyId);
       localStorage.setItem('companyId', companyId);
       localStorage.setItem('companyName', selected?.name);
+      localStorage.setItem('companyRole', selected?.role);
 
-      navigate('/dashboard');
+      // Route based on role
+      if (selected?.role === 'employee') {
+        navigate('/dashboard');
+      } else {
+        navigate('/dashboard/manager');
+      }
     } catch (err) {
       console.error('Failed to switch company:', err);
     } finally {
@@ -40,13 +62,33 @@ const SelectCompany = () => {
   };
 
   if (companies.length === 0) {
+    // Check if SuperAdmin
+    const userProfile = localStorage.getItem('userProfile');
+    let isSuperAdmin = false;
+    if (userProfile) {
+      try {
+        const profile = JSON.parse(userProfile);
+        isSuperAdmin = profile.isSuperAdmin === true;
+      } catch (err) {
+        console.error('Error parsing profile');
+      }
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">No Companies</h1>
           <p className="text-gray-600 mb-6">
-            You haven't joined any companies yet. Create your first one to get started!
+            You haven't joined any companies yet. {isSuperAdmin ? 'As a SuperAdmin, you can access the admin panel.' : 'Create your first one to get started!'}
           </p>
+          {isSuperAdmin ? (
+            <button
+              onClick={() => navigate('/dashboard/super-admin')}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold mb-3"
+            >
+              Go to SuperAdmin Dashboard
+            </button>
+          ) : null}
           <button
             onClick={handleCreateNewCompany}
             className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"

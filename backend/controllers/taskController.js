@@ -10,7 +10,7 @@ const ensureMember = async (companyId, userId) => {
 };
 
 export const createTask = async (req, res) => {
-  const { title, description, companyId, project, assignee, status, priority, dueDate, category, team, group, department } = req.body;
+  const { title, description, companyId, project, assignee, status, priority, dueDate, category, team, group, department, checklist } = req.body;
   if (!title || !companyId) return res.status(400).json({ message: 'title and companyId required' });
   try {
     const { company, role, error } = await ensureMember(companyId, req.user._id);
@@ -32,7 +32,11 @@ export const createTask = async (req, res) => {
       team: team || undefined,
       group: group || undefined,
       department: department || '',
+        checklist: Array.isArray(checklist)
+          ? checklist.map((item) => ({ title: item.title || item, done: !!item.done }))
+          : [],
     });
+    
     res.status(201).json(task);
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -55,6 +59,7 @@ export const listTasks = async (req, res) => {
     const tasks = await Task.find(q)
       .populate('assignee', 'firstName lastName email')
       .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name')
       .sort({ createdAt: -1 });
     res.json(tasks);
   } catch (e) {
@@ -64,7 +69,10 @@ export const listTasks = async (req, res) => {
 
 export const getTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findById(req.params.id)
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name');
     if (!task) return res.status(404).json({ message: 'Task not found' });
     const { error } = await ensureMember(task.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
@@ -85,7 +93,12 @@ export const updateTask = async (req, res) => {
     const canManage = ['owner', 'manager'].includes(role);
 
     // Assignee can update status; managers can update anything
-    const { title, description, status, priority, dueDate, category, assignee, team, group, department } = req.body;
+    const { title, description, status, priority, dueDate, category, assignee, team, group, department, checklist } = req.body;
+
+    const oldStatus = task.status;
+    const oldPriority = task.priority;
+    const oldAssignee = task.assignee?.toString();
+
     if (canManage) {
       if (title !== undefined) task.title = title;
       if (description !== undefined) task.description = description;
@@ -96,6 +109,9 @@ export const updateTask = async (req, res) => {
       if (team !== undefined) task.team = team;
       if (group !== undefined) task.group = group;
       if (department !== undefined) task.department = department;
+      if (checklist !== undefined && Array.isArray(checklist)) {
+        task.checklist = checklist.map((item) => ({ title: item.title || item, done: !!item.done }));
+      }
     }
     if (status !== undefined) {
       if (!isAssignee && !canManage) return res.status(403).json({ message: 'Only assignee or manager can change status' });

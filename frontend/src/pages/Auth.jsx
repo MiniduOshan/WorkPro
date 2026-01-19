@@ -75,20 +75,40 @@ const Auth = ({ type }) => {
         localStorage.setItem('userProfile', JSON.stringify(data.user));
       }
 
-      // 2. Redirect Super Admins
-      if (data.user?.isSuperAdmin) {
+      console.log('Login response:', data);
+      console.log('User data:', data.user);
+      console.log('User email:', data.user?.email);
+      console.log('Is SuperAdmin from data.user?', data.user?.isSuperAdmin);
+      console.log('Is SuperAdmin from data?', data.isSuperAdmin);
+
+      // 2. Check if user is SuperAdmin - ONLY admin.workpro@gmail.com
+      const userEmail = data.user?.email?.toLowerCase() || '';
+      const isSuperAdmin = userEmail === 'admin.workpro@gmail.com';
+      
+      console.log('Computed isSuperAdmin:', isSuperAdmin);
+      
+      if (isSuperAdmin) {
+        console.log('SuperAdmin detected, navigating to admin dashboard');
+        // Still fetch company data for SuperAdmins in case they need it
+        try {
+          const { data: companiesData } = await api.get('/api/companies/my-companies', {
+            headers: { Authorization: `Bearer ${data.token}` }
+          });
+          
+          // Store company info but navigate to SuperAdmin dashboard
+          if (companiesData.companies && companiesData.companies.length > 0) {
+            const defaultCompany = companiesData.defaultCompany || companiesData.companies[0];
+            localStorage.setItem('companyId', defaultCompany._id);
+            localStorage.setItem('companyRole', defaultCompany.role);
+          }
+        } catch (err) {
+          console.log('SuperAdmin has no companies, proceeding to admin dashboard');
+        }
         navigate('/dashboard/super-admin');
         return;
       }
 
-      // 3. Handle Employee Redirection
-      // Check for 'employee' role specifically
-      if (data.user?.role === 'employee') {
-        navigate('/dashboard/employee');
-        return;
-      }
-
-      // 4. Handle Manager/Owner Redirection
+      // 3. Handle Company-based Redirection for regular users
       if (isLogin) {
         try {
           const { data: companiesData } = await api.get('/api/companies/my-companies', {
@@ -96,7 +116,7 @@ const Auth = ({ type }) => {
           });
 
           if (companiesData.companies && companiesData.companies.length > 1) {
-            // Select screen for users with multiple companies
+            // Multiple companies - let user select
             navigate('/select-company', { 
               state: { 
                 companies: companiesData.companies, 
@@ -104,21 +124,29 @@ const Auth = ({ type }) => {
               } 
             });
           } else if (companiesData.companies && companiesData.companies.length === 1) {
-            // Auto-select the only company and go to manager dashboard
-            localStorage.setItem('companyId', companiesData.companies[0]._id);
-            navigate('/dashboard/manager');
+            // Single company - auto-select and route based on role
+            const company = companiesData.companies[0];
+            localStorage.setItem('companyId', company._id);
+            localStorage.setItem('companyRole', company.role);
+            
+            // Route based on role
+            if (company.role === 'employee') {
+              navigate('/dashboard');
+            } else {
+              navigate('/dashboard/manager');
+            }
           } else {
-            // Manager logged in but has no company yet
-            navigate('/dashboard/manager?first-time=true');
+            // No companies yet - go directly to company creation page
+            navigate('/company/create');
           }
         } catch (err) {
-          console.error('Company fetch failed, defaulting to manager dashboard:', err);
-          navigate('/dashboard/manager');
+          console.error('Company fetch failed:', err);
+          // On error, assume no companies and go to create
+          navigate('/company/create');
         }
       } else {
-        // 5. New Manager Signup
-        // Redirect to manager dashboard with the 'create company' modal trigger
-        navigate('/dashboard/manager?first-time=true');
+        // 4. New User Signup - go directly to company creation
+        navigate('/company/create');
       }
 
     } catch (err) {

@@ -31,6 +31,8 @@ const SuperAdminDashboard = () => {
   const fetchAllAnalytics = async () => {
     try {
       setLoading(true);
+      console.log('Fetching SuperAdmin analytics...');
+      
       const [analData, compData, userData, pricingData] = await Promise.all([
         api.get('/api/super-admin/analytics', {
           headers: { Authorization: `Bearer ${token}` },
@@ -46,12 +48,26 @@ const SuperAdminDashboard = () => {
         }),
       ]);
 
+      console.log('Analytics data:', analData.data);
+      console.log('Companies data:', compData.data);
+      console.log('Users data:', userData.data);
+      console.log('Pricing data:', pricingData.data);
+
       setAnalytics(analData.data);
       setCompaniesAnalytics(compData.data);
       setUserAnalytics(userData.data);
       setPricingPlans(pricingData.data);
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      // Show error message to user
+      if (err.response?.status === 403) {
+        alert('Access denied. Please ensure you are logged in as a Super Admin. You may need to log out and log back in.');
+      } else {
+        alert('Failed to load analytics data. Please check console for details.');
+      }
     } finally {
       setLoading(false);
     }
@@ -90,71 +106,86 @@ const SuperAdminDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900">Super Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">Platform analytics and management</p>
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl">
+        <h1 className="text-4xl font-bold">Super Admin Dashboard</h1>
+        <p className="text-purple-100 mt-2 text-lg">Platform-wide analytics and management</p>
+        <div className="mt-4 flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span>System Online</span>
+          </div>
+          <div className="bg-white/20 px-4 py-2 rounded-full">
+            Last Updated: {new Date().toLocaleString()}
+          </div>
+        </div>
       </div>
 
       {/* Overview Cards */}
       {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Companies</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{overview.totalCompanies}</p>
+                <p className="text-blue-100 text-sm font-medium">Total Companies</p>
+                <p className="text-4xl font-bold mt-2">{overview.totalCompanies || 0}</p>
+                <p className="text-xs text-blue-100 mt-1">Organizations joined</p>
               </div>
-              <IoBusinessOutline className="w-8 h-8 text-blue-400" />
+              <IoBusinessOutline className="w-12 h-12 text-blue-200 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Users</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{overview.totalUsers}</p>
+                <p className="text-green-100 text-sm font-medium">Total Users</p>
+                <p className="text-4xl font-bold mt-2">{overview.totalUsers || 0}</p>
+                <p className="text-xs text-green-100 mt-1">Active platform users</p>
               </div>
-              <IoPeopleOutline className="w-8 h-8 text-green-400" />
+              <IoPeopleOutline className="w-12 h-12 text-green-200 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Tasks</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{overview.totalTasks}</p>
+                <p className="text-yellow-100 text-sm font-medium">Total Tasks</p>
+                <p className="text-4xl font-bold mt-2">{overview.totalTasks || 0}</p>
+                <p className="text-xs text-yellow-100 mt-1">Tasks created</p>
               </div>
-              <IoCheckmarkCircle className="w-8 h-8 text-yellow-400" />
+              <IoCheckmarkCircle className="w-12 h-12 text-yellow-200 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Total Teams</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{overview.totalTeams}</p>
+                <p className="text-purple-100 text-sm font-medium">Total Teams</p>
+                <p className="text-4xl font-bold mt-2">{overview.totalTeams || 0}</p>
+                <p className="text-xs text-purple-100 mt-1">Teams formed</p>
               </div>
-              <IoBusinessOutline className="w-8 h-8 text-purple-400" />
+              <IoBusinessOutline className="w-12 h-12 text-purple-200 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Departments</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{overview.totalDepartments}</p>
+                <p className="text-orange-100 text-sm font-medium">Departments</p>
+                <p className="text-4xl font-bold mt-2">{overview.totalDepartments || 0}</p>
+                <p className="text-xs text-orange-100 mt-1">Across all companies</p>
               </div>
-              <IoBarChartOutline className="w-8 h-8 text-orange-400" />
+              <IoBarChartOutline className="w-12 h-12 text-orange-200 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm">Announcements</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{overview.totalAnnouncements}</p>
+                <p className="text-red-100 text-sm font-medium">Announcements</p>
+                <p className="text-4xl font-bold mt-2">{overview.totalAnnouncements || 0}</p>
+                <p className="text-xs text-red-100 mt-1">Platform-wide posts</p>
               </div>
-              <IoClose className="w-8 h-8 text-red-400" />
+              <IoClose className="w-12 h-12 text-red-200 opacity-80" />
             </div>
           </div>
         </div>
@@ -163,45 +194,69 @@ const SuperAdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Task Analytics */}
         {analyticsBreakdown && (
-          <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Task Analytics</h2>
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <IoBarChartOutline className="w-6 h-6 text-purple-600" />
+              Task Analytics
+            </h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">By Status</h3>
-                <div className="space-y-2">
-                  {Object.entries(analyticsBreakdown.tasksByStatus || {}).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between">
-                      <span className="text-gray-600 capitalize">{status}</span>
-                      <span className="font-semibold text-gray-900">{count}</span>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5">
+                <h3 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                  By Status
+                </h3>
+                <div className="space-y-3">
+                  {Object.keys(analyticsBreakdown.tasksByStatus || {}).length > 0 ? (
+                    Object.entries(analyticsBreakdown.tasksByStatus).map(([status, count]) => (
+                      <div key={status} className="flex items-center justify-between bg-white rounded-lg px-3 py-2">
+                        <span className="text-gray-700 capitalize font-medium">{status}</span>
+                        <span className="font-bold text-blue-600 text-lg">{count}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No task data available</p>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">By Priority</h3>
-                <div className="space-y-2">
-                  {Object.entries(analyticsBreakdown.tasksByPriority || {}).map(([priority, count]) => (
-                    <div key={priority} className="flex items-center justify-between">
-                      <span className="text-gray-600 capitalize">{priority}</span>
-                      <span className="font-semibold text-gray-900">{count}</span>
-                    </div>
-                  ))}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5">
+                <h3 className="text-sm font-bold text-green-900 mb-4 flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                  By Priority
+                </h3>
+                <div className="space-y-3">
+                  {Object.keys(analyticsBreakdown.tasksByPriority || {}).length > 0 ? (
+                    Object.entries(analyticsBreakdown.tasksByPriority).map(([priority, count]) => (
+                      <div key={priority} className="flex items-center justify-between bg-white rounded-lg px-3 py-2">
+                        <span className="text-gray-700 capitalize font-medium">{priority}</span>
+                        <span className="font-bold text-green-600 text-lg">{count}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No priority data available</p>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Users By Role */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Users By Role</h3>
-              <div className="space-y-2">
-                {Object.entries(analyticsBreakdown.usersByRole || {}).map(([role, count]) => (
-                  <div key={role} className="flex items-center justify-between">
-                    <span className="text-gray-600 capitalize">{role}</span>
-                    <span className="font-semibold text-gray-900">{count}</span>
-                  </div>
-                ))}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5">
+              <h3 className="text-sm font-bold text-purple-900 mb-4 flex items-center gap-2">
+                <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                Users By Role
+              </h3>
+              <div className="space-y-3">
+                {Object.keys(analyticsBreakdown.usersByRole || {}).length > 0 ? (
+                  Object.entries(analyticsBreakdown.usersByRole).map(([role, count]) => (
+                    <div key={role} className="flex items-center justify-between bg-white rounded-lg px-3 py-2">
+                      <span className="text-gray-700 capitalize font-medium">{role}</span>
+                      <span className="font-bold text-purple-600 text-lg">{count}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No role data available</p>
+                )}
               </div>
             </div>
           </div>
@@ -242,44 +297,91 @@ const SuperAdminDashboard = () => {
       </div>
 
       {/* Companies List */}
-      {companiesAnalytics.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Companies Overview</h2>
+      {companiesAnalytics && companiesAnalytics.length > 0 ? (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <IoBusinessOutline className="w-6 h-6 text-blue-600" />
+              Companies Joined ({companiesAnalytics.length})
+            </h2>
+            <div className="text-sm text-gray-500">
+              Showing all registered companies
+            </div>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Company</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Owner</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-900">Members</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-900">Tasks</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-900">Teams</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-900">Departments</th>
+                <tr className="border-b-2 border-gray-300 bg-gray-50">
+                  <th className="text-left py-4 px-4 font-bold text-gray-900">#</th>
+                  <th className="text-left py-4 px-4 font-bold text-gray-900">Company Name</th>
+                  <th className="text-left py-4 px-4 font-bold text-gray-900">Owner</th>
+                  <th className="text-center py-4 px-4 font-bold text-gray-900">Members</th>
+                  <th className="text-center py-4 px-4 font-bold text-gray-900">Tasks</th>
+                  <th className="text-center py-4 px-4 font-bold text-gray-900">Teams</th>
+                  <th className="text-center py-4 px-4 font-bold text-gray-900">Departments</th>
+                  <th className="text-center py-4 px-4 font-bold text-gray-900">Created</th>
                 </tr>
               </thead>
               <tbody>
-                {companiesAnalytics.slice(0, 10).map((company) => (
-                  <tr key={company._id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium text-gray-900">{company.name}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {company.owner?.firstName} {company.owner?.lastName}
+                {companiesAnalytics.map((company, index) => (
+                  <tr key={company._id} className="border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                    <td className="py-4 px-4 text-gray-600 font-medium">{index + 1}</td>
+                    <td className="py-4 px-4">
+                      <div className="font-bold text-gray-900">{company.name}</div>
+                      <div className="text-xs text-gray-500">ID: {company._id.substring(0, 8)}...</div>
                     </td>
-                    <td className="py-3 px-4 text-center text-gray-900">{company.memberCount}</td>
-                    <td className="py-3 px-4 text-center text-gray-900">{company.taskCount}</td>
-                    <td className="py-3 px-4 text-center text-gray-900">{company.teamCount}</td>
-                    <td className="py-3 px-4 text-center text-gray-900">{company.departmentCount}</td>
+                    <td className="py-4 px-4 text-gray-700">
+                      {company.owner ? (
+                        <div>
+                          <div className="font-medium">{company.owner.firstName} {company.owner.lastName}</div>
+                          <div className="text-xs text-gray-500">{company.owner.email}</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic">No owner</span>
+                      )}
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="inline-flex items-center justify-center bg-green-100 text-green-800 font-bold rounded-full px-3 py-1">
+                        {company.memberCount || 0}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="inline-flex items-center justify-center bg-blue-100 text-blue-800 font-bold rounded-full px-3 py-1">
+                        {company.taskCount || 0}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="inline-flex items-center justify-center bg-purple-100 text-purple-800 font-bold rounded-full px-3 py-1">
+                        {company.teamCount || 0}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className="inline-flex items-center justify-center bg-orange-100 text-orange-800 font-bold rounded-full px-3 py-1">
+                        {company.departmentCount || 0}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-center text-sm text-gray-600">
+                      {company.createdAt ? new Date(company.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          {companiesAnalytics.length > 10 && (
-            <p className="text-sm text-gray-500 mt-4">
-              Showing 10 of {companiesAnalytics.length} companies
-            </p>
-          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12">
+          <div className="text-center">
+            <IoBusinessOutline className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-gray-700 mb-2">No Companies Yet</h3>
+            <p className="text-gray-500 text-lg">Companies will appear here when users create them</p>
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+              <p className="text-sm text-blue-900">
+                <strong>Getting Started:</strong> Users need to sign up and create their first company to appear on this dashboard.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

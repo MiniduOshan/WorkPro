@@ -7,10 +7,15 @@ import {
   IoBusinessOutline,
   IoSearchOutline,
   IoFilterOutline,
-  IoPeopleOutline
+  IoPeopleOutline,
+  IoLinkOutline,
+  IoCopyOutline,
+  IoCheckmarkCircleOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Teams() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,11 +23,11 @@ export default function Teams() {
   const [filterRole, setFilterRole] = useState('all');
   const [company, setCompany] = useState(null);
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('employee');
   const [inviteDept, setInviteDept] = useState('');
   const [sendingInvite, setSendingInvite] = useState(false);
   const [inviteResult, setInviteResult] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -67,24 +72,31 @@ export default function Teams() {
 
   const sendInvite = async (e) => {
     e.preventDefault();
-    if (!companyId || !inviteEmail.trim()) return;
+    if (!companyId) return;
     setSendingInvite(true);
     setInviteResult(null);
     try {
       const { data } = await api.post(`/api/companies/${companyId}/invitations`, {
-        email: inviteEmail.trim(),
+        email: `invite-${Date.now()}@internal.workpro`, // Internal temporary email for link generation
         role: inviteRole,
         department: inviteDept || ''
       });
       setInviteResult({ link: data.link });
-      setInviteEmail('');
       setInviteDept('');
       setInviteRole('employee');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to send invitation';
+      const msg = err.response?.data?.message || 'Failed to create invitation link';
       setInviteResult({ error: msg });
     } finally {
       setSendingInvite(false);
+    }
+  };
+
+  const copyLink = () => {
+    if (inviteResult?.link) {
+      navigator.clipboard.writeText(inviteResult.link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -120,7 +132,7 @@ export default function Teams() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Team Members</h1>
             <p className="text-slate-600">Manage and view your team members</p>
           </div>
-          <button onClick={()=>setShowInvite(true)} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95">
+          <button onClick={()=>setShowInvite(true)} className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}>
             <IoPersonAddOutline className="text-xl" />
             <span>Invite Member</span>
           </button>
@@ -135,7 +147,7 @@ export default function Teams() {
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+              className={`w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none transition-colors`}
             />
           </div>
           <div className="flex items-center gap-2">
@@ -143,7 +155,7 @@ export default function Teams() {
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors bg-white"
+              className={`px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none transition-colors bg-white`}
             >
               <option value="all">All Roles</option>
               <option value="owner">Owner</option>
@@ -158,7 +170,7 @@ export default function Teams() {
       <div className="grow overflow-y-auto p-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme.primary}`}></div>
           </div>
         ) : filteredMembers.length === 0 ? (
           <div className="text-center py-16">
@@ -171,11 +183,11 @@ export default function Teams() {
             {filteredMembers.map((member) => (
               <div
                 key={member._id}
-                className="bg-white rounded-2xl border-2 border-slate-200 p-6 hover:shadow-xl hover:border-blue-300 transition-all duration-300 cursor-pointer group"
+                className={`bg-white rounded-2xl border-2 border-slate-200 p-6 hover:shadow-xl hover:border-${theme.primaryBorderLight} transition-all duration-300 cursor-pointer group`}
               >
                 {/* Avatar and Role Badge */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform">
+                  <div className={`w-16 h-16 bg-gradient-to-br from-${theme.primary} to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform`}>
                     {member.profilePic ? (
                       <img
                         src={member.profilePic}
@@ -193,7 +205,7 @@ export default function Teams() {
 
                 {/* Member Info */}
                 <div className="mb-4">
-                  <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
+                  <h3 className={`text-lg font-bold text-slate-800 mb-1 group-hover:text-${theme.primary} transition-colors`}>
                     {member.firstName} {member.lastName}
                   </h3>
                   {member.department && (
@@ -220,7 +232,7 @@ export default function Teams() {
 
                 {/* Actions */}
                 <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
-                  <button className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold hover:bg-blue-100 transition text-sm">
+                  <button className={`flex-1 px-4 py-2 bg-${theme.primaryLight} text-${theme.primary} rounded-lg font-semibold hover:bg-${theme.primaryLighter} transition text-sm`}>
                     View Profile
                   </button>
                   <button onClick={async ()=>{
@@ -245,43 +257,90 @@ export default function Teams() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-800">Invite Member</h2>
+              <div className="flex items-center gap-2">
+                <IoLinkOutline className="text-2xl text-slate-600" />
+                <h2 className="text-2xl font-bold text-slate-800">Create Invite Link</h2>
+              </div>
               <button onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
             </div>
-            <form onSubmit={sendInvite}>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
-                <input type="email" value={inviteEmail} onChange={(e)=>setInviteEmail(e.target.value)} className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none" placeholder="user@example.com" required />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
+            
+            {!inviteResult?.link ? (
+              <form onSubmit={sendInvite}>
+                <div className="mb-4">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Role</label>
-                  <select value={inviteRole} onChange={(e)=>setInviteRole(e.target.value)} className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white">
+                  <select value={inviteRole} onChange={(e)=>setInviteRole(e.target.value)} className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}>
                     <option value="employee">Employee</option>
                     <option value="manager">Manager</option>
                   </select>
                 </div>
-                <div>
+                
+                <div className="mb-6">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Department</label>
-                  <select value={inviteDept} onChange={(e)=>setInviteDept(e.target.value)} className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white">
+                  <select value={inviteDept} onChange={(e)=>setInviteDept(e.target.value)} className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}>
                     <option value="">None</option>
                     {(company?.departments||[]).map((d)=>(
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
                 </div>
+
+                {inviteResult?.error && (
+                  <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{inviteResult.error}</div>
+                )}
+
+                <div className="flex gap-3">
+                  <button type="button" onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition">Cancel</button>
+                  <button type="submit" disabled={sendingInvite} className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50`}>{sendingInvite? 'Creating…':'Generate Link'}</button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+                  <IoCheckmarkCircleOutline className="text-2xl text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-green-800">Link Created!</p>
+                    <p className="text-sm text-green-700">Share this link to join the team</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-slate-600 uppercase">Invite Link</p>
+                  <div className="bg-slate-100 p-4 rounded-xl border-2 border-slate-200 break-all max-h-24 overflow-y-auto">
+                    <code className="text-sm text-slate-700 font-mono">{inviteResult.link}</code>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={copyLink}
+                  className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
+                    copied 
+                      ? `${theme.bgPrimary} text-white` 
+                      : `border-2 border-slate-200 text-slate-700 hover:border-slate-300`
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <IoCheckmarkCircleOutline className="text-xl" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <IoCopyOutline className="text-xl" />
+                      Copy Link
+                    </>
+                  )}
+                </button>
+
+                <p className="text-xs text-slate-500 text-center">The recipient can click the link to create an account and join your team</p>
+
+                <button 
+                  onClick={()=>{setShowInvite(false); setInviteResult(null);}}
+                  className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                >
+                  Done
+                </button>
               </div>
-              {inviteResult?.error && (
-                <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{inviteResult.error}</div>
-              )}
-              {inviteResult?.link && (
-                <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm break-all">Invite Link: {inviteResult.link}</div>
-              )}
-              <div className="flex gap-3">
-                <button type="button" onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition">Cancel</button>
-                <button type="submit" disabled={sendingInvite} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50">{sendingInvite? 'Sending…':'Send Invite'}</button>
-              </div>
-            </form>
+            )}
           </div>
         </div>
       )}

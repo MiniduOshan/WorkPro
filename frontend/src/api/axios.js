@@ -1,9 +1,13 @@
 import axios from 'axios';
 
-// Use empty baseURL - components will specify full paths like /api/users/login
-// In production, Nginx proxies /api to backend container
-// In dev, Vite proxies /api to localhost:5000
-const BASE_URL = import.meta.env.VITE_API_URL || '';
+// Base URL resolution:
+// - Production: leave empty, Nginx proxies /api to backend
+// - Dev: if VITE_API_URL is not set, default to http://localhost:5000 to avoid proxy/network issues
+const BASE_URL = (() => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl;
+  return import.meta.env.DEV ? 'http://localhost:5000' : '';
+})();
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -26,7 +30,7 @@ api.interceptors.request.use((config) => {
   }
   
   // Log the request for debugging
-  console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url}`);
   return config;
 });
 

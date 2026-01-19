@@ -5,10 +5,14 @@ import api from '../../api/axios';
 
 // 🎨 HIGH-CONTRAST COLOR MAPPINGS
 const ACCENT_PURPLE = 'purple-700'; // Used for Avatar, Focus states
-const SUCCESS_COLOR = 'teal-600';    // Used for Save button (Strong contrast with purple theme)
-const NEUTRAL_ACTION = 'indigo-600'; // Used for Edit button
 
 const Profile = () => {
+        // Role-based button colors: green for employees, blue for managers
+        const isManager = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard/manager');
+        const EDIT_COLOR = isManager ? 'blue-600' : 'green-600';
+        const EDIT_HOVER = isManager ? 'blue-700' : 'green-700';
+        const SAVE_COLOR = isManager ? 'blue-600' : 'green-600';
+        const SAVE_HOVER = isManager ? 'blue-700' : 'green-700';
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState({
@@ -269,8 +273,8 @@ const Profile = () => {
                             <button
                                 onClick={handleSave}
                                 type="submit"
-                                // Save button color updated to SUCCESS_COLOR (Teal)
-                                className={`px-4 py-2 bg-${SUCCESS_COLOR} text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition-colors flex items-center space-x-2`}
+                                // Save button color based on role (green for employee, blue for manager)
+                                className={`px-4 py-2 bg-${SAVE_COLOR} text-white font-semibold rounded-lg shadow-md hover:bg-${SAVE_HOVER} transition-colors flex items-center space-x-2`}
                             >
                                 <IoSaveOutline className="w-5 h-5" />
                                 <span>Save Changes</span>
@@ -280,8 +284,8 @@ const Profile = () => {
                         <button 
                             onClick={() => setIsEditing(true)}
                             type="button"
-                            // Edit button color updated to NEUTRAL_ACTION (Indigo)
-                            className={`px-4 py-2 bg-${NEUTRAL_ACTION} text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors flex items-center space-x-2`}
+                            // Edit button color based on role (green for employee, blue for manager)
+                            className={`px-4 py-2 bg-${EDIT_COLOR} text-white font-semibold rounded-lg shadow-md hover:bg-${EDIT_HOVER} transition-colors flex items-center space-x-2`}
                         >
                             <IoPencilOutline className="w-5 h-5" />
                             <span>Edit Profile</span>

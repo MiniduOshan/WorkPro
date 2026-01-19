@@ -18,7 +18,6 @@ const InvitationSchema = new mongoose.Schema(
 );
 
 InvitationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-InvitationSchema.index({ token: 1 }, { unique: true });
 InvitationSchema.index({ email: 1, company: 1 });
 
 const Invitation = mongoose.model('Invitation', InvitationSchema);

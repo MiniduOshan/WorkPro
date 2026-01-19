@@ -9,8 +9,10 @@ import {
   IoPinOutline,
   IoCheckmarkCircleOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Announcements() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -147,7 +149,7 @@ export default function Announcements() {
           {canManageAnnouncements && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
             >
               <IoAddOutline className="text-xl" />
               <span>New Announcement</span>
@@ -170,7 +172,7 @@ export default function Announcements() {
             {canManageAnnouncements && (
               <button 
                 onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-blue-700 transition"
+                className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}
               >
                 <IoAddOutline className="text-xl" />
                 <span>New Announcement</span>
@@ -306,7 +308,7 @@ export default function Announcements() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
                 >
                   Publish
                 </button>

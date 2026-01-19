@@ -8,15 +8,27 @@ import {
   IoCheckmarkDoneOutline,
   IoTrashOutline,
   IoCreateOutline,
-  IoPersonOutline
+  IoPersonOutline,
+  IoBusinessOutline,
+  IoCalendarOutline,
+  IoFunnelOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function TasksBoard() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [tasks, setTasks] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('to-do');
+  const [priority, setPriority] = useState('medium');
+  const [assignee, setAssignee] = useState('');
+  const [department, setDepartment] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -65,11 +77,39 @@ export default function TasksBoard() {
     }
   }, []);
 
+  const loadEmployees = async () => {
+    if (!companyId) return;
+    try {
+      const { data } = await api.get(`/api/companies/${companyId}`);
+      if (data && data.members) {
+        setEmployees(data.members.map(m => ({
+          _id: m.user._id || m.user,
+          name: m.user.firstName ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown',
+          department: m.department
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load employees:', err);
+    }
+  };
+
+  const loadDepartments = async () => {
+    if (!companyId) return;
+    try {
+      const { data } = await api.get('/api/departments', { params: { companyId } });
+      setDepartments(data);
+    } catch (err) {
+      console.error('Failed to load departments:', err);
+    }
+  };
+
   const load = async () => {
     if (!companyId) return;
     try {
       setLoading(true);
-      const { data } = await api.get('/api/tasks', { params: { companyId } });
+      const params = { companyId };
+      if (filterDepartment) params.department = filterDepartment;
+      const { data } = await api.get('/api/tasks', { params });
       setTasks(data);
     } catch (err) {
       console.error('Failed to load tasks:', err);
@@ -78,7 +118,13 @@ export default function TasksBoard() {
     }
   };
 
-  useEffect(() => { load(); }, [companyId]);
+  useEffect(() => { 
+    if (companyId) {
+      loadEmployees();
+      loadDepartments();
+      load();
+    }
+  }, [companyId, filterDepartment]);
 
   const create = async (e) => {
     e.preventDefault();
@@ -89,26 +135,44 @@ export default function TasksBoard() {
         title,
         description,
         status,
-        assignedTo: { firstName: 'You' },
-        dueDate: null
+        assignee: assignee ? { firstName: 'Assignee' } : null,
+        department: department ? { name: 'Department' } : null,
+        dueDate: dueDate || null
       };
       setTasks((prev) => [...prev, newTask]);
-      setTitle('');
-      setDescription('');
-      setStatus('to-do');
-      setShowAddModal(false);
+      resetForm();
       return;
     }
     try {
-      await api.post('/api/tasks', { title, description, companyId, status });
-      setTitle('');
-      setDescription('');
-      setStatus('to-do');
-      setShowAddModal(false);
+      const taskData = { 
+        title, 
+        description, 
+        companyId, 
+        status,
+        priority
+      };
+      if (assignee) taskData.assignee = assignee;
+      if (department) taskData.department = department;
+      if (dueDate) taskData.dueDate = dueDate;
+      
+      await api.post('/api/tasks', taskData);
+      resetForm();
       load();
     } catch (err) {
       console.error('Failed to create task:', err);
+      alert('Failed to create task: ' + (err.response?.data?.message || err.message));
     }
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStatus('to-do');
+    setPriority('medium');
+    setAssignee('');
+    setDepartment('');
+    setDueDate('');
+    setShowAddModal(false);
   };
 
   const updateStatus = async (taskId, newStatus) => {
@@ -150,7 +214,7 @@ export default function TasksBoard() {
       'to-do': 'border-l-slate-500 hover:border-slate-600',
       'in-progress': 'border-l-blue-500 hover:border-blue-600',
       'blocked': 'border-l-red-500 hover:border-red-600',
-      'done': 'border-l-green-500 hover:border-green-600',
+      'done': 'border-l-green-600 hover:border-green-600',
     };
     return colors[status] || 'border-l-slate-500';
   };
@@ -164,13 +228,31 @@ export default function TasksBoard() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Task Oversight</h1>
             <p className="text-slate-600">Manage and track team tasks across projects</p>
           </div>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
-          >
-            <IoAddOutline className="text-xl" />
-            <span>Create Task</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Department Filter */}
+            {departments.length > 0 && (
+              <div className="flex items-center gap-2">
+                <IoFunnelOutline className="text-slate-600" />
+                <select
+                  value={filterDepartment}
+                  onChange={(e) => setFilterDepartment(e.target.value)}
+                  className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white"
+                >
+                  <option value="">All Departments</option>
+                  {departments.map((dept) => (
+                    <option key={dept._id} value={dept._id}>{dept.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
+            >
+              <IoAddOutline className="text-xl" />
+              <span>Create Task</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -178,7 +260,7 @@ export default function TasksBoard() {
       <div className="flex-grow overflow-x-auto overflow-y-hidden p-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme.primary}`}></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 h-full">
@@ -209,7 +291,7 @@ export default function TasksBoard() {
                       >
                         {/* Task Content */}
                         <div className="mb-3">
-                          <h4 className="font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                          <h4 className={`font-bold text-slate-800 mb-2 group-hover:text-${theme.primary} transition-colors`}>
                             {task.title}
                           </h4>
                           {task.description && (
@@ -218,15 +300,35 @@ export default function TasksBoard() {
                         </div>
 
                         {/* Task Meta */}
-                        <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-                          <div className="flex items-center gap-1">
-                            <IoPersonOutline />
-                            <span>{task.assignedTo?.firstName || 'Unassigned'}</span>
+                        <div className="space-y-2 text-xs text-slate-600 mb-3">
+                          <div className="flex items-center gap-2">
+                            <IoPersonOutline className="text-blue-500" />
+                            <span className="font-medium">
+                              {task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Unassigned'}
+                            </span>
                           </div>
+                          {task.department && (
+                            <div className="flex items-center gap-2">
+                              <IoBusinessOutline className="text-purple-500" />
+                              <span>{task.department.name}</span>
+                            </div>
+                          )}
                           {task.dueDate && (
-                            <div className="flex items-center gap-1">
-                              <IoTimeOutline />
+                            <div className="flex items-center gap-2">
+                              <IoCalendarOutline className="text-orange-500" />
                               <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                          {task.priority && (
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                task.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                                task.priority === 'high' ? 'bg-orange-100 text-orange-700' :
+                                task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-green-100 text-green-700'
+                              }`}>
+                                {task.priority.toUpperCase()}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -270,60 +372,125 @@ export default function TasksBoard() {
       {/* Add Task Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Create New Task</h2>
             <form onSubmit={create}>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Task Title
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
-                  placeholder="Enter task title"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                    placeholder="Enter task title"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
+                    placeholder="Add task details..."
+                    rows="3"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Assign To
+                  </label>
+                  <select
+                    value={assignee}
+                    onChange={(e) => setAssignee(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  >
+                    <option value="">Select Employee</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp._id}>{emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Department
+                  </label>
+                  <select
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept) => (
+                      <option key={dept._id} value={dept._id}>{dept.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  >
+                    <option value="to-do">To Do</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Priority
+                  </label>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                  />
+                </div>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Description (Optional)
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"
-                  placeholder="Add task details..."
-                  rows="3"
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Initial Status
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
-                >
-                  <option value="to-do">To Do</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="blocked">Blocked</option>
-                  <option value="done">Done</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
+
+              <div className="flex gap-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={resetForm}
                   className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
                 >
                   Create Task
                 </button>

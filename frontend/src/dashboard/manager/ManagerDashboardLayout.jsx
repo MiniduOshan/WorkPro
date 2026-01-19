@@ -90,7 +90,8 @@ const ManagerDashboardLayout = () => {
     };
     
     const handleGoToProfile = () => {
-        navigate('/dashboard/profile');
+        // Navigate to the manager profile route, not the employee dashboard
+        navigate('/dashboard/manager/profile');
     };
 
     return (

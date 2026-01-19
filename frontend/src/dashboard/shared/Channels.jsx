@@ -11,8 +11,10 @@ import {
   IoRadioButtonOnOutline,
   IoLockClosedOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Channels() {
+  const theme = useThemeColors();
   const [companyId, setCompanyId] = useState('');
   const [channels, setChannels] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -84,6 +86,18 @@ export default function Channels() {
     }
   };
 
+  const deleteChannel = async (channelId) => {
+    if (!window.confirm('Are you sure you want to delete this channel? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/api/channels/${channelId}`);
+      if (selected?._id === channelId) setSelected(null);
+      loadChannels();
+    } catch (err) {
+      console.error('Failed to delete channel:', err);
+      alert('Failed to delete channel: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   const formatTime = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -106,7 +120,7 @@ export default function Channels() {
           </div>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg hover:shadow-xl active:scale-95"
+            className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
           >
             <IoAddOutline className="text-xl" />
             <span>New Channel</span>
@@ -134,7 +148,7 @@ export default function Channels() {
           <div className="grow overflow-y-auto p-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 border-${theme.primary}`}></div>
               </div>
             ) : channels.length === 0 ? (
               <div className="text-center py-8">
@@ -142,7 +156,7 @@ export default function Channels() {
                 <p className="text-sm text-slate-500">No channels yet</p>
                 <button 
                   onClick={() => setShowAddModal(true)}
-                  className="mt-4 text-sm text-blue-600 font-semibold hover:underline"
+                  className={`mt-4 text-sm text-${theme.primary} font-semibold hover:underline`}
                 >
                   Create your first channel
                 </button>
@@ -151,21 +165,30 @@ export default function Channels() {
               <div className="space-y-1">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Channels</p>
                 {channels.map((channel) => (
-                  <button
-                    key={channel._id}
-                    onClick={() => setSelected(channel)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${
-                      selected?._id === channel._id
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
-                        : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <IoRadioButtonOnOutline className="text-lg shrink-0" />
-                    <span className="truncate grow">{channel.name}</span>
-                    {channel.type === 'private' && (
-                      <IoLockClosedOutline className="text-sm text-slate-400" />
-                    )}
-                  </button>
+                  <div key={channel._id} className="relative group">
+                    <button
+                      onClick={() => setSelected(channel)}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${
+                        selected?._id === channel._id
+                          ? `bg-blue-100 text-blue-600 font-semibold`
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <IoRadioButtonOnOutline className="text-lg shrink-0" />
+                      <span className="truncate grow">{channel.name}</span>
+                      {channel.type === 'private' && (
+                        <IoLockClosedOutline className="text-sm text-slate-400" />
+                      )}
+                    </button>
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => deleteChannel(channel._id)}
+                      className="absolute right-2 top-2 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 text-red-600 rounded transition-all"
+                      title="Delete channel"
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -195,8 +218,12 @@ export default function Channels() {
                     </p>
                   </div>
                 </div>
-                <button className="p-2 hover:bg-slate-100 rounded-lg transition">
-                  <IoEllipsisVerticalOutline className="text-xl text-slate-500" />
+                <button 
+                  onClick={() => deleteChannel(selected._id)}
+                  className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 hover:text-red-700"
+                  title="Delete channel"
+                >
+                  <IoEllipsisVerticalOutline className="text-xl" />
                 </button>
               </div>
 
@@ -223,7 +250,7 @@ export default function Channels() {
                         {/* Avatar */}
                         <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white ${
                           isOwnMessage 
-                            ? 'bg-linear-to-br from-green-500 to-emerald-600'
+                            ? 'bg-linear-to-br from-green-500 to-green-600'
                             : 'bg-linear-to-br from-blue-500 to-purple-600'
                         }`}>
                           {msg.user?.profilePic ? (
@@ -277,7 +304,7 @@ export default function Channels() {
                   <button
                     type="submit"
                     disabled={!message.trim()}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                   >
                     <IoSendOutline className="text-lg" />
                     <span className="hidden sm:inline">Send</span>
@@ -357,7 +384,7 @@ export default function Channels() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
                 >
                   Create
                 </button>

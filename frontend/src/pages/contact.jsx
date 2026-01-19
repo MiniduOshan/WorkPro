@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
-import { IoMailOutline, IoCallOutline, IoLocationOutline, IoSend } from 'react-icons/io5';
+import { 
+    IoMailOutline, 
+    IoCallOutline, 
+    IoLocationOutline, 
+    IoSend, 
+    IoCheckmarkCircleOutline, 
+    IoArrowForwardOutline,
+    IoChevronDownOutline
+} from 'react-icons/io5';
 
 const Contact = () => {
-    const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
     const [status, setStatus] = useState('');
 
     const handleChange = (e) => {
@@ -12,100 +20,126 @@ const Contact = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setStatus('Sending...');
-
-        // --- Simulated Submission ---
-        // In a real application, you would make an API call here (e.g., axios.post('/api/contact', formData))
         setTimeout(() => {
-            console.log("Contact form submitted:", formData);
             setStatus('Message Sent Successfully!');
-            setFormData({ name: '', email: '', message: '' }); // Clear form
+            setFormData({ name: '', email: '', subject: '', message: '' });
+            setTimeout(() => setStatus(''), 4000);
         }, 1500);
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-            <header className="text-center mb-10">
-                <IoMailOutline className="w-12 h-12 text-primary-500 mx-auto mb-3" />
-                <h1 className="text-4xl font-extrabold text-gray-800">Get In Touch</h1>
-                <p className="text-gray-500 mt-2">We'd love to hear from you. Send us a message!</p>
+        <div className="min-h-screen bg-white font-sans antialiased">
+            {/* Header */}
+            <header className="pt-24 pb-12 bg-slate-50 border-b border-slate-100">
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <div className="inline-flex items-center justify-center w-14 h-14 bg-white text-blue-600 rounded-2xl shadow-sm border border-slate-100 mb-6">
+                        <IoMailOutline className="w-7 h-7" />
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">Get In Touch</h1>
+                    <p className="text-xl text-slate-600 leading-relaxed">
+                        Have questions? We'd love to hear from you. Our team typically responds within 24 hours.
+                    </p>
+                </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                
-                {/* Contact Form */}
-                <div className="p-4">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
-                            <input 
-                                type="text" 
-                                name="name" 
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-primary-500 focus:border-primary-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Your Email</label>
-                            <input 
-                                type="email" 
-                                name="email" 
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-primary-500 focus:border-primary-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                            <textarea 
-                                name="message" 
-                                value={formData.message}
-                                onChange={handleChange}
-                                rows="5"
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-primary-500 focus:border-primary-500 resize-none"
-                                required
-                            />
-                        </div>
+            {/* Main Content */}
+            <section className="py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid lg:grid-cols-12 gap-16">
                         
-                        <button
-                            type="submit"
-                            className="w-full py-3 bg-primary-500 text-white font-semibold rounded-lg shadow-md hover:bg-primary-600 transition-colors flex items-center justify-center space-x-2"
-                            disabled={status === 'Sending...'}
-                        >
-                            <IoSend className="w-5 h-5" />
-                            <span>{status || 'Send Message'}</span>
-                        </button>
-                        
-                        {status === 'Message Sent Successfully!' && (
-                            <p className="text-green-600 text-center font-medium mt-2">Thank you for contacting us!</p>
-                        )}
-                    </form>
-                </div>
+                        {/* Info Column */}
+                        <div className="lg:col-span-4 space-y-12">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-8">Contact Information</h2>
+                                <div className="space-y-8">
+                                    <ContactInfoItem 
+                                        icon={<IoMailOutline />} 
+                                        title="Email" 
+                                        detail="support@workpro.app" 
+                                        sub="We respond within 24 hours"
+                                    />
+                                    <ContactInfoItem 
+                                        icon={<IoCallOutline />} 
+                                        title="Phone" 
+                                        detail="+94 762 288 794" 
+                                        sub="Mon-Fri, 9AM-6PM EST"
+                                    />
+                                    <ContactInfoItem 
+                                        icon={<IoLocationOutline />} 
+                                        title="Location" 
+                                        detail="Homagama, Sri Lanka" 
+                                        sub="Global Headquarters"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
-                {/* Contact Info */}
-                <div className="bg-gray-50 p-6 rounded-xl shadow-inner flex flex-col justify-center space-y-6">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">Contact Details</h2>
-                    
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <IoMailOutline className="w-6 h-6 text-primary-500" />
-                        <span className="font-medium">miniduoshan23@gmail.com</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <IoCallOutline className="w-6 h-6 text-primary-500" />
-                        <span className="font-medium">+94762288794</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 text-gray-600">
-                        <IoLocationOutline className="w-6 h-6 text-primary-500" />
-                        <span className="font-medium">Homagama, Sri Lanka</span>
+                        {/* Form Column */}
+                        <div className="lg:col-span-8">
+                            <div className="bg-white rounded-3xl border border-slate-200 p-8 md:p-12 shadow-2xl shadow-slate-100">
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <InputField label="Full Name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" />
+                                        <InputField label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" />
+                                    </div>
+                                    <InputField label="Subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="How can we help?" />
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">Message</label>
+                                        <textarea 
+                                            name="message" 
+                                            value={formData.message} 
+                                            onChange={handleChange} 
+                                            rows="5" 
+                                            className="w-full border border-slate-200 rounded-xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition outline-none bg-slate-50/50"
+                                            required
+                                        ></textarea>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={status === 'Sending...'}
+                                        className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-50"
+                                    >
+                                        {status === 'Sending...' ? 'Sending...' : <><IoSend /> Send Message</>}
+                                    </button>
+                                    {status === 'Message Sent Successfully!' && (
+                                        <div className="bg-green-50 border border-green-100 text-green-700 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
+                                            <IoCheckmarkCircleOutline className="w-6 h-6" />
+                                            <span className="font-medium">Success! We'll be in touch soon.</span>
+                                        </div>
+                                    )}
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     );
 };
+
+// Sub-components for cleaner code
+const ContactInfoItem = ({ icon, title, detail, sub }) => (
+    <div className="flex gap-5 group">
+        <div className="flex-shrink-0 w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
+            {React.cloneElement(icon, { className: "w-6 h-6" })}
+        </div>
+        <div>
+            <h3 className="font-bold text-slate-900">{title}</h3>
+            <p className="text-slate-600 font-medium">{detail}</p>
+            <p className="text-xs text-slate-400 mt-1">{sub}</p>
+        </div>
+    </div>
+);
+
+const InputField = ({ label, ...props }) => (
+    <div>
+        <label className="block text-sm font-bold text-slate-700 mb-2">{label}</label>
+        <input 
+            {...props} 
+            className="w-full border border-slate-200 rounded-xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition outline-none bg-slate-50/50" 
+            required 
+        />
+    </div>
+);
 
 export default Contact;

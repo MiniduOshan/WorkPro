@@ -1,23 +1,34 @@
 import User from '../models/User.js';
 import generateToken from '../config/generateToken.js';
 
+// Fixed super admin email - cannot be changed through website
+const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
+
 // Helper function to structure user response (used for both signup and login success)
-const getUserResponse = (user) => ({
-    _id: user._id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    username: `${user.firstName} ${user.lastName}`, // The combined name
-    email: user.email,
-    isSuperAdmin: user.isSuperAdmin || false,
-    token: generateToken(user._id),
-    user: {
+const getUserResponse = (user) => {
+    // Check if this is the super admin account
+    const isSuperAdmin = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    
+    console.log(`[AUTH] Processing user: ${user.email}`);
+    console.log(`[AUTH] Is SuperAdmin: ${isSuperAdmin} (checking against: ${SUPER_ADMIN_EMAIL})`);
+    
+    return {
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
+        username: `${user.firstName} ${user.lastName}`, // The combined name
         email: user.email,
-        isSuperAdmin: user.isSuperAdmin || false,
-    }
-});
+        isSuperAdmin: isSuperAdmin,
+        token: generateToken(user._id),
+        user: {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            isSuperAdmin: isSuperAdmin,
+        }
+    };
+};
 
 // @desc 	Register a new user (Sign Up)
 // @route 	POST /api/users/signup
@@ -39,10 +50,19 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const user = await User.create({ firstName, lastName, email, password });
+        // Check if this is the super admin email
+        const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+        
+        const user = await User.create({ 
+            firstName, 
+            lastName, 
+            email, 
+            password,
+            isSuperAdmin: isSuperAdmin  // Only set true for admin.workpro@gmail.com
+        });
 
         if (user) {
-            console.log(`[AUTH] User created successfully: ${user.email}`);
+            console.log(`[AUTH] User created successfully: ${user.email}${isSuperAdmin ? ' (Super Admin)' : ''}`);
             res.status(201).json(getUserResponse(user));
         } else {
             res.status(400).json({ message: 'Invalid user data (Mongoose validation error)' });
@@ -63,6 +83,12 @@ const authUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await user.matchPassword(password))) {
+            // Update isSuperAdmin flag if this is the admin account
+            const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+            if (user.isSuperAdmin !== isSuperAdmin) {
+                user.isSuperAdmin = isSuperAdmin;
+                await user.save();
+            }
             res.json(getUserResponse(user));
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
