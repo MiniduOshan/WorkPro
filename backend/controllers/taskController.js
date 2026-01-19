@@ -86,7 +86,7 @@ export const updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ message: 'Task not found' });
-    const { role, error } = await ensureMember(task.company, req.user._id);
+    const { company, role, error } = await ensureMember(task.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
 
     const isAssignee = task.assignee?.toString() === req.user._id.toString();
@@ -112,14 +112,41 @@ export const updateTask = async (req, res) => {
       if (checklist !== undefined && Array.isArray(checklist)) {
         task.checklist = checklist.map((item) => ({ title: item.title || item, done: !!item.done }));
       }
+    } else if (role === 'employee' && isAssignee && assignee !== undefined && assignee !== task.assignee?.toString()) {
+      // Employee trying to reassign - check if same department
+      const currentUserMember = company.members.find(m => m.user.toString() === req.user._id.toString());
+      const targetMember = company.members.find(m => m.user.toString() === assignee);
+      
+      if (!currentUserMember || !targetMember) {
+        return res.status(403).json({ message: 'Invalid reassignment' });
+      }
+      
+      if (currentUserMember.department !== targetMember.department) {
+        return res.status(403).json({ message: 'Can only reassign to employees in your department' });
+      }
+      
+      // Create pending reassignment request
+      task.pendingReassignment = {
+        newAssignee: assignee,
+        requestedBy: req.user._id,
+        requestedAt: new Date(),
+        reason: req.body.reassignReason || 'Employee requested reassignment'
+      };
     }
+    
     if (status !== undefined) {
       if (!isAssignee && !canManage) return res.status(403).json({ message: 'Only assignee or manager can change status' });
       task.status = status;
     }
 
     const updated = await task.save();
-    res.json(updated);
+    const populated = await Task.findById(updated._id)
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name')
+      .populate('pendingReassignment.newAssignee', 'firstName lastName email')
+      .populate('pendingReassignment.requestedBy', 'firstName lastName email');
+    res.json(populated);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -134,6 +161,71 @@ export const deleteTask = async (req, res) => {
     if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can delete tasks' });
     await Task.deleteOne({ _id: task._id });
     res.json({ message: 'Task removed' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Approve or reject employee reassignment request
+export const approveReassignment = async (req, res) => {
+  try {
+    const { approve } = req.body; // true = approve, false = reject
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+    
+    const { role, error } = await ensureMember(task.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    if (!['owner', 'manager'].includes(role)) {
+      return res.status(403).json({ message: 'Only managers can approve reassignments' });
+    }
+    
+    if (!task.pendingReassignment || !task.pendingReassignment.newAssignee) {
+      return res.status(400).json({ message: 'No pending reassignment found' });
+    }
+    
+    if (approve) {
+      // Approve: assign to new assignee
+      task.assignee = task.pendingReassignment.newAssignee;
+      task.pendingReassignment = undefined;
+    } else {
+      // Reject: clear pending reassignment
+      task.pendingReassignment = undefined;
+    }
+    
+    await task.save();
+    const updated = await Task.findById(task._id)
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name');
+    res.json(updated);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get all tasks with pending reassignments for manager approval
+export const getPendingReassignments = async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.status(400).json({ message: 'companyId required' });
+  try {
+    const { role, error } = await ensureMember(companyId, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    if (!['owner', 'manager'].includes(role)) {
+      return res.status(403).json({ message: 'Only managers can view pending reassignments' });
+    }
+    
+    const tasks = await Task.find({ 
+      company: companyId,
+      'pendingReassignment.newAssignee': { $exists: true }
+    })
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name')
+      .populate('pendingReassignment.newAssignee', 'firstName lastName email')
+      .populate('pendingReassignment.requestedBy', 'firstName lastName email')
+      .sort({ 'pendingReassignment.requestedAt': -1 });
+    
+    res.json(tasks);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

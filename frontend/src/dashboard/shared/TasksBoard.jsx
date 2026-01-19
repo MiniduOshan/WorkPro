@@ -31,6 +31,12 @@ export default function TasksBoard() {
   const [filterDepartment, setFilterDepartment] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [companyRole, setCompanyRole] = useState('');
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [reassignTask, setReassignTask] = useState(null);
+  const [reassignTo, setReassignTo] = useState('');
+  const [reassignReason, setReassignReason] = useState('');
 
   const sampleTasks = () => ([
     {
@@ -69,6 +75,20 @@ export default function TasksBoard() {
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
+    const role = localStorage.getItem('companyRole');
+    setCompanyRole(role || '');
+    
+    const fetchUserProfile = async () => {
+      try {
+        const { data } = await api.get('/api/users/profile');
+        setUserProfile(data);
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+      }
+    };
+    
+    fetchUserProfile();
+    
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
     } else {
@@ -85,7 +105,8 @@ export default function TasksBoard() {
         setEmployees(data.members.map(m => ({
           _id: m.user._id || m.user,
           name: m.user.firstName ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown',
-          department: m.department
+          department: m.department,
+          role: m.role
         })));
       }
     } catch (err) {
@@ -202,6 +223,49 @@ export default function TasksBoard() {
     }
   };
 
+  const openReassignModal = (task) => {
+    setReassignTask(task);
+    setReassignTo('');
+    setReassignReason('');
+    setShowReassignModal(true);
+  };
+
+  const handleReassignRequest = async (e) => {
+    e.preventDefault();
+    if (!reassignTask || !reassignTo) return;
+    
+    try {
+      await api.put(`/api/tasks/${reassignTask._id}`, {
+        assignee: reassignTo,
+        reassignReason
+      });
+      alert('Reassignment request submitted! Waiting for manager approval.');
+      setShowReassignModal(false);
+      load();
+    } catch (err) {
+      console.error('Failed to request reassignment:', err);
+      alert(err.response?.data?.message || 'Failed to request reassignment');
+    }
+  };
+
+  const getAvailableAssignees = () => {
+    if (!userProfile || !employees.length) return [];
+    
+    // Managers can assign to anyone
+    if (['owner', 'manager'].includes(companyRole)) {
+      return employees;
+    }
+    
+    // Employees can only reassign to people in their department
+    const currentUserMember = employees.find(e => e._id === userProfile._id);
+    if (!currentUserMember || !currentUserMember.department) return [];
+    
+    return employees.filter(e => 
+      e.department === currentUserMember.department && 
+      e._id !== userProfile._id
+    );
+  };
+
   const columns = [
     { id: 'to-do', label: 'To Do', icon: IoTimeOutline, color: 'slate', count: tasks.filter(t => t.status === 'to-do').length },
     { id: 'in-progress', label: 'In Progress', icon: IoCreateOutline, color: 'blue', count: tasks.filter(t => t.status === 'in-progress').length },
@@ -306,6 +370,11 @@ export default function TasksBoard() {
                             <span className="font-medium">
                               {task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Unassigned'}
                             </span>
+                            {task.pendingReassignment && (
+                              <span className="ml-auto px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold">
+                                PENDING APPROVAL
+                              </span>
+                            )}
                           </div>
                           {task.department && (
                             <div className="flex items-center gap-2">
@@ -345,13 +414,24 @@ export default function TasksBoard() {
                               {col.label}
                             </button>
                           ))}
-                          <button
-                            onClick={() => deleteTask(task._id)}
-                            className="ml-auto text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
-                            title="Delete task"
-                          >
-                            <IoTrashOutline className="inline" />
-                          </button>
+                          {userProfile && task.assignee?._id === userProfile._id && companyRole === 'employee' && !task.pendingReassignment && (
+                            <button
+                              onClick={() => openReassignModal(task)}
+                              className="text-xs px-2 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
+                              title="Request reassignment"
+                            >
+                              Reassign
+                            </button>
+                          )}
+                          {['owner', 'manager'].includes(companyRole) && (
+                            <button
+                              onClick={() => deleteTask(task._id)}
+                              className="ml-auto text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                              title="Delete task"
+                            >
+                              <IoTrashOutline className="inline" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -411,12 +491,20 @@ export default function TasksBoard() {
                     value={assignee}
                     onChange={(e) => setAssignee(e.target.value)}
                     className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                    disabled={companyRole === 'employee'}
                   >
-                    <option value="">Select Employee</option>
-                    {employees.map((emp) => (
+                    <option value="">
+                      {companyRole === 'employee' ? 'Self-assign only' : 'Select Employee'}
+                    </option>
+                    {getAvailableAssignees().map((emp) => (
                       <option key={emp._id} value={emp._id}>{emp.name}</option>
                     ))}
                   </select>
+                  {companyRole === 'employee' && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Only managers can assign tasks to others
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -493,6 +581,69 @@ export default function TasksBoard() {
                   className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
                 >
                   Create Task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reassign Task Modal */}
+      {showReassignModal && reassignTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">Request Task Reassignment</h2>
+            <p className="text-sm text-slate-600 mb-6">
+              Request to reassign <strong>{reassignTask.title}</strong> to another team member in your department.
+              Manager approval is required.
+            </p>
+            <form onSubmit={handleReassignRequest}>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Reassign To *
+                </label>
+                <select
+                  value={reassignTo}
+                  onChange={(e) => setReassignTo(e.target.value)}
+                  className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  required
+                >
+                  <option value="">Select team member...</option>
+                  {getAvailableAssignees().map((emp) => (
+                    <option key={emp._id} value={emp._id}>{emp.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Only showing employees in your department
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Reason (Optional)
+                </label>
+                <textarea
+                  value={reassignReason}
+                  onChange={(e) => setReassignReason(e.target.value)}
+                  className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
+                  placeholder="Why are you requesting this reassignment?"
+                  rows="3"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowReassignModal(false)}
+                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
+                >
+                  Request Approval
                 </button>
               </div>
             </form>

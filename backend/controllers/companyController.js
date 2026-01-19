@@ -114,7 +114,10 @@ export const createInvitation = async (req, res) => {
       token, 
       expiresAt 
     });
-    const inviteLink = `${process.env.APP_BASE_URL || ''}/invite/accept?token=${token}`;
+
+    // Build a link that matches the frontend route (/invite/join) to avoid 404s when users click the copied link
+    const appBaseUrl = process.env.APP_BASE_URL || req.get('origin') || '';
+    const inviteLink = `${appBaseUrl}/invite/join?token=${token}`;
     // Try sending email, but respond even if sending fails
     try {
       await sendInvitationEmail({

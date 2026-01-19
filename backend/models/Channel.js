@@ -13,6 +13,8 @@ const ChannelSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
     department: { type: String, default: '' },
+    group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', default: null },
+    type: { type: String, enum: ['public', 'private'], default: 'public' },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     messages: { type: [MessageSchema], default: [] },
   },

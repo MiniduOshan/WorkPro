@@ -8,7 +8,10 @@ import {
   IoCreateOutline,
   IoTrashOutline,
   IoClipboardOutline,
-  IoCloseOutline
+  IoCloseOutline,
+  IoPersonAddOutline,
+  IoPersonRemoveOutline,
+  IoCheckmarkOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
 
@@ -23,9 +26,16 @@ export default function Departments() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const [viewDept, setViewDept] = useState(null);
+  const [deptMembers, setDeptMembers] = useState([]);
+  const [availableMembers, setAvailableMembers] = useState([]);
+  const [selectedMember, setSelectedMember] = useState('');
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [companyRole, setCompanyRole] = useState('');
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
+    const role = localStorage.getItem('companyRole');
+    setCompanyRole(role || '');
     if (storedCompanyId && storedCompanyId !== 'null' && storedCompanyId !== 'undefined') {
       setCompanyId(storedCompanyId);
       fetchDepartments(storedCompanyId);
@@ -87,10 +97,21 @@ export default function Departments() {
 
   const openView = async (dept) => {
     try {
-      const [teamsRes, tasksRes] = await Promise.all([
+      setLoadingMembers(true);
+      const [teamsRes, tasksRes, membersRes, companyRes] = await Promise.all([
         api.get('/api/teams', { params: { companyId, department: dept._id } }),
-        api.get('/api/tasks', { params: { companyId, department: dept._id } })
+        api.get('/api/tasks', { params: { companyId, department: dept._id } }),
+        api.get(`/api/departments/${dept._id}/members`),
+        api.get(`/api/companies/${companyId}`)
       ]);
+      
+      setDeptMembers(membersRes.data.members || []);
+      
+      // Get available members (company members not in department)
+      const deptMemberIds = (membersRes.data.members || []).map(m => m.user?._id || m.user);
+      const available = (companyRes.data.members || []).filter(m => !deptMemberIds.includes(m.user?._id || m.user));
+      setAvailableMembers(available);
+      
       setViewDept({ 
         ...dept, 
         teams: teamsRes.data,
@@ -99,6 +120,8 @@ export default function Departments() {
     } catch (err) {
       console.error('Failed to load department details:', err);
       setViewDept({ ...dept, teams: [], tasks: [] });
+    } finally {
+      setLoadingMembers(false);
     }
   };
 
@@ -112,6 +135,31 @@ export default function Departments() {
       'from-amber-500 to-orange-600'
     ];
     return colors[index % colors.length];
+  };
+
+  const addMemberToDepartment = async () => {
+    if (!selectedMember || !viewDept) return;
+    try {
+      const { data } = await api.post(`/api/departments/${viewDept._id}/members/add`, { userId: selectedMember });
+      const updatedMember = data.company.members.find(m => m.user._id === selectedMember);
+      setDeptMembers([...deptMembers, updatedMember]);
+      setAvailableMembers(availableMembers.filter(m => m.user._id !== selectedMember));
+      setSelectedMember('');
+    } catch (err) {
+      console.error('Failed to add member:', err);
+    }
+  };
+
+  const removeMemberFromDepartment = async (userId) => {
+    if (!viewDept) return;
+    try {
+      await api.post(`/api/departments/${viewDept._id}/members/remove`, { userId });
+      const member = deptMembers.find(m => m.user._id === userId);
+      setDeptMembers(deptMembers.filter(m => m.user._id !== userId));
+      setAvailableMembers([...availableMembers, member]);
+    } catch (err) {
+      console.error('Failed to remove member:', err);
+    }
   };
 
   return (
@@ -275,7 +323,7 @@ export default function Departments() {
       {/* View Department Modal */}
       {viewDept && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-800">{viewDept.name}</h2>
@@ -286,7 +334,7 @@ export default function Departments() {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Teams Section */}
               <div>
                 <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
@@ -317,8 +365,8 @@ export default function Departments() {
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {viewDept.tasks.map(task => (
                       <div key={task._id} className="px-4 py-3 bg-purple-50 rounded-xl border border-purple-200">
-                        <p className="font-semibold text-slate-800">{task.title}</p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-600">
+                        <p className="font-semibold text-slate-800 text-sm">{task.title}</p>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-slate-600">
                           <span className={`px-2 py-0.5 rounded-full ${
                             task.status === 'done' ? 'bg-green-100 text-green-700' :
                             task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
@@ -328,7 +376,7 @@ export default function Departments() {
                             {task.status}
                           </span>
                           {task.assignee && (
-                            <span>👤 {task.assignee.firstName} {task.assignee.lastName}</span>
+                            <span>👤 {task.assignee.firstName}</span>
                           )}
                         </div>
                       </div>
@@ -338,6 +386,87 @@ export default function Departments() {
                   <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No tasks assigned to this department yet.</p>
                 )}
               </div>
+
+              {/* Members Section (Manager only) */}
+              {['owner', 'manager'].includes(companyRole) && (
+                <div>
+                  <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <IoPeopleOutline className="text-emerald-600" />
+                    Members ({deptMembers?.length || 0})
+                  </h4>
+                  
+                  {deptMembers?.length ? (
+                    <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
+                      {deptMembers.map(member => (
+                        <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
+                            <p className="text-xs text-slate-600">{member.user.email}</p>
+                          </div>
+                          <button
+                            onClick={() => removeMemberFromDepartment(member.user._id)}
+                            className="p-1 hover:bg-red-100 text-red-600 rounded transition"
+                            title="Remove from department"
+                          >
+                            <IoPersonRemoveOutline className="text-lg" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-xl mb-4">No members in this department yet.</p>
+                  )}
+
+                  {availableMembers.length > 0 && (
+                    <div className="pt-4 border-t border-slate-200">
+                      <label className="block text-xs font-semibold text-slate-600 mb-2">Add Member</label>
+                      <div className="flex gap-2">
+                        <select
+                          value={selectedMember}
+                          onChange={(e) => setSelectedMember(e.target.value)}
+                          className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg text-sm focus:border-emerald-500 focus:outline-none"
+                        >
+                          <option value="">Select employee...</option>
+                          {availableMembers.map(m => (
+                            <option key={m.user._id} value={m.user._id}>
+                              {m.user.firstName} {m.user.lastName}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={addMemberToDepartment}
+                          disabled={!selectedMember}
+                          className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 font-semibold text-sm flex items-center gap-1"
+                        >
+                          <IoPersonAddOutline /> Add
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Members Section (Employee view only) */}
+              {!['owner', 'manager'].includes(companyRole) && (
+                <div>
+                  <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <IoPeopleOutline className="text-emerald-600" />
+                    Members ({deptMembers?.length || 0})
+                  </h4>
+                  {deptMembers?.length ? (
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {deptMembers.map(member => (
+                        <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                          <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
+                          <p className="text-xs text-slate-600">{member.user.email}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this department yet.</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

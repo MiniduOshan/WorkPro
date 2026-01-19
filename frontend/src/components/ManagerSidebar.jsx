@@ -14,7 +14,8 @@ import {
   IoShieldCheckmarkOutline,
   IoFlashOutline,
   IoDocumentTextOutline,
-  IoSparklesOutline
+  IoSparklesOutline,
+  IoCheckmarkDoneOutline
 } from 'react-icons/io5';
 
 const ManagerSidebar = () => {
@@ -63,18 +64,19 @@ const ManagerSidebar = () => {
 
   const managementLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/manager' },
-      { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
+    { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
     { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },
+      { name: 'Task Approvals', icon: IoCheckmarkDoneOutline, path: '/dashboard/manager/task-approvals' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
-    { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
-      { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },
+    { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },
     { name: 'Notes', icon: IoDocumentTextOutline, path: '/dashboard/manager/notes' },
     { name: 'Invite Members', icon: IoPersonAddOutline, path: '/dashboard/manager/invite' },
   ];
 
   const communicationLinks = [
-    { name: 'Group Works', icon: IoChatbubblesOutline, path: '/dashboard/manager/channels', badge: '3' },
+    { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
+    { name: 'Channels', icon: IoChatbubblesOutline, path: '/dashboard/manager/channels', badge: '3' },
     { name: 'Announcements', icon: IoMegaphoneOutline, path: '/dashboard/manager/announcements' },
   ];
 

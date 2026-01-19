@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
+import CalendarWidget from '../shared/CalendarWidget.jsx';
 
 const EmployeeDashboard = () => {
   const [summary, setSummary] = useState({ tasks: { total: 0, byStatus: {} } });
@@ -140,39 +141,6 @@ const StatCard = ({ icon, color, label, value }) => {
       <div>
         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{label}</p>
         <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
-      </div>
-    </div>
-  );
-};
-
-const CalendarWidget = () => (
-  <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-    <div className="p-5 bg-green-600 text-white flex justify-between items-center">
-      <div>
-        <h3 className="font-bold text-lg">Event Schedule</h3>
-        <p className="text-green-300 text-xs italic">Jan 2026</p>
-      </div>
-      <i className="fa-solid fa-calendar-check text-green-500/50 text-xl"></i>
-    </div>
-    <div className="p-5 space-y-4">
-      <EventItem time="10:00 AM" title="Weekly Sync" type="Team" color="emerald" />
-      <EventItem time="02:30 PM" title="Project Update" type="Review" color="teal" />
-      <EventItem time="05:00 PM" title="Sprint End" type="Deadline" color="green" />
-    </div>
-  </div>
-);
-
-const EventItem = ({ time, title, type, color }) => {
-  const dotColors = { emerald: 'bg-green-600', teal: 'bg-green-600', green: 'bg-green-600' };
-  return (
-    <div className="flex gap-4 items-start group cursor-pointer hover:bg-slate-50 p-1 rounded-lg transition-colors">
-      <div className="text-[10px] font-bold text-slate-400 w-14 pt-1">{time}</div>
-      <div className="grow">
-        <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${dotColors[color]}`}></span>
-          <h4 className="text-sm font-bold text-slate-800 group-hover:text-green-600 transition-colors">{title}</h4>
-        </div>
-        <p className="text-[10px] text-slate-500 ml-4 uppercase font-medium">{type}</p>
       </div>
     </div>
   );

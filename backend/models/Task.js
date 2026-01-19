@@ -21,6 +21,12 @@ const TaskSchema = new mongoose.Schema(
         done: { type: Boolean, default: false },
       },
     ],
+    pendingReassignment: {
+      newAssignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      requestedAt: { type: Date },
+      reason: { type: String, default: '' },
+    },
   },
   { timestamps: true }
 );

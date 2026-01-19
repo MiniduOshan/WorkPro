@@ -12,9 +12,9 @@ import {
   IoShieldCheckmarkOutline,
   IoFlashOutline,
   IoDocumentTextOutline,
-  IoBusinessOutline
+  IoBusinessOutline,
+  IoPeopleCircleOutline
 } from 'react-icons/io5';
-
 const EmployeeSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,8 +69,9 @@ const EmployeeSidebar = () => {
   ];
 
   const communicationLinks = [
+    { name: 'Groups', icon: IoPeopleCircleOutline, path: '/dashboard/groups' },
     { name: 'Channels', icon: IoChatbubblesOutline, path: '/dashboard/channels', badge: '3' },
-    { name: 'Announcements', icon: IoMegaphoneOutline, path: '/dashboard/announcements' },
+    { name: 'Announcements', icon: IoMegaphoneOutline, path: '/dashboard/announcements' }
   ];
 
   const systemLinks = [
