@@ -59,6 +59,7 @@ export const listTasks = async (req, res) => {
     const tasks = await Task.find(q)
       .populate('assignee', 'firstName lastName email')
       .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name')
       .sort({ createdAt: -1 });
     res.json(tasks);
   } catch (e) {
@@ -68,7 +69,10 @@ export const listTasks = async (req, res) => {
 
 export const getTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findById(req.params.id)
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name');
     if (!task) return res.status(404).json({ message: 'Task not found' });
     const { error } = await ensureMember(task.company, req.user._id);
     if (error) return res.status(403).json({ message: error });

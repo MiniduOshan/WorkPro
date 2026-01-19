@@ -5,7 +5,6 @@ import {
   generateAISummary,
   breakdownTask,
   progressSummary,
-  chatAssistant,
 } from '../controllers/aiController.js';
 
 const router = Router();
@@ -17,6 +16,5 @@ router.get('/daily-data', getDailySummaryData);
 router.get('/summarize', generateAISummary);
 router.post('/breakdown', breakdownTask);
 router.get('/progress-summary', progressSummary);
-router.post('/chat', chatAssistant);
 
 export default router;

@@ -49,11 +49,20 @@ const SuperAdminSidebar = () => {
   };
 
   const handleBackToDashboard = () => {
+    const companyId = localStorage.getItem('companyId');
+    if (!companyId) {
+      alert('You are not currently associated with any company.');
+      return;
+    }
+    
     // Go back to user's company dashboard based on their role
     if (companyRole === 'employee') {
       navigate('/dashboard');
-    } else {
+    } else if (companyRole === 'manager' || companyRole === 'owner') {
       navigate('/dashboard/manager');
+    } else {
+      // If role is not clear, show select company page
+      navigate('/select-company');
     }
   };
 
@@ -75,7 +84,6 @@ const SuperAdminSidebar = () => {
     { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/super-admin/users' },
     { name: 'Pricing Plans', icon: IoWalletOutline, path: '/dashboard/super-admin/pricing' },
     { name: 'Platform Content', icon: IoDocumentTextOutline, path: '/dashboard/super-admin/platform-content' },
-    { name: 'Chatbot Config', icon: IoChatbubblesOutline, path: '/dashboard/super-admin/chatbot' },
   ];
 
   const systemLinks = [

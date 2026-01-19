@@ -44,6 +44,17 @@ export const createCompany = async (req, res) => {
       owner: req.user._id,
       members: [{ user: req.user._id, role: 'owner' }],
     });
+
+    // Update user's companies array and set as default company
+    const user = await User.findById(req.user._id);
+    if (user) {
+      if (!user.companies.includes(company._id)) {
+        user.companies.push(company._id);
+      }
+      user.defaultCompany = company._id;
+      await user.save();
+    }
+
     res.status(201).json(company);
   } catch (e) {
     res.status(500).json({ message: e.message });

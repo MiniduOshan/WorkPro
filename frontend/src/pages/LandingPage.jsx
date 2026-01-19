@@ -11,7 +11,6 @@ import {
     IoPeopleCircleOutline
 } from 'react-icons/io5';
 import api from '../api/axios';
-import ChatAssistant from '../components/ChatAssistant';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -48,10 +47,13 @@ const LandingPage = () => {
         if (userProfile) {
             try {
                 const profile = JSON.parse(userProfile);
-                setIsSuperAdmin(profile.isSuperAdmin || false);
+                setIsSuperAdmin(profile.isSuperAdmin === true);
             } catch (err) {
                 console.error("Error parsing user profile", err);
+                setIsSuperAdmin(false);
             }
+        } else {
+            setIsSuperAdmin(false);
         }
 
         // Fetch public stats and platform content
@@ -115,7 +117,7 @@ const LandingPage = () => {
 
             {/* 1. Super Admin Banner */}
             {isSuperAdmin && (
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-3 px-4 sticky top-0 z-50 shadow-md">
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-3 px-4 sticky top-0 z-40 shadow-md">
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <IoShieldCheckmarkOutline className="w-5 h-5 text-purple-200" />
@@ -137,7 +139,7 @@ const LandingPage = () => {
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[120px] -mr-64 -mt-64"></div>
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-100/30 rounded-full blur-[100px] -ml-32 -mb-32"></div>
                 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-0">
                     <div className="grid lg:grid-cols-2 gap-20 items-center">
                         
                         {/* Left Column: Text Content */}
@@ -275,9 +277,6 @@ const LandingPage = () => {
                     <StatItem value={stats.tasksCompleted} label={content.stats.tasksLabel} />
                 </div>
             </section>
-
-            {/* Chat Assistant */}
-            <ChatAssistant userType="guest" />
         </div>
     );
 };

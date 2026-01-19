@@ -14,7 +14,7 @@ const TaskSchema = new mongoose.Schema(
     priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
     dueDate: { type: Date },
     category: { type: String, default: '' },
-    department: { type: String, default: '' },
+    department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
     checklist: [
       {
         title: { type: String, required: true },

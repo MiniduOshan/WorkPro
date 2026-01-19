@@ -1,7 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import EmployeeSidebar from '../../components/EmployeeSidebar';
 import CompanySwitcher from '../../components/CompanySwitcher';
-import ChatAssistant from '../../components/ChatAssistant';
 import { 
     IoNotificationsOutline, 
     IoChevronDown,
@@ -14,7 +13,7 @@ import api from '../../api/axios';
 const ProfileDropdown = ({ profile, onLogout, onClose, onGoToProfile }) => (
     <div className="absolute right-0 top-14 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-4">
         <div className="flex items-center pb-3 border-b border-gray-100">
-            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 overflow-hidden">
+            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 overflow-hidden">
                 <img 
                     src={profile.profilePic || '/images/default_avatar.png'} 
                     alt="User" 
@@ -162,12 +161,6 @@ const EmployeeDashboardLayout = () => {
                     <Outlet />
                 </main>
             </div>
-            
-            {/* Chat Assistant - Persistent across all pages */}
-            <ChatAssistant 
-                userType="employee" 
-                companyId={companyId} 
-            />
         </div>
     );
 };

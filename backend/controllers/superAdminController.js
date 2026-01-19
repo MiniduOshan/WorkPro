@@ -6,10 +6,24 @@ import Team from '../models/Team.js';
 import Department from '../models/Department.js';
 import Announcement from '../models/Announcement.js';
 
+// Fixed super admin email - only this account has super admin access
+const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
+
 // Check if user is super admin
 const isSuperAdmin = async (userId) => {
   const user = await User.findById(userId);
-  return user && user.isSuperAdmin;
+  if (!user) return false;
+  
+  // Only admin.workpro@gmail.com can be super admin
+  const isAdmin = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  
+  // Update the flag in database if it doesn't match
+  if (user.isSuperAdmin !== isAdmin) {
+    user.isSuperAdmin = isAdmin;
+    await user.save();
+  }
+  
+  return isAdmin;
 };
 
 // Get super admin dashboard analytics

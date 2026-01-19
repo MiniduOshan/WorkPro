@@ -69,6 +69,7 @@ const ManagerSidebar = () => {
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
     { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
       { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },
+    { name: 'Notes', icon: IoDocumentTextOutline, path: '/dashboard/manager/notes' },
     { name: 'Invite Members', icon: IoPersonAddOutline, path: '/dashboard/manager/invite' },
   ];
 

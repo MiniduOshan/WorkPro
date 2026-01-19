@@ -31,6 +31,7 @@ import Teams from './dashboard/shared/Teams.jsx';
 import Departments from './dashboard/shared/Departments.jsx';
 import Groups from './dashboard/shared/Groups.jsx';
 import Announcements from './dashboard/shared/Announcements.jsx';
+import Notes from './dashboard/shared/Notes.jsx';
 import Settings from './dashboard/shared/Settings.jsx';
 import DocumentLibrary from './dashboard/shared/DocumentLibrary.jsx';
 import AIInsights from './dashboard/manager/AIInsights.jsx';
@@ -38,7 +39,6 @@ import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/shared/Invite.jsx';
 import SelectCompany from './pages/SelectCompany.jsx';
-import SuperAdminChatbot from './dashboard/SuperAdminChatbot.jsx';
 
 
 // Simple Auth Check Simulation
@@ -47,8 +47,30 @@ const isAuthenticated = () => {
 };
 
 // Protected Route Wrapper Component
-const ProtectedRoute = ({ children }) => {
-    return isAuthenticated() ? children : <Navigate to="/login" />;
+const ProtectedRoute = ({ children, requireCompany = false }) => {
+    if (!isAuthenticated()) {
+        return <Navigate to="/login" />;
+    }
+    
+    // Check if user is SuperAdmin - they don't need a company
+    const userProfile = localStorage.getItem('userProfile');
+    if (userProfile) {
+        try {
+            const profile = JSON.parse(userProfile);
+            if (profile.isSuperAdmin) {
+                return children; // SuperAdmins can access everything
+            }
+        } catch (err) {
+            console.error('Error parsing user profile', err);
+        }
+    }
+    
+    // For non-SuperAdmin users, check company requirement
+    if (requireCompany && !localStorage.getItem('companyId')) {
+        return <Navigate to="/select-company" />;
+    }
+    
+    return children;
 };
 
 // Layout component to wrap public pages with both Header AND Footer
@@ -83,9 +105,18 @@ function App() {
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/about" element={<About />} /> 
                     <Route path="/contact" element={<Contact />} />
-                    <Route path="/company/create" element={<CompanyCreate />} />
                     <Route path="/invite/join" element={<InviteJoin />} />
                 </Route>
+
+                {/* Company Create (Protected - accessible from dashboard) */}
+                <Route
+                    path="/company/create"
+                    element={
+                        <ProtectedRoute>
+                            <CompanyCreate />
+                        </ProtectedRoute>
+                    }
+                />
 
                 {/* Select Company (Protected but independent) */}
                 <Route
@@ -101,7 +132,7 @@ function App() {
                 <Route
                     path="/dashboard"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute requireCompany={true}>
                             <EmployeeDashboardLayout />
                         </ProtectedRoute>
                     }
@@ -115,13 +146,15 @@ function App() {
                     <Route path="announcements" element={<Announcements />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="documents" element={<DocumentLibrary />} />
+                    <Route path="notes" element={<Notes />} />
+                    <Route path="create-company" element={<CompanyCreate />} />
                 </Route>
 
                 {/* 4. PROTECTED ROUTES - Manager Dashboard */}
                 <Route
                     path="/dashboard/manager"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute requireCompany={true}>
                             <ManagerDashboardLayout />
                         </ProtectedRoute>
                     }
@@ -137,7 +170,9 @@ function App() {
                     <Route path="settings" element={<Settings />} />
                     <Route path="invite" element={<Invite />} />
                     <Route path="documents" element={<DocumentLibrary />} />
+                    <Route path="notes" element={<Notes />} />
                     <Route path="ai-insights" element={<AIInsights />} />
+                    <Route path="create-company" element={<CompanyCreate />} />
                 </Route>
 
                 {/* 5. PROTECTED ROUTES - Super Admin Dashboard */}
@@ -155,7 +190,6 @@ function App() {
                     <Route path="users" element={<SuperAdminUsers />} />
                     <Route path="pricing" element={<SuperAdminPricing />} />
                     <Route path="platform-content" element={<PlatformContent />} />
-                    <Route path="chatbot" element={<SuperAdminChatbot />} />
                     <Route path="settings" element={<SuperAdminSettings />} />
                 </Route>
 

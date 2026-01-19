@@ -56,8 +56,18 @@ export default function CompanyCreate() {
       localStorage.setItem('companyId', data._id);
       localStorage.setItem('companyRole', 'owner');
       
+      // Get current role to determine which dashboard to redirect to
+      const currentPath = window.location.pathname;
+      const isFromManagerDashboard = currentPath.includes('/manager');
+      
       setTimeout(() => {
-        navigate('/dashboard');
+        // Redirect based on role - owner can access manager dashboard
+        if (isFromManagerDashboard) {
+          navigate('/dashboard/manager');
+        } else {
+          navigate('/dashboard/manager'); // New company owners go to manager dashboard
+        }
+        window.location.reload(); // Reload to update company context
       }, 2000);
     } catch (err) {
       setStatus(err.response?.data?.message || 'Failed to create company');

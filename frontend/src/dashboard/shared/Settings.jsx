@@ -14,7 +14,8 @@ import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Settings() {
   const theme = useThemeColors();
-  const [activeTab, setActiveTab] = useState('company');
+  const isManager = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard/manager');
+  const [activeTab, setActiveTab] = useState(isManager ? 'company' : 'notifications');
   const [companySettings, setCompanySettings] = useState({
     name: '',
     description: '',
@@ -97,7 +98,7 @@ export default function Settings() {
   };
 
   const tabs = [
-    { id: 'company', label: 'Company', icon: IoBusinessOutline },
+    ...(isManager ? [{ id: 'company', label: 'Company', icon: IoBusinessOutline }] : []),
     { id: 'notifications', label: 'Notifications', icon: IoNotificationsOutline },
     { id: 'privacy', label: 'Privacy', icon: IoLockClosedOutline },
     { id: 'appearance', label: 'Appearance', icon: IoColorPaletteOutline }
@@ -141,8 +142,8 @@ export default function Settings() {
             })}
           </div>
 
-          {/* Company Settings */}
-          {activeTab === 'company' && (
+          {/* Company Settings (Managers only) */}
+          {isManager && activeTab === 'company' && (
             <div className="bg-white rounded-2xl border-2 border-slate-200 p-8">
               <h2 className="text-xl font-bold text-slate-800 mb-6">Company Information</h2>
               <form onSubmit={handleSaveCompanySettings} className="space-y-6">

@@ -1,5 +1,6 @@
 import Department from '../models/Department.js';
 import Company from '../models/Company.js';
+import Channel from '../models/Channel.js';
 
 const ensureMember = async (companyId, userId) => {
   if (!companyId) return { error: 'Company ID is required' };
@@ -25,6 +26,22 @@ export const createDepartment = async (req, res) => {
     }
     
     const dept = await Department.create({ name, company: company._id, description: description || '', managers: managers || [] });
+    
+    // Automatically create a channel for the department
+    try {
+      const channelName = `#${name.toLowerCase().replace(/\\s+/g, '-')}`;
+      await Channel.create({
+        name: channelName,
+        company: company._id,
+        department: name,
+        members: [req.user._id],
+        type: 'public'
+      });
+    } catch (channelErr) {
+      console.error('Failed to create department channel:', channelErr);
+      // Continue even if channel creation fails
+    }
+    
     res.status(201).json(dept);
   } catch (e) {
     res.status(500).json({ message: e.message });

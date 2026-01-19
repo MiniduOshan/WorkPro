@@ -86,6 +86,18 @@ export default function Channels() {
     }
   };
 
+  const deleteChannel = async (channelId) => {
+    if (!window.confirm('Are you sure you want to delete this channel? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/api/channels/${channelId}`);
+      if (selected?._id === channelId) setSelected(null);
+      loadChannels();
+    } catch (err) {
+      console.error('Failed to delete channel:', err);
+      alert('Failed to delete channel: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   const formatTime = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -153,21 +165,30 @@ export default function Channels() {
               <div className="space-y-1">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Channels</p>
                 {channels.map((channel) => (
-                  <button
-                    key={channel._id}
-                    onClick={() => setSelected(channel)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${
-                      selected?._id === channel._id
-                        ? `bg-${theme.primaryLight} text-${theme.primary} font-semibold`
-                        : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <IoRadioButtonOnOutline className="text-lg shrink-0" />
-                    <span className="truncate grow">{channel.name}</span>
-                    {channel.type === 'private' && (
-                      <IoLockClosedOutline className="text-sm text-slate-400" />
-                    )}
-                  </button>
+                  <div key={channel._id} className="relative group">
+                    <button
+                      onClick={() => setSelected(channel)}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${
+                        selected?._id === channel._id
+                          ? `bg-blue-100 text-blue-600 font-semibold`
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <IoRadioButtonOnOutline className="text-lg shrink-0" />
+                      <span className="truncate grow">{channel.name}</span>
+                      {channel.type === 'private' && (
+                        <IoLockClosedOutline className="text-sm text-slate-400" />
+                      )}
+                    </button>
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => deleteChannel(channel._id)}
+                      className="absolute right-2 top-2 p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-100 text-red-600 rounded transition-all"
+                      title="Delete channel"
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -197,8 +218,12 @@ export default function Channels() {
                     </p>
                   </div>
                 </div>
-                <button className="p-2 hover:bg-slate-100 rounded-lg transition">
-                  <IoEllipsisVerticalOutline className="text-xl text-slate-500" />
+                <button 
+                  onClick={() => deleteChannel(selected._id)}
+                  className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 hover:text-red-700"
+                  title="Delete channel"
+                >
+                  <IoEllipsisVerticalOutline className="text-xl" />
                 </button>
               </div>
 
@@ -225,7 +250,7 @@ export default function Channels() {
                         {/* Avatar */}
                         <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white ${
                           isOwnMessage 
-                            ? 'bg-linear-to-br from-green-500 to-emerald-600'
+                            ? 'bg-linear-to-br from-green-500 to-green-600'
                             : 'bg-linear-to-br from-blue-500 to-purple-600'
                         }`}>
                           {msg.user?.profilePic ? (

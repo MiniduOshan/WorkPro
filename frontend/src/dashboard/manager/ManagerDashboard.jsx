@@ -12,6 +12,7 @@ import {
   IoSendOutline,
   IoCopyOutline,
   IoLinkOutline,
+  IoCheckmarkCircleOutline,
   IoNotificationsOutline,
   IoAddOutline,
   IoCloseCircleOutline,
@@ -168,70 +169,93 @@ const CompanyCreationModal = ({
   </div>
 );
 
-const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, setShowInviteModal, companyData }) => (
+const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, setShowInviteModal, companyData, inviteLink, inviteGenerating, onCopyLink, copied }) => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
-        <h2 className="text-2xl font-bold">Add Team Member</h2>
-        <p className="text-blue-100 mt-1">Send invitation to join your company</p>
+        <h2 className="text-2xl font-bold">Create Invite Link</h2>
+        <p className="text-blue-100 mt-1">Generate a link to join your company</p>
       </div>
-      
-      <form onSubmit={handleInviteEmployee} className="p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Email Address *</label>
-          <input 
-            type="email"
-            required
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="employee@example.com"
-            value={inviteForm.email}
-            onChange={(e) => setInviteForm({...inviteForm, email: e.target.value})}
-          />
-        </div>
 
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Role *</label>
-          <select 
-            required
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={inviteForm.role}
-            onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
-          >
-            <option value="employee">Employee</option>
-            <option value="manager">Manager</option>
-          </select>
-        </div>
+      {!inviteLink ? (
+        <form onSubmit={handleInviteEmployee} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Role *</label>
+            <select 
+              required
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+              value={inviteForm.role}
+              onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
+            >
+              <option value="employee">Employee</option>
+              <option value="manager">Manager</option>
+            </select>
+          </div>
 
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Department</label>
-          <select 
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={inviteForm.department}
-            onChange={(e) => setInviteForm({...inviteForm, department: e.target.value})}
-          >
-            <option value="">Select Department</option>
-            {companyData?.members && [...new Set(companyData.members.map(m => m.department))].map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Department</label>
+            <select 
+              className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+              value={inviteForm.department}
+              onChange={(e) => setInviteForm({...inviteForm, department: e.target.value})}
+            >
+              <option value="">Select Department</option>
+              {companyData?.members && [...new Set(companyData.members.map(m => m.department))].map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
+          <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
+            <button 
+              type="button" 
+              onClick={() => setShowInviteModal(false)}
+              className="flex-1 border-2 border-gray-300 text-gray-700 py-2 rounded-lg"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={inviteGenerating}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg disabled:opacity-50"
+            >
+              {inviteGenerating ? 'Generating…' : 'Generate Link'}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="p-6 space-y-4">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+            <IoCheckmarkCircleOutline className="text-2xl text-green-600" />
+            <div>
+              <p className="font-semibold text-green-800">Link Created!</p>
+              <p className="text-sm text-green-700">Share this link to join the team</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-slate-600 uppercase">Invite Link</p>
+            <div className="bg-white p-4 rounded-lg border-2 border-slate-200 break-all max-h-24 overflow-y-auto">
+              <code className="text-sm text-slate-700">{inviteLink}</code>
+            </div>
+          </div>
+
           <button 
-            type="button" 
-            onClick={() => setShowInviteModal(false)}
-            className="flex-1 border-2 border-gray-300 text-gray-700 py-2 rounded-lg"
+            onClick={onCopyLink}
+            className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${copied ? 'bg-blue-600 text-white' : 'border-2 border-slate-200 text-slate-700 hover:border-slate-300'}`}
           >
-            Cancel
+            <IoCopyOutline className="text-xl" />
+            {copied ? 'Copied!' : 'Copy Link'}
           </button>
+
           <button 
-            type="submit"
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg"
+            onClick={() => { setShowInviteModal(false); }}
+            className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
           >
-            Send Invitation
+            Done
           </button>
         </div>
-      </form>
+      )}
     </div>
   </div>
 );
@@ -254,21 +278,19 @@ export default function ManagerDashboard() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showTaskModal, setShowTaskModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteLink, setInviteLink] = useState('');
+  const [inviteGenerating, setInviteGenerating] = useState(false);
+  const [copiedInvite, setCopiedInvite] = useState(false);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
   const [aiSummary, setAiSummary] = useState('');
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
-  
-  const [newTask, setNewTask] = useState({
-    title: '', description: '', status: 'to-do', priority: 'medium', assignedTo: [], dueDate: ''
-  });
   const [companyForm, setCompanyForm] = useState({
     name: '', description: '', website: '', mission: '', vision: '', industry: '', departments: ['Tech', 'Marketing', 'HR']
   });
   const [newDept, setNewDept] = useState('');
   const [inviteForm, setInviteForm] = useState({
-    email: '', role: 'employee', department: ''
+    role: 'employee', department: ''
   });
 
   useEffect(() => {
@@ -380,78 +402,29 @@ export default function ManagerDashboard() {
   const handleInviteEmployee = async (e) => {
     e.preventDefault();
     try {
+      setInviteGenerating(true);
       const companyId = localStorage.getItem('companyId');
-      await api.post(`/api/companies/${companyId}/invitations`, inviteForm);
-      setShowInviteModal(false);
-      setInviteForm({ email: '', role: 'employee', department: '' });
-      alert('Invitation sent successfully!');
+      const { data } = await api.post(`/api/companies/${companyId}/invitations`, {
+        email: `invite-${Date.now()}@internal.workpro`,
+        role: inviteForm.role,
+        department: inviteForm.department || ''
+      });
+      setInviteLink(data.link);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to send invitation');
+      alert(err.response?.data?.message || 'Failed to create invitation link');
+    } finally {
+      setInviteGenerating(false);
     }
   };
 
   const copyInviteLink = () => {
-    const link = `join.workpro.io/${companyData?.name?.toLowerCase().replace(/\s+/g, '-') || 'company'}-2024`;
-    navigator.clipboard.writeText(link);
-    alert('Link copied!');
+    if (!inviteLink) return;
+    navigator.clipboard.writeText(inviteLink);
+    setCopiedInvite(true);
+    setTimeout(() => setCopiedInvite(false), 2000);
   };
 
-  const handleCreateTask = async (e) => {
-    e.preventDefault();
-    const companyId = localStorage.getItem('companyId');
-    
-    if (newTask.assignedTo.length === 0) {
-      alert('Please select at least one employee to assign the task to');
-      return;
-    }
 
-    try {
-      // Create task for each assigned employee
-      const taskPromises = newTask.assignedTo.map(employeeId => 
-        api.post('/api/tasks', { 
-          title: newTask.title,
-          description: newTask.description,
-          status: newTask.status,
-          priority: newTask.priority,
-          dueDate: newTask.dueDate,
-          assignee: employeeId,
-          companyId 
-        })
-      );
-      
-      const createdTasks = await Promise.all(taskPromises);
-
-      // If multiple employees are assigned, create a channel for them
-      if (newTask.assignedTo.length > 1) {
-        try {
-          const channelName = `${newTask.title.substring(0, 30)} Team`;
-          await api.post('/api/channels', {
-            name: channelName,
-            description: `Collaboration channel for: ${newTask.title}`,
-            companyId,
-            members: newTask.assignedTo,
-            isPrivate: false
-          });
-          alert(`Task created successfully for ${newTask.assignedTo.length} employees! A team channel "${channelName}" has been created for collaboration.`);
-        } catch (channelErr) {
-          console.error('Failed to create channel:', channelErr);
-          alert(`Task created successfully for ${newTask.assignedTo.length} employees! However, channel creation failed.`);
-        }
-      } else {
-        alert('Task created successfully!');
-      }
-
-      setShowTaskModal(false);
-      setNewTask({ title: '', description: '', status: 'to-do', priority: 'medium', assignedTo: [], dueDate: '' });
-      
-      // Refresh dashboard data
-      fetchDashboardData();
-    } catch (err) {
-      console.error('Failed to create task:', err);
-      console.error('Error response:', err.response?.data);
-      alert(err.response?.data?.message || 'Failed to create task. Please try again.');
-    }
-  };
 
   const getCapacityColor = (capacity) => {
     if (capacity < 50) return 'bg-emerald-500';
@@ -491,6 +464,10 @@ export default function ManagerDashboard() {
           handleInviteEmployee={handleInviteEmployee}
           setShowInviteModal={setShowInviteModal}
           companyData={companyData}
+          inviteLink={inviteLink}
+          inviteGenerating={inviteGenerating}
+          onCopyLink={copyInviteLink}
+          copied={copiedInvite}
         />
       )}
 
@@ -516,12 +493,6 @@ export default function ManagerDashboard() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-slate-100 rounded-full py-2 px-4 text-sm focus:ring-2 focus:ring-blue-500 w-64"
               />
-              <button 
-                onClick={() => setShowTaskModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
-              >
-                <IoAddOutline /> Assign Task
-              </button>
             </div>
           </header>
 
@@ -596,149 +567,7 @@ export default function ManagerDashboard() {
       )}
       </div>
 
-      {/* Task Assignment Modal */}
-      {showTaskModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-800">Assign New Task</h2>
-              <button 
-                onClick={() => setShowTaskModal(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition"
-              >
-                <IoCloseCircleOutline className="text-2xl text-slate-400" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateTask}>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Task Title *</label>
-                <input
-                  type="text"
-                  value={newTask.title}
-                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
-                  style={{ caretColor: '#2563eb' }}
-                  placeholder="Enter task title"
-                  required
-                />
-              </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
-                <textarea
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none"
-                  style={{ caretColor: '#2563eb' }}
-                  placeholder="Add task details..."
-                  rows="4"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Priority</label>
-                  <select
-                    value={newTask.priority}
-                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-                  <select
-                    value={newTask.status}
-                    onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
-                  >
-                    <option value="to-do">To Do</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="blocked">Blocked</option>
-                    <option value="done">Done</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Due Date</label>
-                <input
-                  type="date"
-                  value={newTask.dueDate}
-                  onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Assign To * (Select one or multiple employees)
-                </label>
-                <div className="border-2 border-slate-200 rounded-xl p-4 max-h-48 overflow-y-auto bg-slate-50">
-                  {teamMembers.length === 0 ? (
-                    <p className="text-slate-400 text-sm text-center py-4">No team members available</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {teamMembers.map((member) => (
-                        <label 
-                          key={member.id} 
-                          className="flex items-center gap-3 p-2 hover:bg-white rounded-lg cursor-pointer transition"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={newTask.assignedTo.includes(member.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewTask({ ...newTask, assignedTo: [...newTask.assignedTo, member.id] });
-                              } else {
-                                setNewTask({ ...newTask, assignedTo: newTask.assignedTo.filter(id => id !== member.id) });
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                          />
-                          <div className={`w-8 h-8 rounded-full ${getAvatarColor(member.color)} flex items-center justify-center font-bold text-xs`}>
-                            {member.initials}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-slate-800">{member.name}</p>
-                            <p className="text-xs text-slate-500">{member.role} - {member.department}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {newTask.assignedTo.length > 0 && (
-                  <p className="text-xs text-slate-500 mt-2">
-                    {newTask.assignedTo.length} employee{newTask.assignedTo.length > 1 ? 's' : ''} selected
-                    {newTask.assignedTo.length > 1 && ' - A team channel will be created automatically'}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowTaskModal(false)}
-                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
-                >
-                  Create Task
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }

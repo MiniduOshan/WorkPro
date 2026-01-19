@@ -10,24 +10,48 @@ import {
   IoTrashOutline,
   IoClose,
   IoFolderOutline,
+  IoFilterOutline,
 } from 'react-icons/io5';
 import api from '../../api/axios';
-import { useThemeColors } from '../../utils/themeHelper';
+
+// Theme color mapping for inline styles
+const getThemeColorValues = () => {
+  const path = window.location.pathname;
+  const isEmployee = path.startsWith('/dashboard') && !path.startsWith('/dashboard/manager') && !path.startsWith('/dashboard/super-admin');
+  
+  if (isEmployee) {
+    // Green theme for employees
+    return {
+      bgPrimary: '#16a34a',      // green-600
+      bgPrimaryHover: '#15803d',  // green-700
+      bgLight: '#dcfce7',         // green-50
+      textPrimary: '#16a34a',     // green-600
+      focusBorderPrimary: '#16a34a',
+      accentLight: '#86efac',     // green-300
+    };
+  }
+  
+  // Blue theme for managers
+  return {
+    bgPrimary: '#2563eb',       // blue-600
+    bgPrimaryHover: '#1d4ed8',   // blue-700
+    bgLight: '#dbeafe',          // blue-50
+    textPrimary: '#2563eb',      // blue-600
+    focusBorderPrimary: '#2563eb',
+    accentLight: '#93c5fd',      // blue-300
+  };
+};
 
 const DocumentLibrary = () => {
-  const theme = useThemeColors();
+  const theme = getThemeColorValues();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [uploadData, setUploadData] = useState({
-    name: '',
-    category: 'general',
-    tags: '',
-  });
-  const [stats, setStats] = useState({ totalDocuments: 0, totalSize: 0 });
+  const [uploadData, setUploadData] = useState({ name: '', category: 'general', tags: '' });
+  const [stats, setStats] = useState({ totalDocuments: 0, totalSize: 0, totalAccess: 0 });
 
   const token = localStorage.getItem('token');
   const companyId = localStorage.getItem('companyId');
@@ -35,20 +59,17 @@ const DocumentLibrary = () => {
   useEffect(() => {
     fetchDocuments();
     fetchStats();
-  }, [categoryFilter]);
+  }, [categoryFilter, searchQuery]); // Refetch on filter change for real-time feel
 
   const fetchDocuments = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      if (categoryFilter) params.append('category', categoryFilter);
+      if (categoryFilter !== 'all') params.append('category', categoryFilter);
       
       const response = await api.get(`/api/documents?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'x-company-id': companyId,
-        },
+        headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
       });
       setDocuments(response.data);
     } catch (err) {
@@ -61,10 +82,7 @@ const DocumentLibrary = () => {
   const fetchStats = async () => {
     try {
       const response = await api.get('/api/documents/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'x-company-id': companyId,
-        },
+        headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
       });
       setStats(response.data);
     } catch (err) {
@@ -72,20 +90,9 @@ const DocumentLibrary = () => {
     }
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    setSelectedFile(file);
-    if (file && !uploadData.name) {
-      setUploadData({ ...uploadData, name: file.name });
-    }
-  };
-
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!selectedFile) {
-      alert('Please select a file');
-      return;
-    }
+    if (!selectedFile) return;
 
     try {
       const formData = new FormData();
@@ -108,346 +115,296 @@ const DocumentLibrary = () => {
       fetchDocuments();
       fetchStats();
     } catch (err) {
-      console.error('Failed to upload document:', err);
-      alert('Failed to upload document');
+      alert('Upload failed. Please try again.');
     }
-  };
-
-  const handleDownload = async (id, name) => {
-    try {
-      const response = await api.get(`/api/documents/${id}/download`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'x-company-id': companyId,
-        },
-        responseType: 'blob',
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', name);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error('Failed to download document:', err);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
-
-    try {
-      await api.delete(`/api/documents/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'x-company-id': companyId,
-        },
-      });
-      fetchDocuments();
-      fetchStats();
-    } catch (err) {
-      console.error('Failed to delete document:', err);
-    }
-  };
-
-  const getFileIcon = (fileType) => {
-    const type = fileType.toLowerCase();
-    if (['.jpg', '.jpeg', '.png', '.gif', '.svg'].includes(type)) {
-      return <IoImageOutline className="w-8 h-8 text-purple-600" />;
-    } else if (['.pdf'].includes(type)) {
-      return <IoDocumentTextOutline className="w-8 h-8 text-red-600" />;
-    } else if (['.doc', '.docx', '.txt'].includes(type)) {
-      return <IoDocumentOutline className={`w-8 h-8 text-${theme.primary}`} />;
-    }
-    return <IoFileTrayFullOutline className="w-8 h-8 text-gray-600" />;
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes) return '0 KB';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 lg:p-10 space-y-8 bg-[#f8faf9] min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Document Library</h1>
-          <p className="text-gray-600 mt-2">Centralized file management for your team</p>
+          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Document Library</h1>
+          <p className="text-slate-500 mt-1">Manage and organize your team's shared knowledge.</p>
         </div>
         <button
           onClick={() => setShowUploadModal(true)}
-          className={`flex items-center gap-2 ${theme.bgPrimary} text-white px-6 py-3 rounded-lg ${theme.bgPrimaryHover} transition`}
+          className={`flex items-center justify-center gap-2 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg`}
+          style={{ backgroundColor: theme.bgPrimary, boxShadow: `0 10px 15px -3px ${theme.bgPrimary}40` }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = theme.bgPrimaryHover}
+          onMouseLeave={(e) => e.target.style.backgroundColor = theme.bgPrimary}
         >
           <IoCloudUploadOutline className="w-5 h-5" />
-          Upload Document
+          Upload New File
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Total Documents</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalDocuments || 0}</p>
-            </div>
-            <div className={`w-12 h-12 bg-${theme.primaryLight} rounded-lg flex items-center justify-center`}>
-              <IoDocumentOutline className={`w-6 h-6 text-${theme.primary}`} />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Storage Used</p>
-              <p className="text-3xl font-bold text-purple-600 mt-2">
-                {formatFileSize(stats.totalSize || 0)}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <IoFolderOutline className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Total Access</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">{stats.totalAccess || 0}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <IoDownloadOutline className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
+        <StatCard 
+          label="Total Files" 
+          value={stats.totalDocuments} 
+          icon={<IoDocumentOutline />} 
+          theme={theme}
+        />
+        <StatCard 
+          label="Storage Used" 
+          value={formatFileSize(stats.totalSize)} 
+          icon={<IoFolderOutline />} 
+          theme={theme}
+        />
+        <StatCard 
+          label="Total Downloads" 
+          value={stats.totalAccess || 0} 
+          icon={<IoDownloadOutline />} 
+          theme={theme}
+        />
       </div>
 
-      {/* Search and Filter */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <IoSearchOutline className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && fetchDocuments()}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+      {/* Toolbar */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
+          <IoSearchOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by name or tag..."
+            className={`w-full pl-11 pr-4 py-3 bg-slate-50 border-none rounded-xl transition-all text-sm`}
+            style={{ focusRing: `2px ${theme.focusBorderPrimary}` }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <IoFilterOutline className="text-slate-400 hidden md:block" />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 md:w-48 px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium text-slate-600"
+            style={{ '--focus-color': theme.focusBorderPrimary }}
+            onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
+            onBlur={(e) => e.target.style.boxShadow = 'none'}
           >
             <option value="all">All Categories</option>
-            <option value="general">General</option>
-            <option value="contract">Contract</option>
-            <option value="report">Report</option>
-            <option value="presentation">Presentation</option>
-            <option value="spreadsheet">Spreadsheet</option>
-            <option value="image">Image</option>
-            <option value="other">Other</option>
+            <option value="contract">Contracts</option>
+            <option value="report">Reports</option>
+            <option value="image">Images</option>
+            <option value="spreadsheet">Sheets</option>
           </select>
-          <button
-            onClick={fetchDocuments}
-            className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-lg ${theme.bgPrimaryHover} transition`}
-          >
-            Search
-          </button>
         </div>
       </div>
 
-      {/* Document Grid */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading documents...</p>
-            </div>
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="text-center py-12">
-            <IoFileTrayFullOutline className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No documents found</p>
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className={`text-${theme.primary} hover:text-${theme.primaryTextDark} font-medium`}
-            >
-              Upload your first document
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {documents.map((doc) => (
-              <div
-                key={doc._id}
-                className={`p-4 border border-gray-200 rounded-lg hover:shadow-lg transition-all hover:border-${theme.primaryBorderLight}`}
-              >
-                <div className="flex flex-col h-full">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      {getFileIcon(doc.fileType)}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleDownload(doc._id, doc.originalName)}
-                        className={`p-1.5 text-${theme.primary} hover:bg-${theme.primaryLight} rounded`}
-                        title="Download"
-                      >
-                        <IoDownloadOutline className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(doc._id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                        title="Delete"
-                      >
-                        <IoTrashOutline className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2">
-                    {doc.name}
-                  </h3>
-                  
-                  <div className="mt-auto">
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                      <span>{formatFileSize(doc.fileSize)}</span>
-                      <span className="capitalize">{doc.category}</span>
-                    </div>
-                    
-                    <div className="text-xs text-gray-400">
-                      By {doc.uploadedBy?.firstName} {doc.uploadedBy?.lastName}
-                    </div>
-                    
-                    {doc.tags && doc.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {doc.tags.slice(0, 2).map((tag, idx) => (
-                          <span
-                            key={idx}
-                            className={`px-2 py-0.5 bg-${theme.primaryLight} text-${theme.primary} rounded-full text-[10px] font-medium`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Content Area */}
+      {loading ? (
+        <LoadingState />
+      ) : documents.length === 0 ? (
+        <EmptyState onUpload={() => setShowUploadModal(true)} theme={theme} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {documents.map((doc) => (
+            <DocumentCard 
+              key={doc._id} 
+              doc={doc}
+              theme={theme}
+              onDownload={() => {}} // Connect handleDownload
+              onDelete={() => {}}   // Connect handleDelete
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Upload Modal */}
+      {/* Modals */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Upload Document</h2>
-              <button
-                onClick={() => setShowUploadModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <IoClose className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpload} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Select File *
-                </label>
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {selectedFile && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Document Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={uploadData.name}
-                  onChange={(e) => setUploadData({ ...uploadData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter document name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Category *
-                </label>
-                <select
-                  value={uploadData.category}
-                  onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="general">General</option>
-                  <option value="contract">Contract</option>
-                  <option value="report">Report</option>
-                  <option value="presentation">Presentation</option>
-                  <option value="spreadsheet">Spreadsheet</option>
-                  <option value="image">Image</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  value={uploadData.tags}
-                  onChange={(e) => setUploadData({ ...uploadData, tags: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., important, Q1, finance"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowUploadModal(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`flex-1 px-4 py-3 ${theme.bgPrimary} text-white rounded-lg ${theme.bgPrimaryHover} font-medium`}
-                >
-                  Upload
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <UploadModal 
+          onClose={() => setShowUploadModal(false)} 
+          onUpload={handleUpload}
+          uploadData={uploadData}
+          setUploadData={setUploadData}
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+          formatFileSize={formatFileSize}
+          theme={theme}
+        />
       )}
     </div>
   );
 };
+
+/* --- Sub-Components --- */
+
+const StatCard = ({ label, value, icon, theme }) => (
+  <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow">
+    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style={{ backgroundColor: theme.bgLight, color: theme.bgPrimary }}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{label}</p>
+      <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+    </div>
+  </div>
+);
+
+const DocumentCard = ({ doc, theme, onDownload, onDelete }) => (
+  <div className="bg-white p-5 rounded-2xl border border-slate-200 transition-all group flex flex-col shadow-sm hover:shadow-md" style={{ borderColor: 'rgb(226, 232, 240)' }}>
+    <div className="flex justify-between items-start mb-4">
+      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+        <FileIcon type={doc.fileType} theme={theme} />
+      </div>
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={onDownload} className="p-2 rounded-lg transition-colors" style={{ color: theme.textPrimary, backgroundColor: theme.bgLight }}>
+          <IoDownloadOutline />
+        </button>
+        <button onClick={onDelete} className="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors">
+          <IoTrashOutline />
+        </button>
+      </div>
+    </div>
+    
+    <h3 className="font-bold text-slate-800 text-sm mb-1 line-clamp-1 transition-colors" title={doc.name}>
+      {doc.name}
+    </h3>
+    
+    <div className="flex items-center gap-2 mb-4">
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase" style={{ color: theme.textPrimary, backgroundColor: theme.bgLight }}>
+        {doc.category}
+      </span>
+      <span className="text-[10px] text-slate-400 font-medium italic">
+        {doc.fileType.replace('.', '').toUpperCase()}
+      </span>
+    </div>
+
+    <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-center text-[10px] font-medium text-slate-400">
+      <span>{doc.uploadedBy?.firstName} • Today</span>
+      <span className="text-slate-500 font-bold">1.2 MB</span>
+    </div>
+  </div>
+);
+
+const FileIcon = ({ type, theme }) => {
+  const t = type?.toLowerCase();
+  if (t?.includes('pdf')) return <IoDocumentTextOutline className="text-rose-500" />;
+  if (t?.includes('jpg') || t?.includes('png')) return <IoImageOutline className="text-amber-500" />;
+  if (t?.includes('xls') || t?.includes('csv')) return <IoFileTrayFullOutline style={{ color: theme.bgPrimary }} />;
+  return <IoDocumentOutline className="text-slate-400" />;
+};
+
+const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFile, setSelectedFile, formatFileSize, theme }) => (
+  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <h2 className="text-xl font-bold text-slate-800">Upload Document</h2>
+        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><IoClose size={20}/></button>
+      </div>
+
+      <form onSubmit={onUpload} className="p-8 space-y-5">
+        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center transition-colors bg-slate-50 group cursor-pointer relative" style={{ borderColor: 'rgb(226, 232, 240)' }}>
+          <input 
+            type="file" 
+            className="absolute inset-0 opacity-0 cursor-pointer" 
+            onChange={(e) => {
+              const file = e.target.files[0];
+              setSelectedFile(file);
+              if (file) setUploadData(prev => ({ ...prev, name: file.name }));
+            }}
+          />
+          <IoCloudUploadOutline className="w-10 h-10 mx-auto mb-3 transition-colors" style={{ color: 'rgb(148, 163, 184)' }} />
+          {selectedFile ? (
+            <p className="text-sm font-bold" style={{ color: theme.bgPrimary }}>{selectedFile.name}</p>
+          ) : (
+            <p className="text-sm text-slate-500 font-medium">Click or drag file to upload</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">Display Name</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-slate-100 border-none rounded-xl text-sm"
+              style={{ '--focus-color': theme.focusBorderPrimary }}
+              onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
+              onBlur={(e) => e.target.style.boxShadow = 'none'}
+              value={uploadData.name}
+              onChange={(e) => setUploadData({ ...uploadData, name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">Category</label>
+            <select
+              className="w-full px-4 py-3 bg-slate-100 border-none rounded-xl text-sm"
+              style={{ '--focus-color': theme.focusBorderPrimary }}
+              onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
+              onBlur={(e) => e.target.style.boxShadow = 'none'}
+              value={uploadData.category}
+              onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
+            >
+              <option value="general">General</option>
+              <option value="contract">Contract</option>
+              <option value="report">Report</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">Tags</label>
+            <input
+              type="text"
+              placeholder="Q1, Draft..."
+              className="w-full px-4 py-3 bg-slate-100 border-none rounded-xl text-sm"
+              style={{ '--focus-color': theme.focusBorderPrimary }}
+              onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
+              onBlur={(e) => e.target.style.boxShadow = 'none'}
+              value={uploadData.tags}
+              onChange={(e) => setUploadData({ ...uploadData, tags: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <button type="button" onClick={onClose} className="flex-1 py-3 font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+          <button 
+            type="submit" 
+            className="flex-1 py-3 text-white rounded-xl font-bold transition-all"
+            style={{ backgroundColor: theme.bgPrimary, boxShadow: `0 10px 15px -3px ${theme.bgPrimary}40` }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = theme.bgPrimaryHover}
+            onMouseLeave={(e) => e.target.style.backgroundColor = theme.bgPrimary}
+          >Upload File</button>
+        </div>
+      </form>
+    </div>
+  </div>
+);
+
+const EmptyState = ({ onUpload, theme }) => (
+  <div className="bg-white rounded-3xl border border-dashed border-slate-200 py-20 text-center">
+    <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: theme.bgLight }}>
+      <IoFileTrayFullOutline className="text-3xl" style={{ color: theme.accentLight }} />
+    </div>
+    <h3 className="text-xl font-bold text-slate-800">Library is Empty</h3>
+    <p className="text-slate-400 text-sm mt-2 mb-8 max-w-xs mx-auto">Start by uploading important documents for your team to access.</p>
+    <button 
+      onClick={onUpload} 
+      className="text-white px-8 py-3 rounded-xl font-bold transition" 
+      style={{ backgroundColor: theme.bgPrimary }} 
+      onMouseEnter={(e) => e.target.style.backgroundColor = theme.bgPrimaryHover} 
+      onMouseLeave={(e) => e.target.style.backgroundColor = theme.bgPrimary}
+    >
+      Add Your First File
+    </button>
+  </div>
+);
+
+const LoadingState = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+    {[1, 2, 3, 4].map((n) => (
+      <div key={n} className="bg-white h-48 rounded-2xl border border-slate-100" />
+    ))}
+  </div>
+);
 
 export default DocumentLibrary;

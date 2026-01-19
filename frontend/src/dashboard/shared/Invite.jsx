@@ -14,7 +14,6 @@ import {
 export default function Invite() {
   const [companyId, setCompanyId] = useState('');
   const [company, setCompany] = useState(null);
-  const [email, setEmail] = useState('');
   const [role, setRole] = useState('employee');
   const [department, setDepartment] = useState('');
   const [link, setLink] = useState('');
@@ -46,13 +45,12 @@ export default function Invite() {
     setLoading(true);
     try {
       const { data } = await api.post(`/api/companies/${companyId}/invitations`, { 
-        email, 
+        email: `invite-${Date.now()}@internal.workpro`,
         role,
         department 
       });
       setLink(data.link);
       setMsg('Invitation created successfully! 🎉');
-      setEmail('');
       setDepartment('');
     } catch (err) {
       setMsg(err.response?.data?.message || 'Failed to create invitation');
@@ -100,22 +98,6 @@ export default function Invite() {
               )}
 
               <form onSubmit={send} className="space-y-6">
-                {/* Email Input */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <IoMailOutline className="inline mr-2 text-xl" />
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors"
-                    placeholder="colleague@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
                 {/* Role Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -178,12 +160,12 @@ export default function Invite() {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                      Creating Invitation...
+                      Creating Invite Link...
                     </>
                   ) : (
                     <>
                       <IoSendOutline className="text-xl" />
-                      Create Invitation Link
+                      Generate Invite Link
                     </>
                   )}
                 </button>
@@ -235,7 +217,7 @@ export default function Invite() {
                       )}
                     </button>
                     <a
-                      href={`mailto:${email}?subject=Join our team on WorkPro&body=You've been invited to join our team! Click here: ${link}`}
+                      href={`mailto:?subject=Join our team on WorkPro&body=You've been invited to join our team! Click here: ${link}`}
                       className="flex-1 px-4 py-3 border-2 border-indigo-600 text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
                     >
                       <IoMailOutline className="text-xl" />

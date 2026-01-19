@@ -208,32 +208,3 @@ Announcements: ${announcements.length}`;
     res.status(500).json({ message: error.message });
   }
 };
-
-// Chat assistant with lightweight context
-export const chatAssistant = async (req, res) => {
-  try {
-    const companyId = req.headers['x-company-id'];
-    const userId = req.user?._id;
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ message: 'Message is required' });
-
-    const [tasks, announcements] = await Promise.all([
-      Task.find({ company: companyId, assignee: userId }).sort({ updatedAt: -1 }).limit(5).select('title status dueDate'),
-      Announcement.find({ company: companyId }).sort({ createdAt: -1 }).limit(5).select('title createdAt'),
-    ]);
-
-    const context = `You are WorkPro assistant. Current user tasks: ${tasks
-      .map((t) => `${t.title} [${t.status}] due ${t.dueDate ? new Date(t.dueDate).toDateString() : 'unscheduled'}`)
-      .join('; ') || 'no assigned tasks'}. Announcements: ${announcements.map((a) => a.title).join('; ') || 'none'}.`;
-
-    const aiResult = await generateAIResponse(
-      `${context} Keep answers under 120 words and be practical.`,
-      message,
-      { maxTokens: 200, temperature: 0.5, fallback: 'AI assistant unavailable right now. Please try again later.' }
-    );
-
-    res.json({ reply: aiResult.content, model: aiResult.model });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};

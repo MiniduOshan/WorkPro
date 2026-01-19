@@ -65,6 +65,7 @@ const EmployeeSidebar = () => {
     { name: 'Teams', icon: IoPeopleOutline, path: '/dashboard/teams' },
     { name: 'Departments', icon: IoBusinessOutline, path: '/dashboard/departments' },
     { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/documents' },
+    { name: 'Notes', icon: IoDocumentTextOutline, path: '/dashboard/notes' },
   ];
 
   const communicationLinks = [

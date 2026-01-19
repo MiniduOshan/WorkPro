@@ -22,7 +22,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import superAdminRoutes from './routes/superAdminRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
-import chatbotRoutes from './routes/chatbotRoutes.js';
+import notesRoutes from './routes/notesRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -99,7 +99,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/notes', notesRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {
