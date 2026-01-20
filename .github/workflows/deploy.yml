@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Deploy to Azure VM
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.AZURE_VM_IP }}
+        username: ${{ secrets.AZURE_VM_USER }}
+        key: ${{ secrets.AZURE_VM_SSH_KEY }}
+        script: |
+          PROJECT_DIR="/home/${{ secrets.AZURE_VM_USER }}/project"
+          NETWORK_NAME="academicpro-net"
+
+          echo "Removing existing project folder..."
+          rm -rf $PROJECT_DIR
+
+          echo "Cloning fresh code..."
+          git clone https://github.com/MiniduOshan/AcademicPro.git $PROJECT_DIR
+          cd $PROJECT_DIR
+
+          # Create a Docker network so frontend and backend can see each other
+          echo "Setting up Docker network..."
+          docker network create $NETWORK_NAME || true
+
+          # Using <<'EOF' (with quotes) ensures special characters in MONGO_URI 
+          # are not misinterpreted by the Linux shell.
+          echo "Creating backend .env file..."
+          cat <<'EOF' > $PROJECT_DIR/backend/.env
+          PORT=5000
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          CORS_ORIGIN=http://4.240.89.33
+          EOF
+
+          echo "Creating frontend .env.production..."
+          cat <<'EOF' > $PROJECT_DIR/frontend/.env.production
+          VITE_API_URL=http://4.240.89.33:5000/api
+          EOF
+
+          echo "Building Docker images..."
+          docker build -t academicpro-frontend ./frontend
+          docker build -t academicpro-backend ./backend
+
+          echo "Cleaning up old containers..."
+          docker rm -f academicpro-frontend academicpro-backend || true
+
+          # Start Backend on the network
+          echo "Starting Backend..."
+          docker run -d \
+            --name academicpro-backend \
+            --network $NETWORK_NAME \
+            --env-file $PROJECT_DIR/backend/.env \
+            -p 5000:5000 \
+            academicpro-backend
+
+          # Start Frontend on the same network
+          echo "Starting Frontend..."
+          docker run -d \
+            --name academicpro-frontend \
+            --network $NETWORK_NAME \
+            -p 80:80 \
+            academicpro-frontend
+
+          echo "Deployment completed successfully!"

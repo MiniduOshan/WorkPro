@@ -137,7 +137,7 @@ npm run dev
 ## 🧑‍💻 Frontend Pages
 
 - Company Creation: `/company/create`
-- Invitation Acceptance: `/invite/accept?token=...`
+- Invitation Acceptance: `/invite/join?token=...`
 - Dashboard Tasks: `/dashboard/tasks`
 - Dashboard Channels: `/dashboard/channels`
 
