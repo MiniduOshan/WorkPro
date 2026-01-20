@@ -28,7 +28,7 @@ jobs:
           rm -rf $PROJECT_DIR
 
           echo "Cloning fresh code..."
-          git clone https://github.com/MiniduOshan/AcademicPro.git $PROJECT_DIR
+          git clone https://github.com/MiniduOshan/WorkPro.git $PROJECT_DIR
           cd $PROJECT_DIR
 
           # Create a Docker network so frontend and backend can see each other
