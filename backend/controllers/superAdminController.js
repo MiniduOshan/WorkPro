@@ -5,6 +5,7 @@ import Task from '../models/Task.js';
 import Team from '../models/Team.js';
 import Department from '../models/Department.js';
 import Announcement from '../models/Announcement.js';
+import Notification from '../models/Notification.js';
 
 // Fixed super admin email - only this account has super admin access
 const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
@@ -437,6 +438,194 @@ export const getPublicPlatformContent = async (req, res) => {
     }
 
     res.json(superAdminRecord.platformContent);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Create maintenance message / notification
+export const createNotification = async (req, res) => {
+  const { type = 'maintenance', title, message, severity = 'medium', targetUsers = [], targetCompanies = [], endDate, actionUrl, actionLabel } = req.body;
+
+  try {
+    if (!await isSuperAdmin(req.user._id)) {
+      return res.status(403).json({ message: 'Only super admins can create notifications' });
+    }
+
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
+    const notification = await Notification.create({
+      type,
+      title,
+      message,
+      severity,
+      targetUsers: targetUsers.length > 0 ? targetUsers : [], // Empty = all users
+      targetCompanies: targetCompanies.length > 0 ? targetCompanies : [],
+      endDate: endDate || null,
+      actionUrl: actionUrl || null,
+      actionLabel: actionLabel || null,
+      isActive: true,
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json({ message: 'Notification created', notification });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get all notifications (for admin)
+export const getAllNotifications = async (req, res) => {
+  const { isActive, type, limit = 50, skip = 0 } = req.query;
+
+  try {
+    if (!await isSuperAdmin(req.user._id)) {
+      return res.status(403).json({ message: 'Only super admins can view all notifications' });
+    }
+
+    const filter = {};
+    if (isActive !== undefined) filter.isActive = isActive === 'true';
+    if (type) filter.type = type;
+
+    const notifications = await Notification.find(filter)
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(skip));
+
+    const total = await Notification.countDocuments(filter);
+
+    res.json({ notifications, total, skip: parseInt(skip), limit: parseInt(limit) });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get active notifications for a user
+export const getUserNotifications = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const currentDate = new Date();
+
+    // Get notifications that are:
+    // 1. Active
+    // 2. Not expired (no endDate or endDate is in future)
+    // 3. For all users OR specifically targets this user
+    // 4. For all companies OR specifically targets user's companies
+    const userCompanies = await Company.find({ 'members.user': req.user._id }).select('_id');
+    const companyIds = userCompanies.map(c => c._id);
+
+    const notifications = await Notification.find({
+      isActive: true,
+      startDate: { $lte: currentDate },
+      $or: [
+        { endDate: null },
+        { endDate: { $gte: currentDate } }
+      ],
+      $or: [
+        { targetUsers: { $size: 0 } },
+        { targetUsers: req.user._id }
+      ],
+      $or: [
+        { targetCompanies: { $size: 0 } },
+        { targetCompanies: { $in: companyIds } }
+      ]
+    })
+      .populate('createdBy', 'firstName lastName')
+      .sort({ createdAt: -1 });
+
+    // Get read status for this user
+    const notificationsWithReadStatus = notifications.map(notif => {
+      const isRead = notif.readBy.some(r => r.user.toString() === req.user._id.toString());
+      return {
+        ...notif.toObject(),
+        isRead
+      };
+    });
+
+    res.json(notificationsWithReadStatus);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Mark notification as read
+export const markNotificationAsRead = async (req, res) => {
+  const { notificationId } = req.params;
+
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const notification = await Notification.findById(notificationId);
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    // Check if already read
+    const isAlreadyRead = notification.readBy.some(r => r.user.toString() === req.user._id.toString());
+    if (!isAlreadyRead) {
+      notification.readBy.push({ user: req.user._id, readAt: new Date() });
+      await notification.save();
+    }
+
+    res.json({ message: 'Notification marked as read' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Update notification
+export const updateNotification = async (req, res) => {
+  const { notificationId } = req.params;
+  const { title, message, severity, endDate, isActive, actionUrl, actionLabel } = req.body;
+
+  try {
+    if (!await isSuperAdmin(req.user._id)) {
+      return res.status(403).json({ message: 'Only super admins can update notifications' });
+    }
+
+    const notification = await Notification.findById(notificationId);
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    if (title) notification.title = title;
+    if (message) notification.message = message;
+    if (severity) notification.severity = severity;
+    if (endDate !== undefined) notification.endDate = endDate || null;
+    if (isActive !== undefined) notification.isActive = isActive;
+    if (actionUrl !== undefined) notification.actionUrl = actionUrl || null;
+    if (actionLabel !== undefined) notification.actionLabel = actionLabel || null;
+
+    await notification.save();
+    res.json({ message: 'Notification updated', notification });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Delete notification
+export const deleteNotification = async (req, res) => {
+  const { notificationId } = req.params;
+
+  try {
+    if (!await isSuperAdmin(req.user._id)) {
+      return res.status(403).json({ message: 'Only super admins can delete notifications' });
+    }
+
+    const notification = await Notification.findByIdAndDelete(notificationId);
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    res.json({ message: 'Notification deleted' });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

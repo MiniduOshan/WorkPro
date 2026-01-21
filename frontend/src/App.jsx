@@ -23,6 +23,7 @@ import SuperAdminCompanies from './dashboard/superadmin/SuperAdminCompanies.jsx'
 import SuperAdminUsers from './dashboard/superadmin/SuperAdminUsers.jsx';
 import SuperAdminPricing from './dashboard/superadmin/SuperAdminPricing.jsx';
 import SuperAdminSettings from './dashboard/superadmin/SuperAdminSettings.jsx';
+import SuperAdminNotifications from './dashboard/superadmin/SuperAdminNotifications.jsx';
 import PlatformContent from './dashboard/superadmin/PlatformContent.jsx';
 import Profile from './dashboard/shared/Profile.jsx';
 import TasksBoard from './dashboard/shared/TasksBoard.jsx';
@@ -40,6 +41,7 @@ import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/shared/Invite.jsx';
 import SelectCompany from './pages/SelectCompany.jsx';
+import NotificationCenter from './components/NotificationCenter.jsx';
 
 
 // Simple Auth Check Simulation
@@ -194,6 +196,7 @@ function App() {
                     <Route path="pricing" element={<SuperAdminPricing />} />
                     <Route path="platform-content" element={<PlatformContent />} />
                     <Route path="settings" element={<SuperAdminSettings />} />
+                    <Route path="notifications" element={<SuperAdminNotifications />} />
                 </Route>
 
                 {/* Catch-all for 404 */}

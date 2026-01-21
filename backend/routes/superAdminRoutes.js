@@ -14,6 +14,12 @@ import {
   updatePlatformContent,
   getPlatformContent,
   getPublicPlatformContent,
+  createNotification,
+  getAllNotifications,
+  getUserNotifications,
+  markNotificationAsRead,
+  updateNotification,
+  deleteNotification,
 } from '../controllers/superAdminController.js';
 
 const router = Router();
@@ -36,6 +42,14 @@ router.put('/pricing-plans', protect, updatePricingPlans);
 // Platform content management
 router.get('/platform-content', protect, getPlatformContent);
 router.put('/platform-content', protect, updatePlatformContent);
+
+// Notifications / Maintenance Messages
+router.post('/notifications', protect, createNotification);
+router.get('/notifications/all', protect, getAllNotifications);
+router.get('/notifications', protect, getUserNotifications);
+router.put('/notifications/:notificationId', protect, updateNotification);
+router.delete('/notifications/:notificationId', protect, deleteNotification);
+router.post('/notifications/:notificationId/read', protect, markNotificationAsRead);
 
 // Activity tracking
 router.post('/activity', protect, logActivity);

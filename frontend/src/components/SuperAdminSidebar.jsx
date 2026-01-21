@@ -12,7 +12,8 @@ import {
   IoBriefcaseOutline,
   IoArrowBackOutline,
   IoDocumentTextOutline,
-  IoChatbubblesOutline
+  IoChatbubblesOutline,
+  IoNotificationsOutline
 } from 'react-icons/io5';
 
 const SuperAdminSidebar = () => {
@@ -84,6 +85,7 @@ const SuperAdminSidebar = () => {
     { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/super-admin/users' },
     { name: 'Pricing Plans', icon: IoWalletOutline, path: '/dashboard/super-admin/pricing' },
     { name: 'Platform Content', icon: IoDocumentTextOutline, path: '/dashboard/super-admin/platform-content' },
+    { name: 'Notifications', icon: IoNotificationsOutline, path: '/dashboard/super-admin/notifications' },
   ];
 
   const systemLinks = [

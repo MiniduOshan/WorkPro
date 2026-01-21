@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import SuperAdminSidebar from '../../components/SuperAdminSidebar';
-import { IoNotificationsOutline, IoChevronDownOutline } from 'react-icons/io5';
+import NotificationCenter from '../../components/NotificationCenter';
+import { IoChevronDownOutline } from 'react-icons/io5';
 
 const SuperAdminDashboardLayout = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -26,14 +27,8 @@ const SuperAdminDashboardLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Notifications */}
-            <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition">
-              <IoNotificationsOutline className="w-6 h-6" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            {/* Profile Dropdown */}
-            <div className="relative">
+            {/* Notification Center */}
+            <NotificationCenter />
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition"
