@@ -14,6 +14,7 @@ import {
 export default function Invite() {
   const [companyId, setCompanyId] = useState('');
   const [company, setCompany] = useState(null);
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState('employee');
   const [department, setDepartment] = useState('');
   const [link, setLink] = useState('');
@@ -40,17 +41,22 @@ export default function Invite() {
 
   const send = async (e) => {
     e.preventDefault();
+    if (!email || !email.includes('@')) {
+      setMsg('Please enter a valid email address');
+      return;
+    }
     setMsg('');
     setLink('');
     setLoading(true);
     try {
       const { data } = await api.post(`/api/companies/${companyId}/invitations`, { 
-        email: `invite-${Date.now()}@internal.workpro`,
+        email,
         role,
         department 
       });
       setLink(data.link);
       setMsg('Invitation created successfully! 🎉');
+      setEmail('');
       setDepartment('');
     } catch (err) {
       setMsg(err.response?.data?.message || 'Failed to create invitation');
@@ -98,6 +104,23 @@ export default function Invite() {
               )}
 
               <form onSubmit={send} className="space-y-6">
+                {/* Email Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <IoMailOutline className="inline mr-2 text-xl" />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="colleague@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">The invitee must signup/login with this exact email address</p>
+                </div>
+
                 {/* Role Selection */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -241,7 +264,7 @@ export default function Invite() {
                   </div>
                   <div>
                     <div className="font-medium text-gray-800">Create Invite</div>
-                    <div className="text-sm text-gray-600">Enter email and select role</div>
+                    <div className="text-sm text-gray-600">Enter invitee's email and select role</div>
                   </div>
                 </div>
                 <div className="flex gap-3">

@@ -145,6 +145,13 @@ export const acceptInvitation = async (req, res) => {
     if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
     if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
 
+    // Verify the logged-in user's email matches the invitation email
+    if (req.user.email.toLowerCase() !== inv.email.toLowerCase()) {
+      return res.status(403).json({ 
+        message: 'This invitation was sent to a different email address. Please login with the invited email or request a new invitation.' 
+      });
+    }
+
     const company = await Company.findById(inv.company);
     if (!company) return res.status(404).json({ message: 'Company not found' });
 

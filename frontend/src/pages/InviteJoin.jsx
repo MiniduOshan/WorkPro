@@ -48,7 +48,7 @@ export default function InviteJoin() {
     const userToken = localStorage.getItem('token');
     if (!userToken) {
       localStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
-      navigate('/auth');
+      navigate('/signup'); // Direct to signup page for new users joining via invitation
       return;
     }
 
@@ -70,7 +70,12 @@ export default function InviteJoin() {
       setSuccess(true);
       
       setTimeout(() => {
-        navigate('/dashboard');
+        // Navigate based on role
+        if (data.role === 'employee') {
+          navigate('/dashboard');
+        } else {
+          navigate('/dashboard/manager');
+        }
       }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to accept invitation');
@@ -267,8 +272,13 @@ export default function InviteJoin() {
             {/* Login Prompt */}
             {!localStorage.getItem('token') && (
               <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> You'll be redirected to login/signup before joining
+                <p className="text-sm text-blue-800 mb-2">
+                  <strong>Note:</strong> You'll be redirected to signup/login before joining
+                </p>
+                <p className="text-xs text-blue-700">
+                  This invitation was sent to: <strong>{invitation?.email}</strong>
+                  <br />
+                  Please signup or login with this email address.
                 </p>
               </div>
             )}

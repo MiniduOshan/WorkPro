@@ -108,7 +108,15 @@ const Auth = ({ type }) => {
         return;
       }
 
-      // 3. Handle Company-based Redirection for regular users
+      // 3. Check for pending invitation redirect
+      const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
+      if (redirectAfterLogin) {
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectAfterLogin);
+        return;
+      }
+
+      // 4. Handle Company-based Redirection for regular users
       if (isLogin) {
         try {
           const { data: companiesData } = await api.get('/api/companies/my-companies', {
@@ -145,7 +153,7 @@ const Auth = ({ type }) => {
           navigate('/company/create');
         }
       } else {
-        // 4. New User Signup - go directly to company creation
+        // 5. New User Signup - go directly to company creation
         navigate('/company/create');
       }
 
