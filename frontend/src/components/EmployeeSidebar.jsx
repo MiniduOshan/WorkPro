@@ -62,7 +62,6 @@ const EmployeeSidebar = () => {
   const workLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard' },
     { name: 'My Tasks', icon: IoClipboardOutline, path: '/dashboard/tasks' },
-    { name: 'Teams', icon: IoPeopleOutline, path: '/dashboard/teams' },
     { name: 'Departments', icon: IoBusinessOutline, path: '/dashboard/departments' },
     { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/documents' },
     { name: 'Notes', icon: IoDocumentTextOutline, path: '/dashboard/notes' },

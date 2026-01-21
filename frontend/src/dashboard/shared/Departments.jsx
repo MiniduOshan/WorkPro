@@ -220,7 +220,7 @@ export default function Departments() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Departments</h1>
             <p className="text-slate-600">Organize teams into departments</p>
           </div>
-          {companyId && (
+          {companyId && ['owner', 'manager'].includes(companyRole) && (
             <button 
               onClick={() => setShowAddModal(true)}
               className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
@@ -253,13 +253,15 @@ export default function Departments() {
             <IoLayersOutline className="mx-auto text-6xl text-slate-300 mb-4" />
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No departments yet</h3>
             <p className="text-slate-500 mb-6">Create your first department to organize your team</p>
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}
-            >
-              <IoAddOutline className="text-xl" />
-              <span>Create Department</span>
-            </button>
+            {['owner', 'manager'].includes(companyRole) && (
+              <button 
+                onClick={() => setShowAddModal(true)}
+                className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}
+              >
+                <IoAddOutline className="text-xl" />
+                <span>Create Department</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -302,9 +304,11 @@ export default function Departments() {
                     <button onClick={() => openView(dept)} className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold hover:bg-blue-100 transition text-sm">
                       View Details
                     </button>
-                    <button onClick={() => handleDelete(dept._id)} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
-                      <IoTrashOutline />
-                    </button>
+                    {['owner', 'manager'].includes(companyRole) && (
+                      <button onClick={() => handleDelete(dept._id)} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
+                        <IoTrashOutline />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

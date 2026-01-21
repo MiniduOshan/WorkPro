@@ -47,8 +47,9 @@ export default function Teams() {
     try {
       setLoading(true);
       const { data } = await api.get(`/api/companies/${id}`);
+      console.log('Company data received:', data); // Debug log
       if (data && data.members) {
-        setMembers(data.members.map(m => ({
+        const mappedMembers = data.members.map(m => ({
           _id: m.user?._id || m.user,
           firstName: m.user?.firstName || '',
           lastName: m.user?.lastName || '',
@@ -57,10 +58,16 @@ export default function Teams() {
           department: m.department || '',
           mobileNumber: m.user?.mobileNumber || '',
           profilePic: m.user?.profilePic || ''
-        })));
+        }));
+        console.log('Mapped members:', mappedMembers); // Debug log
+        setMembers(mappedMembers);
+      } else {
+        console.log('No members found in company data');
+        setMembers([]);
       }
     } catch (err) {
       console.error('Failed to fetch team members:', err);
+      setMembers([]);
     } finally {
       setLoading(false);
     }
@@ -224,15 +231,7 @@ export default function Teams() {
                 {/* Avatar and Role Badge */}
                 <div className="flex items-start justify-between mb-4">
                   <div className={`w-16 h-16 bg-gradient-to-br from-${theme.primary} to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform`}>
-                    {member.profilePic ? (
-                      <img
-                        src={member.profilePic}
-                        alt={member.firstName}
-                        className="w-full h-full rounded-2xl object-cover"
-                      />
-                    ) : (
-                      getInitials(member.firstName, member.lastName)
-                    )}
+                    {getInitials(member.firstName, member.lastName)}
                   </div>
                   <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide border-2 ${getRoleBadgeColor(member.role)}`}>
                     {member.role}

@@ -94,8 +94,11 @@ export default function Groups() {
       setTaskStats(groupRes.data.taskStats || null);
 
       // Get available members (company members not in group)
-      const groupMemberIds = members.map(m => m._id || m);
-      const available = (companyRes.data.members || []).filter(m => !groupMemberIds.includes(m.user?._id || m.user));
+      const groupMemberIds = members.map(m => (typeof m === 'string' ? m : m._id));
+      const available = (companyRes.data.members || []).filter(m => {
+        const userId = m.user?._id || m.user;
+        return !groupMemberIds.includes(userId);
+      });
       setAvailableMembers(available);
 
       setViewGroup(group);
@@ -403,7 +406,10 @@ export default function Groups() {
                       </h4>
 
                       {/* Check if current user is in this group */}
-                      {groupMembers?.some(m => getMemberId(m) === localStorage.getItem('userId')) ? (
+                      {groupMembers?.some(m => {
+                        const memberId = typeof m === 'string' ? m : m._id;
+                        return memberId === localStorage.getItem('userId');
+                      }) ? (
                         <>
                           {groupMembers?.length ? (
                             <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
