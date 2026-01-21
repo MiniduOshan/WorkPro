@@ -29,15 +29,12 @@ api.interceptors.request.use((config) => {
     delete config.headers['Content-Type'];
   }
   
-  // Log the request for debugging
-  console.log(`API Request: ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url}`);
   return config;
 });
 
-// Log responses and errors
+// Handle responses and errors
 api.interceptors.response.use(
   (response) => {
-    console.log(`API Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
