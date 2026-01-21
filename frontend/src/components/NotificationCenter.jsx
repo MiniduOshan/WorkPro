@@ -24,7 +24,9 @@ export default function NotificationCenter() {
 
   const fetchNotifications = async () => {
     try {
-      const { data } = await api.get('/api/super-admin/notifications');
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const { data } = await api.get('/api/super-admin/notifications', { headers });
       setNotifications(data);
       const unread = data.filter(n => !n.isRead).length;
       setUnreadCount(unread);
@@ -35,7 +37,9 @@ export default function NotificationCenter() {
 
   const markAsRead = async (notificationId) => {
     try {
-      await api.post(`/api/super-admin/notifications/${notificationId}/read`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await api.post(`/api/super-admin/notifications/${notificationId}/read`, {}, { headers });
       setNotifications(notifications.map(n => 
         n._id === notificationId ? { ...n, isRead: true } : n
       ));

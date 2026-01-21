@@ -276,11 +276,6 @@ export default function InviteJoin() {
                 <p className="text-sm text-blue-800 mb-2">
                   <strong>Note:</strong> You'll be redirected to signup/login before joining
                 </p>
-                <p className="text-xs text-blue-700">
-                  This invitation was sent to: <strong>{invitation?.email}</strong>
-                  <br />
-                  Please signup or login with this email address.
-                </p>
               </div>
             )}
           </div>

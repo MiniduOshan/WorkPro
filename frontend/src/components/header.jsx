@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { IoShieldCheckmarkOutline } from 'react-icons/io5';
+import { IoShieldCheckmarkOutline, IoBriefcaseOutline } from 'react-icons/io5';
 
 // Define the primary color for consistent styling (using Tailwind's indigo as a placeholder)
 const PRIMARY_COLOR = 'indigo'; // e.g., text-indigo-600, bg-indigo-600
@@ -52,8 +52,10 @@ function Header() {
             <div className="flex justify-between items-center py-4 px-6 max-w-7xl mx-auto">
                 {/* 1. Logo & App Name (Left-aligned) */}
                 <Link to="/" className="flex items-center space-x-2 transition-opacity hover:opacity-80">
-                    {/* Placeholder for a visually distinct logo */}
-                    <img src="/logo.png" alt="WorkPro Logo" className="w-8 h-8" />
+                    {/* Work Logo Icon */}
+                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                        <IoBriefcaseOutline className="w-5 h-5 text-white" />
+                    </div>
                     <span className="text-xl font-extrabold text-gray-900">WorkPro</span>
                 </Link>
 

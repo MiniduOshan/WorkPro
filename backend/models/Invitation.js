@@ -4,7 +4,7 @@ const InvitationSchema = new mongoose.Schema(
   {
     company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
     inviter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    email: { type: String, required: true },
+    email: { type: String, default: '' },
     role: { type: String, enum: ['manager', 'employee'], required: true },
     department: { type: String, default: '' },
     token: { type: String, required: true, unique: true }, // Unique invitation token for URL

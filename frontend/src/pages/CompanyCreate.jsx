@@ -8,8 +8,6 @@ export default function CompanyCreate() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [website, setWebsite] = useState('');
-  const [mission, setMission] = useState('');
-  const [vision, setVision] = useState('');
   const [industry, setIndustry] = useState('');
   const [departments, setDepartments] = useState(['Tech', 'Marketing', 'HR']);
   const [newDept, setNewDept] = useState('');
@@ -45,8 +43,6 @@ export default function CompanyCreate() {
         name, 
         description, 
         website,
-        mission,
-        vision,
         industry,
         departments
       });
@@ -156,36 +152,6 @@ export default function CompanyCreate() {
                 rows="4"
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Vision & Mission */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3 pb-4 border-b-2 border-slate-100">
-              <IoEyeOutline className="w-7 h-7 text-indigo-600" />
-              Vision & Mission
-            </h2>
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Our Mission</label>
-              <textarea 
-                className="w-full border-2 border-slate-300 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" 
-                placeholder="What drives your company daily?" 
-                rows="3"
-                value={mission} 
-                onChange={(e) => setMission(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Our Vision</label>
-              <textarea 
-                className="w-full border-2 border-slate-300 p-4 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" 
-                placeholder="Where is your company headed?" 
-                rows="3"
-                value={vision} 
-                onChange={(e) => setVision(e.target.value)}
               />
             </div>
           </div>

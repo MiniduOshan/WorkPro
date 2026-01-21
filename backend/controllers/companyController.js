@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import Company from '../models/Company.js';
 import Invitation from '../models/Invitation.js';
 import User from '../models/User.js';
-import { sendInvitationEmail } from '../config/email.js';
 
 // Search companies by name, industry, or description
 export const searchCompanies = async (req, res) => {
@@ -86,9 +85,9 @@ export const getCompany = async (req, res) => {
 
 // Create invitation for email with role
 export const createInvitation = async (req, res) => {
-  const { email, role, department } = req.body;
+  const { role, department } = req.body;
   const companyId = req.params.companyId;
-  if (!email || !role) return res.status(400).json({ message: 'email and role are required' });
+  if (!role) return res.status(400).json({ message: 'role is required' });
   if (!['manager', 'employee'].includes(role)) return res.status(400).json({ message: 'Invalid role' });
   try {
     const company = await Company.findById(companyId);
@@ -108,7 +107,7 @@ export const createInvitation = async (req, res) => {
     const invitation = await Invitation.create({ 
       company: companyId, 
       inviter: req.user._id, 
-      email, 
+      email: '', // email is optional; invites are link-based
       role, 
       department: department || '',
       token, 
@@ -118,17 +117,6 @@ export const createInvitation = async (req, res) => {
     // Build a link that matches the frontend route (/invite/join) to avoid 404s when users click the copied link
     const appBaseUrl = process.env.APP_BASE_URL || req.get('origin') || '';
     const inviteLink = `${appBaseUrl}/invite/join?token=${token}`;
-    // Try sending email, but respond even if sending fails
-    try {
-      await sendInvitationEmail({
-        to: email,
-        companyName: company.name,
-        inviterName: `${req.user.firstName} ${req.user.lastName}`,
-        link: inviteLink,
-      });
-    } catch (mailErr) {
-      console.error('Invitation email failed:', mailErr.message);
-    }
     res.status(201).json({ invitation, link: inviteLink });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -144,13 +132,6 @@ export const acceptInvitation = async (req, res) => {
     if (!inv) return res.status(404).json({ message: 'Invitation not found' });
     if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
     if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
-
-    // Verify the logged-in user's email matches the invitation email
-    if (req.user.email.toLowerCase() !== inv.email.toLowerCase()) {
-      return res.status(403).json({ 
-        message: 'This invitation was sent to a different email address. Please login with the invited email or request a new invitation.' 
-      });
-    }
 
     const company = await Company.findById(inv.company);
     if (!company) return res.status(404).json({ message: 'Company not found' });
