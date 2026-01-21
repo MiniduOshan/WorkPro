@@ -89,21 +89,6 @@ WorkPro helps companies:
 
 ---
 
-## ⚙️ Environment Variables
-
-Create `.env` in `backend/` with:
-
-```
-MONGO_URI=mongodb://localhost:27017/workpro
-JWT_SECRET=changeme
-APP_BASE_URL=http://localhost:5173
-CORS_ORIGIN=http://localhost:5173
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=your_smtp_username
-SMTP_PASS=your_smtp_password
-SMTP_FROM="WorkPro <noreply@yourdomain.com>"
-```
 
 ## 🔧 Quick Start (Dev)
 
@@ -121,18 +106,7 @@ npm install
 npm run dev
 ```
 
-## 🧭 Key API Endpoints
 
-- Companies: `POST /api/companies`, `GET /api/companies/mine`, `GET /api/companies/:id`
-- Invitations: `POST /api/companies/:companyId/invitations`, `POST /api/companies/invitations/accept`
-- Announcements: `POST /api/announcements`, `GET /api/announcements?companyId=...`
-- Projects: `POST /api/projects`, `GET /api/projects?companyId=...`, `PUT /api/projects/:id`, `DELETE /api/projects/:id`
-- Tasks: `POST /api/tasks`, `GET /api/tasks?companyId=...`, `PUT /api/tasks/:id`, `DELETE /api/tasks/:id`
-- Channels: `POST /api/channels`, `GET /api/channels?companyId=...`, `POST /api/channels/:id/messages`, `GET /api/channels/:id/messages`
-- Departments: `POST /api/departments`, `GET /api/departments?companyId=...`, `PUT /api/departments/:id`, `DELETE /api/departments/:id`
-- Teams: `POST /api/teams`, `GET /api/teams?companyId=...`, `PUT /api/teams/:id`, `DELETE /api/teams/:id`
-- Groups: `POST /api/groups`, `GET /api/groups?companyId=...`, `PUT /api/groups/:id`, `DELETE /api/groups/:id`
-- Dashboards: `GET /api/dashboard/manager?companyId=...`, `GET /api/dashboard/user?companyId=...`
 
 ## 🧑‍💻 Frontend Pages
 
