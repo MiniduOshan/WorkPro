@@ -3,7 +3,7 @@ version: '3.8'
 services:
   backend:
     build: ./backend
-    container_name: academicpro-backend
+    container_name: workpro-backend
     restart: unless-stopped
     ports:
       - "5000:5000"
@@ -12,21 +12,21 @@ services:
     volumes:
       - uploads-data:/app/uploads
     networks:
-      - academicpro-network
+      - workpro-network
 
   frontend:
     build: ./frontend
-    container_name: academicpro-frontend
+    container_name: workpro-frontend
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
       - backend
     networks:
-      - academicpro-network
+      - workpro-network
 
 networks:
-  academicpro-network:
+  workpro-network:
     driver: bridge
 
 volumes:
