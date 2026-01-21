@@ -103,12 +103,18 @@ export default function TasksBoard() {
     try {
       const { data } = await api.get(`/api/companies/${companyId}`);
       if (data && data.members) {
-        const mappedEmployees = data.members.map(m => ({
-          _id: m.user?._id || m.user,
-          name: (m.user?.firstName && m.user?.lastName) ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown',
-          department: m.department,
-          role: m.role
-        }));
+        const mappedEmployees = data.members.map(m => {
+          const userId = m.user?._id || m.user;
+          const firstName = m.user?.firstName || '';
+          const lastName = m.user?.lastName || '';
+          const fullName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : 'Unknown';
+          return {
+            _id: userId,
+            name: fullName,
+            department: m.department,
+            role: m.role
+          };
+        });
         setEmployees(mappedEmployees);
         setFilteredEmployees(mappedEmployees);
       }

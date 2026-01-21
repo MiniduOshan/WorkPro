@@ -7,7 +7,8 @@ import {
   IoCreateOutline,
   IoCloseOutline,
   IoPersonAddOutline,
-  IoPersonRemoveOutline
+  IoPersonRemoveOutline,
+  IoPeopleOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
 

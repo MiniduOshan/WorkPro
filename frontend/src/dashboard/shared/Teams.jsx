@@ -43,17 +43,19 @@ export default function Teams() {
   const fetchTeamMembers = async (id) => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/api/companies/${id}/members`);
-      setMembers(data.map(m => ({
-        _id: m.user?._id || m.user,
-        firstName: m.user?.firstName || '',
-        lastName: m.user?.lastName || '',
-        email: m.user?.email || '',
-        role: m.role,
-        department: m.department || '',
-        mobileNumber: m.user?.mobileNumber || '',
-        profilePic: m.user?.profilePic || ''
-      })));
+      const { data } = await api.get(`/api/companies/${id}`);
+      if (data && data.members) {
+        setMembers(data.members.map(m => ({
+          _id: m.user?._id || m.user,
+          firstName: m.user?.firstName || '',
+          lastName: m.user?.lastName || '',
+          email: m.user?.email || '',
+          role: m.role,
+          department: m.department || '',
+          mobileNumber: m.user?.mobileNumber || '',
+          profilePic: m.user?.profilePic || ''
+        })));
+      }
     } catch (err) {
       console.error('Failed to fetch team members:', err);
     } finally {
