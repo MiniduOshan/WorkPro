@@ -37,6 +37,7 @@ import Settings from './dashboard/shared/Settings.jsx';
 import DocumentLibrary from './dashboard/shared/DocumentLibrary.jsx';
 import AIInsights from './dashboard/manager/AIInsights.jsx';
 import TaskReassignmentApprovals from './dashboard/manager/TaskReassignmentApprovals.jsx';
+import TaskApprovals from './dashboard/manager/TaskApprovals.jsx';
 import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/shared/Invite.jsx';
@@ -164,7 +165,8 @@ function App() {
                     }
                 >
                     <Route index element={<ManagerDashboard />} />
-                                        <Route path="task-approvals" element={<TaskReassignmentApprovals />} />
+                    <Route path="task-approvals" element={<TaskApprovals />} />
+                    <Route path="task-reassignments" element={<TaskReassignmentApprovals />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="tasks" element={<TasksBoard />} />
                     <Route path="channels" element={<Channels />} />

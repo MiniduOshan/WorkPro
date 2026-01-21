@@ -27,6 +27,9 @@ const TaskSchema = new mongoose.Schema(
       requestedAt: { type: Date },
       reason: { type: String, default: '' },
     },
+    pendingApproval: { type: Boolean, default: false },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    approvedAt: { type: Date },
   },
   { timestamps: true }
 );

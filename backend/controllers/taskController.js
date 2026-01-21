@@ -18,6 +18,9 @@ export const createTask = async (req, res) => {
     if (!['owner', 'manager'].includes(role) && assignee && assignee.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Only managers can assign to others' });
     }
+    // Tasks created by managers (non-owners) require approval
+    const needsApproval = role === 'manager';
+    
     const task = await Task.create({
       title,
       description: description || '',
@@ -31,7 +34,8 @@ export const createTask = async (req, res) => {
       category: category || '',
       team: team || undefined,
       group: group || undefined,
-      department: department || '',
+      department: department || undefined,
+      pendingApproval: needsApproval,
         checklist: Array.isArray(checklist)
           ? checklist.map((item) => ({ title: item.title || item, done: !!item.done }))
           : [],
@@ -47,8 +51,9 @@ export const listTasks = async (req, res) => {
   const { companyId, project, assignee, team, group, department, status } = req.query;
   if (!companyId) return res.status(400).json({ message: 'companyId required' });
   try {
-    const { error } = await ensureMember(companyId, req.user._id);
+    const { company, role, error } = await ensureMember(companyId, req.user._id);
     if (error) return res.status(403).json({ message: error });
+    
     const q = { company: companyId };
     if (project) q.project = project;
     if (assignee) q.assignee = assignee;
@@ -56,6 +61,25 @@ export const listTasks = async (req, res) => {
     if (group) q.group = group;
     if (department) q.department = department;
     if (status) q.status = status;
+    
+    // If employee and no specific filters, show tasks in their department OR assigned to them
+    if (role === 'employee' && !assignee && !department && !team && !group) {
+      const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
+      const fullCompany = await Company.findById(companyId);
+      const member = fullCompany.members.find(m => m.user.toString() === req.user._id.toString());
+      
+      if (member && member.department) {
+        // Show tasks assigned to them OR tasks in their department
+        q.$or = [
+          { assignee: req.user._id },
+          { department: member.department }
+        ];
+      } else {
+        // No department, only show their assigned tasks
+        q.assignee = req.user._id;
+      }
+    }
+    
     const tasks = await Task.find(q)
       .populate('assignee', 'firstName lastName email')
       .populate('createdBy', 'firstName lastName email')
@@ -226,6 +250,70 @@ export const getPendingReassignments = async (req, res) => {
       .sort({ 'pendingReassignment.requestedAt': -1 });
     
     res.json(tasks);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get all tasks pending approval for owner/manager
+export const getPendingApprovals = async (req, res) => {
+  const { companyId } = req.query;
+  if (!companyId) return res.status(400).json({ message: 'companyId required' });
+  try {
+    const { role, error } = await ensureMember(companyId, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    if (!['owner', 'manager'].includes(role)) {
+      return res.status(403).json({ message: 'Only managers can view pending approvals' });
+    }
+    
+    const tasks = await Task.find({ 
+      company: companyId,
+      pendingApproval: true
+    })
+      .populate('assignee', 'firstName lastName email')
+      .populate('createdBy', 'firstName lastName email')
+      .populate('department', 'name')
+      .sort({ createdAt: -1 });
+    
+    res.json(tasks);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Approve or reject a task (owner/manager only)
+export const approveTask = async (req, res) => {
+  try {
+    const { approve } = req.body;
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+    
+    const { role, error } = await ensureMember(task.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    if (!['owner', 'manager'].includes(role)) {
+      return res.status(403).json({ message: 'Only managers can approve tasks' });
+    }
+    
+    if (!task.pendingApproval) {
+      return res.status(400).json({ message: 'Task does not require approval' });
+    }
+    
+    if (approve) {
+      task.pendingApproval = false;
+      task.approvedBy = req.user._id;
+      task.approvedAt = new Date();
+      await task.save();
+      const updated = await Task.findById(task._id)
+        .populate('assignee', 'firstName lastName email')
+        .populate('createdBy', 'firstName lastName email')
+        .populate('approvedBy', 'firstName lastName email')
+        .populate('department', 'name');
+      res.json(updated);
+    } else {
+      // Reject: delete the task
+      await Task.deleteOne({ _id: task._id });
+      res.json({ message: 'Task rejected and deleted' });
+    }
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

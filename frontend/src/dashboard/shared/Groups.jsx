@@ -27,6 +27,8 @@ export default function Groups() {
   const [groupMembers, setGroupMembers] = useState([]);
   const [availableMembers, setAvailableMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState('');
+  const [groupTasks, setGroupTasks] = useState([]);
+  const [taskStats, setTaskStats] = useState(null);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -80,13 +82,16 @@ export default function Groups() {
 
   const openView = async (group) => {
     try {
-      const [groupRes, companyRes] = await Promise.all([
+      const [groupRes, companyRes, tasksRes] = await Promise.all([
         api.get(`/api/groups/${group._id}`),
-        api.get(`/api/companies/${companyId}`)
+        api.get(`/api/companies/${companyId}`),
+        api.get('/api/tasks', { params: { companyId, group: group._id } })
       ]);
 
       const members = groupRes.data.members || [];
       setGroupMembers(members);
+      setGroupTasks(tasksRes.data || []);
+      setTaskStats(groupRes.data.taskStats || null);
 
       // Get available members (company members not in group)
       const groupMemberIds = members.map(m => m._id || m);
@@ -99,6 +104,8 @@ export default function Groups() {
       setViewGroup(group);
       setGroupMembers([]);
       setAvailableMembers([]);
+      setGroupTasks([]);
+      setTaskStats(null);
     }
   };
 
@@ -239,9 +246,28 @@ export default function Groups() {
                 </div>
 
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm text-slate-600">Members</p>
-                    <p className="text-2xl font-bold text-slate-800">{group.members?.length || 0}</p>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-slate-600">Progress</span>
+                      <span className="font-bold text-slate-800">{group.progress || 0}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5 mb-4">
+                      <div 
+                        className="bg-linear-to-r from-indigo-500 to-blue-600 h-2.5 rounded-full transition-all duration-500"
+                        style={{ width: `${group.progress || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center p-3 bg-indigo-50 rounded-xl">
+                      <p className="text-2xl font-bold text-slate-800">{group.members?.length || 0}</p>
+                      <p className="text-xs text-slate-600">Members</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-xl">
+                      <p className="text-2xl font-bold text-slate-800">{group.taskCount || 0}</p>
+                      <p className="text-xs text-slate-600">Tasks</p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => openView(group)} className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-semibold hover:bg-indigo-100 transition text-sm flex items-center justify-center gap-2">
@@ -274,6 +300,40 @@ export default function Groups() {
                       <IoCloseOutline className="text-2xl text-slate-400" />
                     </button>
                   </div>
+
+                  {/* Progress Section */}
+                  {taskStats && (
+                    <div className="mb-6 p-4 bg-linear-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-bold text-slate-800">Group Progress</h4>
+                        <span className="text-2xl font-bold text-indigo-600">{taskStats.progress}%</span>
+                      </div>
+                      <div className="w-full bg-white rounded-full h-3 mb-3">
+                        <div 
+                          className="bg-linear-to-r from-indigo-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${taskStats.progress}%` }}
+                        ></div>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                        <div className="p-2 bg-white rounded-lg">
+                          <p className="font-bold text-slate-800">{taskStats.total}</p>
+                          <p className="text-slate-600">Total</p>
+                        </div>
+                        <div className="p-2 bg-green-50 rounded-lg">
+                          <p className="font-bold text-green-700">{taskStats.completed}</p>
+                          <p className="text-green-600">Done</p>
+                        </div>
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                          <p className="font-bold text-blue-700">{taskStats.inProgress}</p>
+                          <p className="text-blue-600">In Progress</p>
+                        </div>
+                        <div className="p-2 bg-orange-50 rounded-lg">
+                          <p className="font-bold text-orange-700">{taskStats.todo}</p>
+                          <p className="text-orange-600">To Do</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Members Section (Manager) */}
                   {['owner', 'manager'].includes(companyRole) && (

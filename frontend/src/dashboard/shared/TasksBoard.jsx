@@ -38,6 +38,18 @@ export default function TasksBoard() {
   const [reassignTo, setReassignTo] = useState('');
   const [reassignReason, setReassignReason] = useState('');
   const [filteredEmployees, setFilteredEmployees] = useState([]);
+  
+  // View/Edit Task Modal States
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewTask, setViewTask] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState('');
+  const [editPriority, setEditPriority] = useState('');
+  const [editAssignee, setEditAssignee] = useState('');
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
 
   const sampleTasks = () => ([
     {
@@ -116,7 +128,10 @@ export default function TasksBoard() {
           };
         });
         setEmployees(mappedEmployees);
-        setFilteredEmployees(mappedEmployees);
+        // Initialize filteredEmployees with all employees
+        if (!department) {
+          setFilteredEmployees(mappedEmployees);
+        }
       }
     } catch (err) {
       console.error('Failed to load employees:', err);
@@ -197,7 +212,7 @@ export default function TasksBoard() {
         priority
       };
       if (assignee) taskData.assignee = assignee;
-      if (department) taskData.department = department;
+      if (department && department !== '') taskData.department = department;
       if (dueDate) taskData.dueDate = dueDate;
       
       await api.post('/api/tasks', taskData);
@@ -252,6 +267,53 @@ export default function TasksBoard() {
     setReassignTo('');
     setReassignReason('');
     setShowReassignModal(true);
+  };
+  
+  const openViewModal = (task) => {
+    setViewTask(task);
+    setIsEditing(false);
+    setEditTitle(task.title);
+    setEditDescription(task.description || '');
+    setEditStatus(task.status);
+    setEditPriority(task.priority || 'medium');
+    setEditAssignee(task.assignee?._id || '');
+    setEditDepartment(task.department?._id || '');
+    setEditDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
+    setShowViewModal(true);
+  };
+  
+  const closeViewModal = () => {
+    setShowViewModal(false);
+    setViewTask(null);
+    setIsEditing(false);
+  };
+  
+  const handleUpdateTask = async (e) => {
+    e.preventDefault();
+    if (!viewTask) return;
+    
+    try {
+      const payload = {
+        title: editTitle,
+        description: editDescription,
+        status: editStatus,
+        priority: editPriority,
+        dueDate: editDueDate || undefined
+      };
+      
+      // Only managers/owners can change assignee and department
+      if (['owner', 'manager'].includes(companyRole)) {
+        if (editAssignee) payload.assignee = editAssignee;
+        if (editDepartment && editDepartment !== '') payload.department = editDepartment;
+      }
+      
+      await api.put(`/api/tasks/${viewTask._id}`, payload);
+      alert('Task updated successfully!');
+      load();
+      closeViewModal();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update task');
+    }
   };
 
   const handleReassignRequest = async (e) => {
@@ -374,6 +436,7 @@ export default function TasksBoard() {
                     {tasks.filter(t => t.status === column.id).map((task) => (
                       <div
                         key={task._id}
+                        onClick={() => openViewModal(task)}
                         className={`bg-white rounded-xl border-l-4 ${getStatusColor(task.status)} border-r border-t border-b border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer group`}
                         draggable
                       >
@@ -394,9 +457,14 @@ export default function TasksBoard() {
                             <span className="font-medium">
                               {task.assignee ? `${task.assignee.firstName} ${task.assignee.lastName}` : 'Unassigned'}
                             </span>
+                            {task.pendingApproval && (
+                              <span className="ml-auto px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold">
+                                PENDING APPROVAL
+                              </span>
+                            )}
                             {task.pendingReassignment && (
                               <span className="ml-auto px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold">
-                                PENDING APPROVAL
+                                REASSIGNMENT PENDING
                               </span>
                             )}
                           </div>
@@ -428,10 +496,13 @@ export default function TasksBoard() {
 
                         {/* Quick Actions */}
                         <div className="flex flex-wrap gap-1 pt-3 border-t border-slate-100">
-                          {columns.map((col) => col.id !== task.status && (
+                          {/* Status change buttons - show to managers or assignee employees */}
+                          {(['owner', 'manager'].includes(companyRole) || 
+                            (companyRole === 'employee' && userProfile && task.assignee?._id === userProfile._id)) && 
+                           columns.map((col) => col.id !== task.status && (
                             <button
                               key={col.id}
-                              onClick={() => updateStatus(task._id, col.id)}
+                              onClick={(e) => { e.stopPropagation(); updateStatus(task._id, col.id); }}
                               className={`text-xs px-2 py-1 rounded-lg bg-${col.color}-50 text-${col.color}-700 hover:bg-${col.color}-100 transition font-medium`}
                               title={`Move to ${col.label}`}
                             >
@@ -440,7 +511,7 @@ export default function TasksBoard() {
                           ))}
                           {userProfile && task.assignee?._id === userProfile._id && companyRole === 'employee' && !task.pendingReassignment && (
                             <button
-                              onClick={() => openReassignModal(task)}
+                              onClick={(e) => { e.stopPropagation(); openReassignModal(task); }}
                               className="text-xs px-2 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition font-medium"
                               title="Request reassignment"
                             >
@@ -449,7 +520,7 @@ export default function TasksBoard() {
                           )}
                           {['owner', 'manager'].includes(companyRole) && (
                             <button
-                              onClick={() => deleteTask(task._id)}
+                              onClick={(e) => { e.stopPropagation(); deleteTask(task._id); }}
                               className="ml-auto text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
                               title="Delete task"
                             >
@@ -603,6 +674,286 @@ export default function TasksBoard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View/Edit Task Modal */}
+      {showViewModal && viewTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8">
+            {/* Modal Header */}
+            <div className={`${theme.bgPrimary} text-white p-6 rounded-t-2xl flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <IoCreateOutline className="text-2xl" />
+                <h2 className="text-2xl font-bold">
+                  {isEditing ? 'Edit Task' : 'Task Details'}
+                </h2>
+              </div>
+              <button
+                onClick={closeViewModal}
+                className="p-2 hover:bg-white/20 rounded-lg transition text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[70vh] overflow-y-auto">
+              {!isEditing ? (
+                // View Mode
+                <div className="space-y-6">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-600 mb-2">Title</label>
+                    <h3 className="text-2xl font-bold text-slate-800">{viewTask.title}</h3>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-600 mb-2">Description</label>
+                    <p className="text-slate-700 whitespace-pre-wrap">
+                      {viewTask.description || 'No description provided'}
+                    </p>
+                  </div>
+
+                  {/* Status & Priority */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Status</label>
+                      <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${
+                        viewTask.status === 'done' ? 'bg-green-100 text-green-700' :
+                        viewTask.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                        viewTask.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {viewTask.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Priority</label>
+                      <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${
+                        viewTask.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                        viewTask.priority === 'high' ? 'bg-orange-100 text-orange-700' :
+                        viewTask.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {(viewTask.priority || 'medium').toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Assignee & Department */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Assigned To</label>
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <IoPersonOutline className="text-blue-500" />
+                        <span>
+                          {viewTask.assignee ? 
+                            `${viewTask.assignee.firstName} ${viewTask.assignee.lastName}` : 
+                            'Unassigned'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Department</label>
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <IoBusinessOutline className="text-purple-500" />
+                        <span>{viewTask.department?.name || 'No department'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Due Date */}
+                  {viewTask.dueDate && (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Due Date</label>
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <IoCalendarOutline className="text-orange-500" />
+                        <span>{new Date(viewTask.dueDate).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Created By */}
+                  {viewTask.createdBy && (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Created By</label>
+                      <p className="text-slate-700">
+                        {viewTask.createdBy.firstName} {viewTask.createdBy.lastName}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Approval Status */}
+                  {viewTask.pendingApproval && (
+                    <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                      <p className="text-orange-700 font-semibold">⏳ This task is pending approval</p>
+                    </div>
+                  )}
+
+                  {/* Reassignment Status */}
+                  {viewTask.pendingReassignment && (
+                    <div className="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+                      <p className="text-yellow-700 font-semibold">🔄 Reassignment request pending</p>
+                      {viewTask.pendingReassignment.reason && (
+                        <p className="text-sm text-yellow-600 mt-1">Reason: {viewTask.pendingReassignment.reason}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Edit Mode
+                <form onSubmit={handleUpdateTask} className="space-y-4">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Title *</label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                      required
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
+                      rows="4"
+                      placeholder="Describe the task..."
+                    />
+                  </div>
+
+                  {/* Status & Priority */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                      <select
+                        value={editStatus}
+                        onChange={(e) => setEditStatus(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                      >
+                        <option value="to-do">To Do</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="done">Done</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Priority</label>
+                      <select
+                        value={editPriority}
+                        onChange={(e) => setEditPriority(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Department & Assignee (Only for Managers/Owners) */}
+                  {['owner', 'manager'].includes(companyRole) && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Department</label>
+                        <select
+                          value={editDepartment}
+                          onChange={(e) => {
+                            setEditDepartment(e.target.value);
+                            setEditAssignee(''); // Reset assignee when department changes
+                          }}
+                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                        >
+                          <option value="">All Departments</option>
+                          {departments.map((dept) => (
+                            <option key={dept._id} value={dept._id}>{dept.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
+                        <select
+                          value={editAssignee}
+                          onChange={(e) => setEditAssignee(e.target.value)}
+                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                        >
+                          <option value="">Select Employee</option>
+                          {employees.filter(emp => !editDepartment || emp.department === editDepartment || ['owner', 'manager'].includes(emp.role)).map((emp) => (
+                            <option key={emp._id} value={emp._id}>{emp.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Due Date */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Due Date</label>
+                    <input
+                      type="date"
+                      value={editDueDate}
+                      onChange={(e) => setEditDueDate(e.target.value)}
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                    />
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* Modal Footer - Action Buttons */}
+            {!isEditing && (
+              <div className="p-6 border-t border-slate-200 flex gap-3">
+                {/* Edit button - show to managers or task assignee */}
+                {(['owner', 'manager'].includes(companyRole) || 
+                  (companyRole === 'employee' && userProfile && viewTask.assignee?._id === userProfile._id)) && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2`}
+                  >
+                    <IoCreateOutline /> Edit Task
+                  </button>
+                )}
+                <button
+                  onClick={closeViewModal}
+                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                >
+                  Close
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

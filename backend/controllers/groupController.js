@@ -49,7 +49,23 @@ export const listGroups = async (req, res) => {
     const { error } = await ensureMember(companyId, req.user._id);
     if (error) return res.status(403).json({ message: error });
     const groups = await Group.find({ company: companyId }).sort({ name: 1 });
-    res.json(groups);
+    
+    // Get task statistics for each group
+    const Task = req.app.locals.Task || (await import('../models/Task.js')).default;
+    const groupsWithStats = await Promise.all(groups.map(async (group) => {
+      const tasks = await Task.find({ group: group._id });
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter(t => t.status === 'done').length;
+      const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      
+      return {
+        ...group.toObject(),
+        taskCount: totalTasks,
+        progress
+      };
+    }));
+    
+    res.json(groupsWithStats);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -61,7 +77,30 @@ export const getGroup = async (req, res) => {
     if (!group) return res.status(404).json({ message: 'Group not found' });
     const { error } = await ensureMember(group.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
-    res.json(group);
+    
+    // Get task statistics for the group
+    const Task = req.app.locals.Task || (await import('../models/Task.js')).default;
+    const tasks = await Task.find({ group: group._id });
+    
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === 'done').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+    const blockedTasks = tasks.filter(t => t.status === 'blocked').length;
+    const todoTasks = tasks.filter(t => t.status === 'to-do').length;
+    
+    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    
+    res.json({
+      ...group.toObject(),
+      taskStats: {
+        total: totalTasks,
+        completed: completedTasks,
+        inProgress: inProgressTasks,
+        blocked: blockedTasks,
+        todo: todoTasks,
+        progress
+      }
+    });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

@@ -48,7 +48,28 @@ export default function Departments() {
     try {
       setLoading(true);
       const { data } = await api.get('/api/departments', { params: { companyId: id } });
-      setDepartments(data.map(d => ({ _id: d._id, name: d.name, description: d.description })));
+      
+      // Fetch member and task counts for each department
+      const departmentsWithCounts = await Promise.all(data.map(async (d) => {
+        try {
+          const [membersRes, tasksRes] = await Promise.all([
+            api.get(`/api/departments/${d._id}/members`),
+            api.get('/api/tasks', { params: { companyId: id, department: d._id } })
+          ]);
+          return {
+            _id: d._id,
+            name: d.name,
+            description: d.description,
+            memberCount: membersRes.data.members?.length || 0,
+            taskCount: tasksRes.data?.length || 0
+          };
+        } catch (err) {
+          console.error(`Failed to fetch counts for department ${d.name}:`, err);
+          return { _id: d._id, name: d.name, description: d.description, memberCount: 0, taskCount: 0 };
+        }
+      }));
+      
+      setDepartments(departmentsWithCounts);
     } catch (err) {
       console.error('Failed to fetch departments:', err);
     } finally {
@@ -266,12 +287,12 @@ export default function Departments() {
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="text-center p-3 bg-blue-50 rounded-xl">
                       <IoPeopleOutline className="mx-auto text-2xl text-blue-600 mb-1" />
-                      <p className="text-2xl font-bold text-slate-800">—</p>
+                      <p className="text-2xl font-bold text-slate-800">{dept.memberCount || 0}</p>
                       <p className="text-xs text-slate-600">Members</p>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-xl">
                       <IoClipboardOutline className="mx-auto text-2xl text-purple-600 mb-1" />
-                      <p className="text-2xl font-bold text-slate-800">—</p>
+                      <p className="text-2xl font-bold text-slate-800">{dept.taskCount || 0}</p>
                       <p className="text-xs text-slate-600">Tasks</p>
                     </div>
                   </div>
@@ -482,48 +503,22 @@ export default function Departments() {
                     Members ({deptMembers?.length || 0})
                   </h4>
                   
-                  {/* Check if current user is in this department */}
-                  {deptMembers?.some(m => m.user._id === localStorage.getItem('userId')) ? (
-                    <>
-                      {deptMembers?.length ? (
-                        <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
-                          {deptMembers.map(member => (
-                            <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                              <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
-                              <p className="text-xs text-slate-600">{member.user.email}</p>
-                            </div>
-                          ))}
+                  {deptMembers?.length ? (
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {deptMembers.map(member => (
+                        <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                          <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
+                          <p className="text-xs text-slate-600">{member.user.email}</p>
                         </div>
-                      ) : (
-                        <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl mb-4">No members in this department yet.</p>
-                      )}
-                      <button
-                        onClick={leaveDepartment}
-                        className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm flex items-center justify-center gap-2"
-                      >
-                        <IoPersonRemoveOutline /> Leave Department
-                      </button>
-                    </>
+                      ))}
+                    </div>
                   ) : (
-                    <div className="space-y-4">
-                      {deptMembers?.length ? (
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {deptMembers.map(member => (
-                            <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                              <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
-                              <p className="text-xs text-slate-600">{member.user.email}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this department yet.</p>
-                      )}
-                      <button
-                        onClick={joinDepartment}
-                        className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition text-sm flex items-center justify-center gap-2"
-                      >
-                        <IoPersonAddOutline /> Join Department
-                      </button>
+                    <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this department yet.</p>
+                  )}
+                  
+                  {deptMembers?.some(m => m.user._id === localStorage.getItem('userId')) && (
+                    <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                      <p className="text-sm text-emerald-700 font-medium">✓ You are a member of this department</p>
                     </div>
                   )}
                 </div>
