@@ -82,7 +82,6 @@ const SuperAdminSidebar = () => {
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/super-admin' },
     { name: 'Analytics', icon: IoStatsChartOutline, path: '/dashboard/super-admin/analytics' },
     { name: 'Companies', icon: IoBusinessOutline, path: '/dashboard/super-admin/companies' },
-    { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/super-admin/users' },
     { name: 'Pricing Plans', icon: IoWalletOutline, path: '/dashboard/super-admin/pricing' },
     { name: 'Platform Content', icon: IoDocumentTextOutline, path: '/dashboard/super-admin/platform-content' },
     { name: 'Notifications', icon: IoNotificationsOutline, path: '/dashboard/super-admin/notifications' },

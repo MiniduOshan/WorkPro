@@ -165,3 +165,56 @@ export const removeMemberFromDepartment = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
+
+// Join department - employees can join departments
+export const joinDepartment = async (req, res) => {
+  try {
+    const dept = await Department.findById(req.params.id);
+    if (!dept) return res.status(404).json({ message: 'Department not found' });
+    const { error } = await ensureMember(dept.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    
+    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
+    const company = await Company.findById(dept.company);
+    
+    // Add current user to department
+    const memberIndex = company.members.findIndex(m => m.user.toString() === req.user._id.toString());
+    if (memberIndex >= 0) {
+      if (company.members[memberIndex].department === dept._id.toString()) {
+        return res.status(400).json({ message: 'Already a member of this department' });
+      }
+      company.members[memberIndex].department = dept._id;
+    }
+    
+    await company.save();
+    const updated = await company.populate('members.user');
+    res.json({ message: 'Joined department', company: updated });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Leave department - employees can leave departments
+export const leaveDepartment = async (req, res) => {
+  try {
+    const dept = await Department.findById(req.params.id);
+    if (!dept) return res.status(404).json({ message: 'Department not found' });
+    const { error } = await ensureMember(dept.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    
+    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
+    const company = await Company.findById(dept.company);
+    
+    // Remove current user from department
+    const memberIndex = company.members.findIndex(m => m.user.toString() === req.user._id.toString());
+    if (memberIndex >= 0) {
+      company.members[memberIndex].department = '';
+    }
+    
+    await company.save();
+    const updated = await company.populate('members.user');
+    res.json({ message: 'Left department', company: updated });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};

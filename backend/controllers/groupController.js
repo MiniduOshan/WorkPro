@@ -143,3 +143,50 @@ export const removeMemberFromGroup = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
+
+// Join group - employees can join groups
+export const joinGroup = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    const { error } = await ensureMember(group.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    
+    // Check if already a member
+    if (group.members.includes(req.user._id)) {
+      return res.status(400).json({ message: 'Already a member of this group' });
+    }
+    
+    // Add current user to group
+    group.members.push(req.user._id);
+    await group.save();
+    
+    const updated = await group.populate('members');
+    res.json({ message: 'Joined group', group: updated });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Leave group - employees can leave groups
+export const leaveGroup = async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id);
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+    const { error } = await ensureMember(group.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+    
+    // Remove current user from group
+    if (!group.members.includes(req.user._id)) {
+      return res.status(400).json({ message: 'Not a member of this group' });
+    }
+    
+    group.members = group.members.filter(m => m.toString() !== req.user._id.toString());
+    await group.save();
+    
+    const updated = await group.populate('members');
+    res.json({ message: 'Left group', group: updated });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};

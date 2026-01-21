@@ -242,6 +242,7 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
           </div>
 
           <button 
+            type="button"
             onClick={onCopyLink}
             className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${copied ? 'bg-blue-600 text-white' : 'border-2 border-slate-200 text-slate-700 hover:border-slate-300'}`}
           >
@@ -420,9 +421,45 @@ export default function ManagerDashboard() {
 
   const copyInviteLink = () => {
     if (!inviteLink) return;
-    navigator.clipboard.writeText(inviteLink);
-    setCopiedInvite(true);
-    setTimeout(() => setCopiedInvite(false), 2000);
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(inviteLink)
+        .then(() => {
+          setCopiedInvite(true);
+          setTimeout(() => setCopiedInvite(false), 2000);
+        })
+        .catch(() => {
+          // Fallback: use document.execCommand
+          const textarea = document.createElement('textarea');
+          textarea.value = inviteLink;
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            setCopiedInvite(true);
+            setTimeout(() => setCopiedInvite(false), 2000);
+          } catch (err) {
+            console.error('Failed to copy link:', err);
+            alert('Failed to copy link. Please copy manually.');
+          }
+          document.body.removeChild(textarea);
+        });
+    } else {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = inviteLink;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        setCopiedInvite(true);
+        setTimeout(() => setCopiedInvite(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+        alert('Failed to copy link. Please copy manually.');
+      }
+      document.body.removeChild(textarea);
+    }
   };
 
 

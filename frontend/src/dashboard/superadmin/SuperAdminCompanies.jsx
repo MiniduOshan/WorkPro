@@ -5,6 +5,7 @@ import {
   IoPeopleOutline,
   IoCheckmarkCircle,
   IoEyeOutline,
+  IoTrashOutline,
 } from 'react-icons/io5';
 import api from '../../api/axios';
 
@@ -12,6 +13,10 @@ const SuperAdminCompanies = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -29,6 +34,38 @@ const SuperAdminCompanies = () => {
       console.error('Failed to fetch companies:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (company) => {
+    setSelectedCompany(company);
+    setDeleteConfirmation('');
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmation !== 'DELETE MY COMPANY') {
+      alert('Please enter the correct confirmation text');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await api.delete(`/api/companies/${selectedCompany._id}`, {
+        data: { confirmation: 'DELETE MY COMPANY' },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      setCompanies(companies.filter(c => c._id !== selectedCompany._id));
+      setShowDeleteModal(false);
+      setSelectedCompany(null);
+      setDeleteConfirmation('');
+      alert('Company deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete company:', err);
+      alert(err.response?.data?.message || 'Failed to delete company');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -129,10 +166,19 @@ const SuperAdminCompanies = () => {
                   <span className="text-gray-600">Departments: </span>
                   <span className="font-semibold text-gray-900">{company.departmentCount}</span>
                 </div>
-                <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1">
-                  <IoEyeOutline className="w-4 h-4" />
-                  View Details
-                </button>
+                <div className="flex items-center gap-2">
+                  <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1">
+                    <IoEyeOutline className="w-4 h-4" />
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(company)}
+                    className="text-red-600 hover:text-red-700 font-medium text-sm flex items-center gap-1 p-1.5 hover:bg-red-50 rounded transition"
+                    title="Delete company"
+                  >
+                    <IoTrashOutline className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -143,6 +189,58 @@ const SuperAdminCompanies = () => {
         <div className="text-center py-12">
           <IoBusinessOutline className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500">No companies found matching your search.</p>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mx-auto mb-4">
+              <IoTrashOutline className="w-6 h-6 text-red-600" />
+            </div>
+            
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">Delete Company?</h2>
+            <p className="text-gray-600 text-center mb-4">
+              You are about to permanently delete <strong>{selectedCompany.name}</strong> and all associated data.
+            </p>
+            
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-800 mb-3">
+                <strong>Warning:</strong> This action cannot be undone. All tasks, teams, members, and related data will be deleted.
+              </p>
+              <p className="text-sm text-red-800">
+                Type <strong className="font-mono">DELETE MY COMPANY</strong> to confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Type confirmation text..."
+                className="w-full mt-3 px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedCompany(null);
+                  setDeleteConfirmation('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting || deleteConfirmation !== 'DELETE MY COMPANY'}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Company'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

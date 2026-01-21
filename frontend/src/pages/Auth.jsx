@@ -73,6 +73,7 @@ const Auth = ({ type }) => {
       localStorage.setItem('token', data.token);
       if (data.user) {
         localStorage.setItem('userProfile', JSON.stringify(data.user));
+        localStorage.setItem('userId', data.user._id);
       }
 
       console.log('Login response:', data);

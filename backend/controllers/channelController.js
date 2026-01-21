@@ -63,13 +63,16 @@ export const postMessage = async (req, res) => {
 
 export const listMessages = async (req, res) => {
   try {
-    const channel = await Channel.findById(req.params.id).populate('messages.user', 'firstName lastName');
+    const channel = await Channel.findById(req.params.id)
+      .populate('members', 'firstName lastName email')
+      .populate('messages.user', 'firstName lastName email')
+      .populate('joinRequests.user', 'firstName lastName email');
     if (!channel) return res.status(404).json({ message: 'Channel not found' });
     const { error } = await ensureMember(channel.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
-    const isMember = channel.members.map((m) => m.toString()).includes(req.user._id.toString());
+    const isMember = channel.members.map((m) => m._id ? m._id.toString() : m.toString()).includes(req.user._id.toString());
     if (!isMember) return res.status(403).json({ message: 'Not a channel member' });
-    res.json(channel.messages);
+    res.json(channel);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -121,7 +124,7 @@ export const requestJoinChannel = async (req, res) => {
   }
 };
 
-// Approve join request
+// Approve join request - only owner or company owner can approve
 export const approveJoinRequest = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -129,11 +132,16 @@ export const approveJoinRequest = async (req, res) => {
     
     const channel = await Channel.findById(req.params.id);
     if (!channel) return res.status(404).json({ message: 'Channel not found' });
-    const { error } = await ensureMember(channel.company, req.user._id);
+    const { error, role: companyRole } = await ensureMember(channel.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
     
-    const isMember = channel.members.some(m => m.toString() === req.user._id.toString());
-    if (!isMember) return res.status(403).json({ message: 'Only channel members can approve requests' });
+    // Only owner or company owner/manager can approve
+    const isChannelOwner = channel.members[0]?.toString() === req.user._id.toString();
+    const isCompanyOwner = companyRole === 'owner';
+    
+    if (!isChannelOwner && !isCompanyOwner) {
+      return res.status(403).json({ message: 'Only channel owner or company owner can approve join requests' });
+    }
     
     // Remove from join requests and add to members
     channel.joinRequests = channel.joinRequests?.filter(r => r.user.toString() !== userId) || [];
@@ -148,7 +156,7 @@ export const approveJoinRequest = async (req, res) => {
   }
 };
 
-// Reject join request
+// Reject join request - only owner or company owner can reject
 export const rejectJoinRequest = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -156,11 +164,16 @@ export const rejectJoinRequest = async (req, res) => {
     
     const channel = await Channel.findById(req.params.id);
     if (!channel) return res.status(404).json({ message: 'Channel not found' });
-    const { error } = await ensureMember(channel.company, req.user._id);
+    const { error, role: companyRole } = await ensureMember(channel.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
     
-    const isMember = channel.members.some(m => m.toString() === req.user._id.toString());
-    if (!isMember) return res.status(403).json({ message: 'Only channel members can reject requests' });
+    // Only owner or company owner/manager can reject
+    const isChannelOwner = channel.members[0]?.toString() === req.user._id.toString();
+    const isCompanyOwner = companyRole === 'owner';
+    
+    if (!isChannelOwner && !isCompanyOwner) {
+      return res.status(403).json({ message: 'Only channel owner or company owner can reject join requests' });
+    }
     
     channel.joinRequests = channel.joinRequests?.filter(r => r.user.toString() !== userId) || [];
     await channel.save();

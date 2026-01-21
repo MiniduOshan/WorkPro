@@ -26,11 +26,14 @@ export default function Channels() {
   const [userProfile, setUserProfile] = useState(null);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [companyMembers, setCompanyMembers] = useState([]);
+  const [companyRole, setCompanyRole] = useState('');
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
+    const role = localStorage.getItem('companyRole');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
+      setCompanyRole(role || '');
       loadUserProfile();
     }
   }, []);
@@ -125,7 +128,9 @@ export default function Channels() {
       loadChannels();
       loadMessages(selected);
     } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to approve request';
       console.error('Failed to approve request:', err);
+      alert(errorMsg);
     }
   };
 
@@ -135,8 +140,11 @@ export default function Channels() {
       await api.post(`/api/channels/${selected._id}/reject-join`, { userId });
       alert('Join request rejected');
       loadChannels();
+      loadMessages(selected);
     } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to reject request';
       console.error('Failed to reject request:', err);
+      alert(errorMsg);
     }
   };
 
@@ -334,7 +342,7 @@ export default function Channels() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selected.isMember && (
+                  {selected.isMember && (selected.members?.[0]?._id === userProfile?._id || selected.members?.[0] === userProfile?._id || companyRole === 'owner') && (
                     <button
                       onClick={() => setShowMembersModal(true)}
                       className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-semibold"
@@ -541,10 +549,13 @@ export default function Channels() {
       )}
 
       {/* Manage Members Modal */}
-      {showMembersModal && selected && (
+      {showMembersModal && selected && (selected.members?.[0]?._id === userProfile?._id || selected.members?.[0] === userProfile?._id || companyRole === 'owner') && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">Manage Channel Members</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">Manage Channel Members</h2>
+              <button onClick={() => setShowMembersModal(false)} className="p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
+            </div>
             
             {/* Join Requests */}
             {selected.joinRequests?.length > 0 && (
@@ -552,21 +563,22 @@ export default function Channels() {
                 <h3 className="text-lg font-semibold text-slate-700 mb-3">Pending Requests</h3>
                 <div className="space-y-2">
                   {selected.joinRequests.map((req) => {
-                    const member = companyMembers.find(m => m.user._id === req.user || m.user._id === req.user._id);
+                    const userId = req.user?._id || req.user;
+                    const member = companyMembers.find(m => m.user._id === userId);
                     return (
-                      <div key={req.user} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div key={userId} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                         <span className="font-semibold">
                           {member ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
                         </span>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => approveJoinRequest(req.user)}
+                            onClick={() => approveJoinRequest(userId)}
                             className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-semibold"
                           >
                             Approve
                           </button>
                           <button
-                            onClick={() => rejectJoinRequest(req.user)}
+                            onClick={() => rejectJoinRequest(userId)}
                             className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-semibold"
                           >
                             Reject

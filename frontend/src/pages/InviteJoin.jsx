@@ -211,7 +211,7 @@ export default function InviteJoin() {
             </div>
 
             {/* Department Selection */}
-            {invitation?.company?.departments?.length > 0 && (
+            {invitation?.company?.departments && invitation.company.departments.length > 0 && (
               <div className="mb-8">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Select Your Department
@@ -219,6 +219,7 @@ export default function InviteJoin() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {invitation.company.departments.map((dept) => (
                     <button
+                      type="button"
                       key={dept}
                       onClick={() => setSelectedDepartment(dept)}
                       className={`px-4 py-3 rounded-lg border-2 transition-all font-medium ${

@@ -77,8 +77,15 @@ export const getCompany = async (req, res) => {
       .populate('owner', 'firstName lastName email')
       .populate('members.user', 'firstName lastName email profilePic mobileNumber');
     if (!company) return res.status(404).json({ message: 'Company not found' });
+    
+    // Check if user is the owner OR a member
+    const isOwner = company.owner?._id?.toString() === req.user._id?.toString();
     const role = company.getMemberRole(req.user._id);
-    if (!role) return res.status(403).json({ message: 'Not a member of this company' });
+    
+    if (!isOwner && !role) {
+      return res.status(403).json({ message: 'Not a member of this company' });
+    }
+    
     res.json(company);
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -365,7 +372,7 @@ export const switchCompany = async (req, res) => {
   }
 };
 
-// Delete entire company (owner only)
+// Delete entire company (owner or super admin only)
 export const deleteCompany = async (req, res) => {
   const { companyId } = req.params;
   const { confirmation } = req.body; // Require confirmation phrase
@@ -378,9 +385,15 @@ export const deleteCompany = async (req, res) => {
     const company = await Company.findById(companyId);
     if (!company) return res.status(404).json({ message: 'Company not found' });
     
+    // Import isSuperAdmin from superAdminController
+    const { isSuperAdmin } = await import('./superAdminController.js');
+    const superAdmin = await isSuperAdmin(req.user._id);
+    
     const role = company.getMemberRole(req.user._id);
-    if (role !== 'owner') {
-      return res.status(403).json({ message: 'Only the company owner can delete the company' });
+    const isOwner = role === 'owner';
+    
+    if (!isOwner && !superAdmin) {
+      return res.status(403).json({ message: 'Only the company owner or super admin can delete the company' });
     }
 
     // Delete all related data

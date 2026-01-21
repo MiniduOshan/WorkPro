@@ -222,6 +222,7 @@ export default function Invite() {
                   </div>
                   <div className="flex gap-3">
                     <button
+                      type="button"
                       onClick={copyLink}
                       className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
                     >

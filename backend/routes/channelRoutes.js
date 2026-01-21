@@ -17,8 +17,8 @@ const router = Router();
 
 router.post('/', protect, createChannel);
 router.get('/', protect, listChannels);
+router.get('/:id', protect, listMessages);
 router.post('/:id/messages', protect, postMessage);
-router.get('/:id/messages', protect, listMessages);
 router.delete('/:id', protect, deleteChannel);
 router.post('/:id/request-join', protect, requestJoinChannel);
 router.post('/:id/approve-join', protect, approveJoinRequest);

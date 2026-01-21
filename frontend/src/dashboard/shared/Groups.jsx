@@ -129,6 +129,30 @@ export default function Groups() {
     }
   };
 
+  const joinGroup = async () => {
+    if (!viewGroup) return;
+    try {
+      await api.post(`/api/groups/${viewGroup._id}/join`);
+      alert('Successfully joined group!');
+      fetchGroups(companyId);
+      openView(viewGroup);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to join group');
+    }
+  };
+
+  const leaveGroup = async () => {
+    if (!viewGroup) return;
+    try {
+      await api.post(`/api/groups/${viewGroup._id}/leave`);
+      alert('Successfully left group!');
+      fetchGroups(companyId);
+      openView(viewGroup);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to leave group');
+    }
+  };
+
   const getMemberName = (member) => {
     if (typeof member === 'string') return 'Unknown';
     return `${member.firstName || ''} ${member.lastName || ''}`.trim();
@@ -318,17 +342,49 @@ export default function Groups() {
                         Members ({groupMembers?.length || 0})
                       </h4>
 
-                      {groupMembers?.length ? (
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {groupMembers.map(member => (
-                            <div key={getMemberId(member)} className="px-4 py-3 bg-indigo-50 rounded-xl border border-indigo-200">
-                              <p className="font-semibold text-slate-800">{getMemberName(member)}</p>
-                              <p className="text-xs text-slate-600">{getMemberEmail(member)}</p>
+                      {/* Check if current user is in this group */}
+                      {groupMembers?.some(m => getMemberId(m) === localStorage.getItem('userId')) ? (
+                        <>
+                          {groupMembers?.length ? (
+                            <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
+                              {groupMembers.map(member => (
+                                <div key={getMemberId(member)} className="px-4 py-3 bg-indigo-50 rounded-xl border border-indigo-200">
+                                  <p className="font-semibold text-slate-800">{getMemberName(member)}</p>
+                                  <p className="text-xs text-slate-600">{getMemberEmail(member)}</p>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          ) : (
+                            <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl mb-4">No members in this group yet.</p>
+                          )}
+                          <button
+                            onClick={leaveGroup}
+                            className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm flex items-center justify-center gap-2"
+                          >
+                            <IoPersonRemoveOutline /> Leave Group
+                          </button>
+                        </>
                       ) : (
-                        <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this group yet.</p>
+                        <div className="space-y-4">
+                          {groupMembers?.length ? (
+                            <div className="space-y-2 max-h-96 overflow-y-auto">
+                              {groupMembers.map(member => (
+                                <div key={getMemberId(member)} className="px-4 py-3 bg-indigo-50 rounded-xl border border-indigo-200">
+                                  <p className="font-semibold text-slate-800">{getMemberName(member)}</p>
+                                  <p className="text-xs text-slate-600">{getMemberEmail(member)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this group yet.</p>
+                          )}
+                          <button
+                            onClick={joinGroup}
+                            className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition text-sm flex items-center justify-center gap-2"
+                          >
+                            <IoPersonAddOutline /> Join Group
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}

@@ -126,9 +126,14 @@ export default function TasksBoard() {
   // Filter employees based on selected department
   useEffect(() => {
     if (department) {
-      const filtered = employees.filter(emp => emp.department === department);
+      // Show employees/managers in the selected department, plus all managers/owners
+      const filtered = employees.filter(emp => 
+        emp.department === department || 
+        ['owner', 'manager'].includes(emp.role)
+      );
       setFilteredEmployees(filtered);
     } else {
+      // Show all employees and managers when no department selected
       setFilteredEmployees(employees);
     }
   }, [department, employees]);

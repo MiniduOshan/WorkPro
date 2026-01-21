@@ -103,9 +103,7 @@ const DocumentLibrary = () => {
 
       await api.post('/api/documents', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'x-company-id': companyId,
-          'Content-Type': 'multipart/form-data',
         },
       });
 
@@ -115,7 +113,9 @@ const DocumentLibrary = () => {
       fetchDocuments();
       fetchStats();
     } catch (err) {
-      alert('Upload failed. Please try again.');
+      const errorMsg = err.response?.data?.message || err.message || 'Upload failed. Please try again.';
+      alert(`Upload failed: ${errorMsg}`);
+      console.error('Document upload error:', err);
     }
   };
 

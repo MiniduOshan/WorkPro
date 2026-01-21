@@ -162,6 +162,34 @@ export default function Departments() {
     }
   };
 
+  const joinDepartment = async () => {
+    if (!viewDept) return;
+    try {
+      await api.post(`/api/departments/${viewDept._id}/join`);
+      alert('Successfully joined department!');
+      fetchDepartments(companyId);
+      openView(viewDept);
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to join department';
+      alert(errorMsg);
+      console.error('Failed to join department:', err);
+    }
+  };
+
+  const leaveDepartment = async () => {
+    if (!viewDept) return;
+    try {
+      await api.post(`/api/departments/${viewDept._id}/leave`);
+      alert('Successfully left department!');
+      fetchDepartments(companyId);
+      openView(viewDept);
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Failed to leave department';
+      alert(errorMsg);
+      console.error('Failed to leave department:', err);
+    }
+  };
+
   return (
     <div className="grow flex flex-col overflow-hidden bg-slate-50">
       {/* Header */}
@@ -453,17 +481,50 @@ export default function Departments() {
                     <IoPeopleOutline className="text-emerald-600" />
                     Members ({deptMembers?.length || 0})
                   </h4>
-                  {deptMembers?.length ? (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {deptMembers.map(member => (
-                        <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
-                          <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
-                          <p className="text-xs text-slate-600">{member.user.email}</p>
+                  
+                  {/* Check if current user is in this department */}
+                  {deptMembers?.some(m => m.user._id === localStorage.getItem('userId')) ? (
+                    <>
+                      {deptMembers?.length ? (
+                        <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
+                          {deptMembers.map(member => (
+                            <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                              <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
+                              <p className="text-xs text-slate-600">{member.user.email}</p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      ) : (
+                        <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl mb-4">No members in this department yet.</p>
+                      )}
+                      <button
+                        onClick={leaveDepartment}
+                        className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm flex items-center justify-center gap-2"
+                      >
+                        <IoPersonRemoveOutline /> Leave Department
+                      </button>
+                    </>
                   ) : (
-                    <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this department yet.</p>
+                    <div className="space-y-4">
+                      {deptMembers?.length ? (
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {deptMembers.map(member => (
+                            <div key={member.user._id} className="px-3 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                              <p className="font-semibold text-slate-800 text-sm">{member.user.firstName} {member.user.lastName}</p>
+                              <p className="text-xs text-slate-600">{member.user.email}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this department yet.</p>
+                      )}
+                      <button
+                        onClick={joinDepartment}
+                        className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition text-sm flex items-center justify-center gap-2"
+                      >
+                        <IoPersonAddOutline /> Join Department
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

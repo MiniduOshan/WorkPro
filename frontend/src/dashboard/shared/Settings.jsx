@@ -155,8 +155,7 @@ export default function Settings() {
   const tabs = [
     ...(isManager ? [{ id: 'company', label: 'Company', icon: IoBusinessOutline }] : []),
     { id: 'notifications', label: 'Notifications', icon: IoNotificationsOutline },
-    { id: 'privacy', label: 'Privacy', icon: IoLockClosedOutline },
-    { id: 'appearance', label: 'Appearance', icon: IoColorPaletteOutline }
+    { id: 'privacy', label: 'Privacy', icon: IoLockClosedOutline }
   ];
 
   return (
@@ -371,35 +370,6 @@ export default function Settings() {
                   {loading ? 'Saving...' : 'Save Privacy Settings'}
                 </button>
               </form>
-            </div>
-          )}
-
-          {/* Appearance Settings */}
-          {activeTab === 'appearance' && (
-            <div className="bg-white rounded-2xl border-2 border-slate-200 p-8">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Appearance</h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-4">Theme</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <button className={`p-6 border-2 border-${theme.primary} bg-${theme.primaryLight} rounded-xl text-center hover:shadow-lg transition`}>
-                      <div className="w-12 h-12 bg-white rounded-lg mx-auto mb-2"></div>
-                      <p className={`font-semibold text-${theme.primary}`}>Light</p>
-                    </button>
-                    <button className="p-6 border-2 border-slate-200 rounded-xl text-center hover:shadow-lg transition">
-                      <div className="w-12 h-12 bg-slate-800 rounded-lg mx-auto mb-2"></div>
-                      <p className="font-semibold text-slate-600">Dark</p>
-                    </button>
-                    <button className="p-6 border-2 border-slate-200 rounded-xl text-center hover:shadow-lg transition">
-                      <div className="w-12 h-12 bg-gradient-to-br from-slate-200 to-slate-800 rounded-lg mx-auto mb-2"></div>
-                      <p className="font-semibold text-slate-600">Auto</p>
-                    </button>
-                  </div>
-                </div>
-                <p className={`text-sm text-slate-500 bg-${theme.primaryLight} border border-${theme.primaryBorderLight} rounded-xl p-4`}>
-                  🎨 More appearance customization options coming soon!
-                </p>
-              </div>
             </div>
           )}
 

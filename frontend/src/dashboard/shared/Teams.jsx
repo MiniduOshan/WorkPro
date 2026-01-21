@@ -28,11 +28,14 @@ export default function Teams() {
   const [sendingInvite, setSendingInvite] = useState(false);
   const [inviteResult, setInviteResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [companyRole, setCompanyRole] = useState('');
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
+    const role = localStorage.getItem('companyRole');
     if (storedCompanyId && storedCompanyId !== 'null' && storedCompanyId !== 'undefined') {
       setCompanyId(storedCompanyId);
+      setCompanyRole(role || 'employee');
       fetchTeamMembers(storedCompanyId);
       fetchCompany(storedCompanyId);
     } else {
@@ -95,10 +98,45 @@ export default function Teams() {
   };
 
   const copyLink = () => {
-    if (inviteResult?.link) {
-      navigator.clipboard.writeText(inviteResult.link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (!inviteResult?.link) return;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(inviteResult.link)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          // Fallback: use document.execCommand
+          const textarea = document.createElement('textarea');
+          textarea.value = inviteResult.link;
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          } catch (err) {
+            console.error('Failed to copy link:', err);
+            alert('Failed to copy link. Please copy manually.');
+          }
+          document.body.removeChild(textarea);
+        });
+    } else {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = inviteResult.link;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+        alert('Failed to copy link. Please copy manually.');
+      }
+      document.body.removeChild(textarea);
     }
   };
 
@@ -233,16 +271,20 @@ export default function Teams() {
                   <button className={`flex-1 px-4 py-2 bg-${theme.primaryLight} text-${theme.primary} rounded-lg font-semibold hover:bg-${theme.primaryLighter} transition text-sm`}>
                     View Profile
                   </button>
-                  <button onClick={async ()=>{
-                    try {
-                      await api.delete(`/api/companies/${companyId}/members/${member._id}`);
-                      setMembers(prev=>prev.filter(m=>m._id!==member._id));
-                    } catch(e){
-                      console.error('Failed to remove member', e);
-                    }
-                  }} className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
-                    Remove
-                  </button>
+                  {['owner', 'manager'].includes(companyRole) && (
+                    <button onClick={async ()=>{
+                      try {
+                        await api.delete(`/api/companies/${companyId}/members/${member._id}`);
+                        setMembers(prev=>prev.filter(m=>m._id!==member._id));
+                      } catch(e){
+                        const msg = e.response?.data?.message || 'Failed to remove member';
+                        alert(msg);
+                        console.error('Failed to remove member', e);
+                      }
+                    }} className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
+                      Remove
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -309,6 +351,7 @@ export default function Teams() {
                 </div>
 
                 <button 
+                  type="button"
                   onClick={copyLink}
                   className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
                     copied 

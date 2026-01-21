@@ -17,10 +17,10 @@ const router = Router();
 router.use(protect);
 
 router.get('/', getDocuments);
+router.post('/', upload.single('file'), uploadDocument);
 router.get('/stats', getDocumentStats);
 router.get('/:id', getDocument);
 router.get('/:id/download', downloadDocument);
-router.post('/', upload.single('file'), uploadDocument);
 router.put('/:id', updateDocument);
 router.delete('/:id', deleteDocument);
 

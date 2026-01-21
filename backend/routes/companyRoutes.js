@@ -8,24 +8,26 @@ const router = Router();
 // Search (public)
 router.get('/search', searchCompanies);
 
-// Companies
-router.post('/', protect, createCompany);
+// Companies - specific routes first
 router.get('/mine', protect, myCompanies);
 router.get('/my-companies', protect, getUserCompanies);
 router.post('/switch', protect, switchCompany);
-router.get('/:id', protect, getCompany);
-router.delete('/:companyId', protect, deleteCompany);
+router.get('/role', protect, myRole);
 
-// Invitations
-router.post('/:companyId/invitations', protect, createInvitation);
+// Invitations - specific routes
 router.get('/invitations/details', getInvitationDetails);
 router.post('/invitations/accept', protect, acceptInvitation);
-router.post('/invitations/accept-public', acceptInvitationPublic); // Public endpoint for signup + join
+router.post('/invitations/accept-public', acceptInvitationPublic);
 
-// Role management & members
+// Company creation
+router.post('/', protect, createCompany);
+
+// Generic company routes with parameters
+router.get('/:id', protect, getCompany);
+router.delete('/:companyId', protect, deleteCompany);
+router.post('/:companyId/invitations', protect, createInvitation);
 router.get('/:companyId/members', protect, listMembers);
 router.put('/:companyId/members/:userId/role', protect, updateMemberRole);
 router.delete('/:companyId/members/:userId', protect, removeMember);
-router.get('/role', protect, myRole);
 
 export default router;

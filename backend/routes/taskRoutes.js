@@ -5,8 +5,8 @@ import { createTask, listTasks, getTask, updateTask, deleteTask, approveReassign
 const router = Router();
 
 router.post('/', protect, createTask);
-router.get('/', protect, listTasks);
 router.get('/pending-reassignments', protect, getPendingReassignments);
+router.get('/', protect, listTasks);
 router.get('/:id', protect, getTask);
 router.put('/:id', protect, updateTask);
 router.post('/:id/approve-reassignment', protect, approveReassignment);

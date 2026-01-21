@@ -84,7 +84,19 @@ export const uploadDocument = async (req, res) => {
 
     const { category = 'general', tags, linkedType, linkedId } = req.body;
 
-    const document = new Document({
+    let parsedTags = [];
+    if (tags) {
+      try {
+        parsedTags = JSON.parse(tags);
+        if (!Array.isArray(parsedTags)) {
+          parsedTags = [];
+        }
+      } catch (e) {
+        parsedTags = [];
+      }
+    }
+
+    const documentData = {
       company: companyId,
       name: req.body.name || req.file.originalname,
       originalName: req.file.originalname,
@@ -93,12 +105,17 @@ export const uploadDocument = async (req, res) => {
       filePath: req.file.path,
       category,
       uploadedBy: req.user._id,
-      tags: tags ? JSON.parse(tags) : [],
-      linkedTo: {
+      tags: parsedTags,
+    };
+
+    if (linkedId) {
+      documentData.linkedTo = {
         type: linkedType || 'none',
-        id: linkedId || null,
-      },
-    });
+        id: linkedId,
+      };
+    }
+
+    const document = new Document(documentData);
 
     await document.save();
 
