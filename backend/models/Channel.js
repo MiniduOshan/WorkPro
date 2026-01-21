@@ -17,6 +17,10 @@ const ChannelSchema = new mongoose.Schema(
     type: { type: String, enum: ['public', 'private'], default: 'public' },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     messages: { type: [MessageSchema], default: [] },
+    joinRequests: [{
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      requestedAt: { type: Date, default: Date.now }
+    }],
   },
   { timestamps: true }
 );

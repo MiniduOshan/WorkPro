@@ -21,6 +21,13 @@ export default function CalendarWidget() {
     if (cid) loadTasks(cid, r, profile);
   }, []);
 
+  // Refresh tasks when month changes
+  useEffect(() => {
+    if (companyId) {
+      loadTasks(companyId, role, userProfile);
+    }
+  }, [currentDate]);
+
   const loadTasks = async (cid, r, profile) => {
     try {
       setLoading(true);

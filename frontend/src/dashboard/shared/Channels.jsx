@@ -23,13 +23,43 @@ export default function Channels() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newChannelName, setNewChannelName] = useState('');
   const [newChannelType, setNewChannelType] = useState('public');
+  const [userProfile, setUserProfile] = useState(null);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [companyMembers, setCompanyMembers] = useState([]);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
+      loadUserProfile();
     }
   }, []);
+
+  useEffect(() => {
+    if (companyId) {
+      loadChannels();
+      loadCompanyMembers();
+    }
+  }, [companyId]);
+
+  const loadUserProfile = async () => {
+    try {
+      const { data } = await api.get('/api/users/profile');
+      setUserProfile(data);
+    } catch (err) {
+      console.error('Failed to load user profile:', err);
+    }
+  };
+
+  const loadCompanyMembers = async () => {
+    if (!companyId) return;
+    try {
+      const { data } = await api.get(`/api/companies/${companyId}`);
+      setCompanyMembers(data.members || []);
+    } catch (err) {
+      console.error('Failed to load company members:', err);
+    }
+  };
 
   const loadChannels = async () => {
     if (!companyId) return;
@@ -47,11 +77,91 @@ export default function Channels() {
 
   const loadMessages = async (ch) => {
     if (!companyId) return;
+    const isMember = ch.members?.some(m => m === userProfile?._id || m._id === userProfile?._id);
+    
+    if (!isMember) {
+      // User is not a member - show join option
+      setSelected({ ...ch, messages: [], isMember: false });
+      return;
+    }
+    
     try {
-      const { data } = await api.get(`/api/channels/${ch._id}/messages`);
-      setSelected({ ...ch, messages: data });
+      const { data } = await api.get(`/api/channels/${ch._id}`);
+      setSelected({ ...ch, messages: data.messages || [], isMember: true });
     } catch (err) {
       console.error('Failed to load messages:', err);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || !selected?.isMember) return;
+    try {
+      await api.post(`/api/channels/${selected._id}/messages`, { text: message });
+      setMessage('');
+      loadMessages(selected);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+  };
+
+  const requestJoin = async () => {
+    if (!selected) return;
+    try {
+      await api.post(`/api/channels/${selected._id}/request-join`);
+      alert('Join request submitted! Wait for approval from channel members.');
+      loadChannels();
+    } catch (err) {
+      console.error('Failed to request join:', err);
+      alert(err.response?.data?.message || 'Failed to request join');
+    }
+  };
+
+  const approveJoinRequest = async (userId) => {
+    if (!selected) return;
+    try {
+      await api.post(`/api/channels/${selected._id}/approve-join`, { userId });
+      alert('Join request approved!');
+      loadChannels();
+      loadMessages(selected);
+    } catch (err) {
+      console.error('Failed to approve request:', err);
+    }
+  };
+
+  const rejectJoinRequest = async (userId) => {
+    if (!selected) return;
+    try {
+      await api.post(`/api/channels/${selected._id}/reject-join`, { userId });
+      alert('Join request rejected');
+      loadChannels();
+    } catch (err) {
+      console.error('Failed to reject request:', err);
+    }
+  };
+
+  const addMember = async (userId) => {
+    if (!selected) return;
+    try {
+      await api.post(`/api/channels/${selected._id}/add-member`, { userId });
+      alert('Member added!');
+      loadChannels();
+      loadMessages(selected);
+    } catch (err) {
+      console.error('Failed to add member:', err);
+    }
+  };
+
+  const removeMember = async (userId) => {
+    if (!selected) return;
+    if (!window.confirm('Remove this member from the channel?')) return;
+    try {
+      await api.post(`/api/channels/${selected._id}/remove-member`, { userId });
+      alert('Member removed');
+      loadChannels();
+      loadMessages(selected);
+    } catch (err) {
+      console.error('Failed to remove member:', err);
     }
   };
 
@@ -215,21 +325,55 @@ export default function Channels() {
                     <p className="text-xs text-slate-500">
                       <IoPeopleOutline className="inline mr-1" />
                       {selected.members?.length || 0} members
+                      {selected.joinRequests?.length > 0 && (
+                        <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold">
+                          {selected.joinRequests.length} pending
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => deleteChannel(selected._id)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 hover:text-red-700"
-                  title="Delete channel"
-                >
-                  <IoEllipsisVerticalOutline className="text-xl" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {selected.isMember && (
+                    <button
+                      onClick={() => setShowMembersModal(true)}
+                      className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-semibold"
+                    >
+                      Manage Members
+                    </button>
+                  )}
+                  {selected.isMember && (
+                    <button 
+                      onClick={() => deleteChannel(selected._id)}
+                      className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 hover:text-red-700"
+                      title="Delete channel"
+                    >
+                      <IoEllipsisVerticalOutline className="text-xl" />
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Messages Area */}
-              <div className="grow overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                {(selected.messages || []).length === 0 ? (
+              {/* Messages Area or Join Button */}
+              {!selected.isMember ? (
+                <div className="grow flex items-center justify-center p-6">
+                  <div className="text-center max-w-md">
+                    <IoPeopleOutline className="mx-auto text-6xl text-slate-300 mb-4" />
+                    <h4 className="text-xl font-bold text-slate-700 mb-2">Join this channel</h4>
+                    <p className="text-slate-600 mb-6">
+                      You need to join this channel to see messages and participate in conversations.
+                    </p>
+                    <button
+                      onClick={requestJoin}
+                      className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition shadow-lg`}
+                    >
+                      Request to Join
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grow overflow-y-auto p-6 space-y-4 custom-scrollbar">{(selected.messages || []).length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
                       <IoChatbubblesOutline className="mx-auto text-6xl text-slate-300 mb-3" />
@@ -311,6 +455,8 @@ export default function Channels() {
                   </button>
                 </form>
               </div>
+                </>
+              )}
             </>
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -390,6 +536,106 @@ export default function Channels() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Members Modal */}
+      {showMembersModal && selected && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-slate-800 mb-6">Manage Channel Members</h2>
+            
+            {/* Join Requests */}
+            {selected.joinRequests?.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-slate-700 mb-3">Pending Requests</h3>
+                <div className="space-y-2">
+                  {selected.joinRequests.map((req) => {
+                    const member = companyMembers.find(m => m.user._id === req.user || m.user._id === req.user._id);
+                    return (
+                      <div key={req.user} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <span className="font-semibold">
+                          {member ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => approveJoinRequest(req.user)}
+                            className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-semibold"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => rejectJoinRequest(req.user)}
+                            className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-semibold"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Current Members */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-slate-700 mb-3">Current Members ({selected.members?.length || 0})</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {selected.members?.map((memberId) => {
+                  const member = companyMembers.find(m => m.user._id === memberId || m.user._id === memberId._id);
+                  return (
+                    <div key={memberId._id || memberId} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <span className="font-semibold">
+                        {member ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
+                      </span>
+                      {userProfile?._id !== (memberId._id || memberId) && (
+                        <button
+                          onClick={() => removeMember(memberId._id || memberId)}
+                          className="px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-semibold"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Add Members */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-700 mb-3">Add Members</h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {companyMembers.filter(m => 
+                  !selected.members?.some(memberId => 
+                    (memberId._id || memberId) === m.user._id
+                  )
+                ).map((member) => (
+                  <div key={member.user._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <span className="font-semibold">
+                      {member.user.firstName} {member.user.lastName}
+                    </span>
+                    <button
+                      onClick={() => addMember(member.user._id)}
+                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={() => setShowMembersModal(false)}
+                className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

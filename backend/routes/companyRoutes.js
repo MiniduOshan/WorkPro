@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import protect from '../middleware/authMiddleware.js';
-import { searchCompanies, createCompany, myCompanies, getCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, updateMemberRole, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany } from '../controllers/companyController.js';
+import { searchCompanies, createCompany, myCompanies, getCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, updateMemberRole, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany, deleteCompany } from '../controllers/companyController.js';
 import { loadCompanyContext, requireRole } from '../middleware/companyAuth.js';
 
 const router = Router();
@@ -14,6 +14,7 @@ router.get('/mine', protect, myCompanies);
 router.get('/my-companies', protect, getUserCompanies);
 router.post('/switch', protect, switchCompany);
 router.get('/:id', protect, getCompany);
+router.delete('/:companyId', protect, deleteCompany);
 
 // Invitations
 router.post('/:companyId/invitations', protect, createInvitation);

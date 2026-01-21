@@ -14,17 +14,18 @@ const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
 const isSuperAdmin = async (userId) => {
   const user = await User.findById(userId);
   if (!user) return false;
-  
-  // Only admin.workpro@gmail.com can be super admin
-  const isAdmin = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
-  
-  // Update the flag in database if it doesn't match
-  if (user.isSuperAdmin !== isAdmin) {
-    user.isSuperAdmin = isAdmin;
+
+  // A user is super admin if explicitly flagged OR matches the fixed email
+  const isAdminEmail = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  const effective = user.isSuperAdmin === true || isAdminEmail;
+
+  // Keep DB flag in sync so subsequent checks are fast
+  if (user.isSuperAdmin !== effective) {
+    user.isSuperAdmin = effective;
     await user.save();
   }
-  
-  return isAdmin;
+
+  return effective;
 };
 
 // Get super admin dashboard analytics

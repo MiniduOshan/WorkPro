@@ -74,73 +74,73 @@ export default function Groups() {
       setGroups(prev => prev.filter(g => g._id !== id));
     } catch (err) {
       console.error('Failed to delete group:', err);
-
-      const openView = async (group) => {
-        try {
-          const [groupRes, companyRes] = await Promise.all([
-            api.get(`/api/groups/${group._id}`),
-            api.get(`/api/companies/${companyId}`)
-          ]);
-
-          const members = groupRes.data.members || [];
-          setGroupMembers(members);
-
-          // Get available members (company members not in group)
-          const groupMemberIds = members.map(m => m._id || m);
-          const available = (companyRes.data.members || []).filter(m => !groupMemberIds.includes(m.user?._id || m.user));
-          setAvailableMembers(available);
-
-          setViewGroup(group);
-        } catch (err) {
-          console.error('Failed to load group details:', err);
-          setViewGroup(group);
-          setGroupMembers([]);
-          setAvailableMembers([]);
-        }
-      };
-
-      const addMemberToGroup = async () => {
-        if (!selectedMember || !viewGroup) return;
-        try {
-          const { data } = await api.post(`/api/groups/${viewGroup._id}/members/add`, { userId: selectedMember });
-          const member = availableMembers.find(m => m.user._id === selectedMember);
-          setGroupMembers([...groupMembers, member.user]);
-          setAvailableMembers(availableMembers.filter(m => m.user._id !== selectedMember));
-          setSelectedMember('');
-        } catch (err) {
-          console.error('Failed to add member:', err);
-        }
-      };
-
-      const removeMemberFromGroup = async (userId) => {
-        if (!viewGroup) return;
-        try {
-          await api.post(`/api/groups/${viewGroup._id}/members/remove`, { userId });
-          const member = groupMembers.find(m => m._id === userId);
-          setGroupMembers(groupMembers.filter(m => m._id !== userId));
-          if (member) {
-            setAvailableMembers([...availableMembers, { user: member, role: 'employee' }]);
-          }
-        } catch (err) {
-          console.error('Failed to remove member:', err);
-        }
-      };
-
-      const getMemberName = (member) => {
-        if (typeof member === 'string') return 'Unknown';
-        return `${member.firstName || ''} ${member.lastName || ''}`.trim();
-      };
-
-      const getMemberEmail = (member) => {
-        if (typeof member === 'string') return '';
-        return member.email || '';
-      };
-
-      const getMemberId = (member) => {
-        if (typeof member === 'string') return member;
-        return member._id || '';
-      };
     }
+  };
+
+  const openView = async (group) => {
+    try {
+      const [groupRes, companyRes] = await Promise.all([
+        api.get(`/api/groups/${group._id}`),
+        api.get(`/api/companies/${companyId}`)
+      ]);
+
+      const members = groupRes.data.members || [];
+      setGroupMembers(members);
+
+      // Get available members (company members not in group)
+      const groupMemberIds = members.map(m => m._id || m);
+      const available = (companyRes.data.members || []).filter(m => !groupMemberIds.includes(m.user?._id || m.user));
+      setAvailableMembers(available);
+
+      setViewGroup(group);
+    } catch (err) {
+      console.error('Failed to load group details:', err);
+      setViewGroup(group);
+      setGroupMembers([]);
+      setAvailableMembers([]);
+    }
+  };
+
+  const addMemberToGroup = async () => {
+    if (!selectedMember || !viewGroup) return;
+    try {
+      const { data } = await api.post(`/api/groups/${viewGroup._id}/members/add`, { userId: selectedMember });
+      const member = availableMembers.find(m => m.user._id === selectedMember);
+      setGroupMembers([...groupMembers, member.user]);
+      setAvailableMembers(availableMembers.filter(m => m.user._id !== selectedMember));
+      setSelectedMember('');
+    } catch (err) {
+      console.error('Failed to add member:', err);
+    }
+  };
+
+  const removeMemberFromGroup = async (userId) => {
+    if (!viewGroup) return;
+    try {
+      await api.post(`/api/groups/${viewGroup._id}/members/remove`, { userId });
+      const member = groupMembers.find(m => m._id === userId);
+      setGroupMembers(groupMembers.filter(m => m._id !== userId));
+      if (member) {
+        setAvailableMembers([...availableMembers, { user: member, role: 'employee' }]);
+      }
+    } catch (err) {
+      console.error('Failed to remove member:', err);
+    }
+  };
+
+  const getMemberName = (member) => {
+    if (typeof member === 'string') return 'Unknown';
+    return `${member.firstName || ''} ${member.lastName || ''}`.trim();
+  };
+
+  const getMemberEmail = (member) => {
+    if (typeof member === 'string') return '';
+    return member.email || '';
+  };
+
+  const getMemberId = (member) => {
+    if (typeof member === 'string') return member;
+    return member._id || '';
   };
 
   return (
@@ -219,6 +219,9 @@ export default function Groups() {
                     <p className="text-2xl font-bold text-slate-800">{group.members?.length || 0}</p>
                   </div>
                   <div className="flex gap-2">
+                    <button onClick={() => openView(group)} className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-semibold hover:bg-indigo-100 transition text-sm flex items-center justify-center gap-2">
+                      <IoPeopleOutline /> View Members
+                    </button>
                     {['owner', 'manager'].includes(companyRole) && (
                       <button onClick={() => handleDelete(group._id)} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
                         <IoTrashOutline />

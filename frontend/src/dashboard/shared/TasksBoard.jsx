@@ -37,6 +37,7 @@ export default function TasksBoard() {
   const [reassignTask, setReassignTask] = useState(null);
   const [reassignTo, setReassignTo] = useState('');
   const [reassignReason, setReassignReason] = useState('');
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
 
   const sampleTasks = () => ([
     {
@@ -102,17 +103,29 @@ export default function TasksBoard() {
     try {
       const { data } = await api.get(`/api/companies/${companyId}`);
       if (data && data.members) {
-        setEmployees(data.members.map(m => ({
-          _id: m.user._id || m.user,
-          name: m.user.firstName ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown',
+        const mappedEmployees = data.members.map(m => ({
+          _id: m.user?._id || m.user,
+          name: (m.user?.firstName && m.user?.lastName) ? `${m.user.firstName} ${m.user.lastName}` : 'Unknown',
           department: m.department,
           role: m.role
-        })));
+        }));
+        setEmployees(mappedEmployees);
+        setFilteredEmployees(mappedEmployees);
       }
     } catch (err) {
       console.error('Failed to load employees:', err);
     }
   };
+
+  // Filter employees based on selected department
+  useEffect(() => {
+    if (department) {
+      const filtered = employees.filter(emp => emp.department === department);
+      setFilteredEmployees(filtered);
+    } else {
+      setFilteredEmployees(employees);
+    }
+  }, [department, employees]);
 
   const loadDepartments = async () => {
     if (!companyId) return;
@@ -472,15 +485,21 @@ export default function TasksBoard() {
                 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Description
+                    Department
                   </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
-                    placeholder="Add task details..."
-                    rows="3"
-                  />
+                  <select
+                    value={department}
+                    onChange={(e) => {
+                      setDepartment(e.target.value);
+                      setAssignee(''); // Reset assignee when department changes
+                    }}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  >
+                    <option value="">All Departments</option>
+                    {departments.map((dept) => (
+                      <option key={dept._id} value={dept._id}>{dept.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -494,9 +513,9 @@ export default function TasksBoard() {
                     disabled={companyRole === 'employee'}
                   >
                     <option value="">
-                      {companyRole === 'employee' ? 'Self-assign only' : 'Select Employee'}
+                      {companyRole === 'employee' ? 'Self-assign only' : department ? 'Select from Department' : 'Select Employee'}
                     </option>
-                    {getAvailableAssignees().map((emp) => (
+                    {filteredEmployees.map((emp) => (
                       <option key={emp._id} value={emp._id}>{emp.name}</option>
                     ))}
                   </select>
@@ -505,22 +524,11 @@ export default function TasksBoard() {
                       Only managers can assign tasks to others
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Department
-                  </label>
-                  <select
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((dept) => (
-                      <option key={dept._id} value={dept._id}>{dept.name}</option>
-                    ))}
-                  </select>
+                  {department && filteredEmployees.length === 0 && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      No employees in this department yet
+                    </p>
+                  )}
                 </div>
 
                 <div>

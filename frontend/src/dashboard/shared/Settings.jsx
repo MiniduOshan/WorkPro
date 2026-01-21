@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
 import { 
   IoSettingsOutline,
   IoBusinessOutline,
@@ -8,14 +9,20 @@ import {
   IoColorPaletteOutline,
   IoSaveOutline,
   IoPersonOutline,
-  IoGlobeOutline
+  IoGlobeOutline,
+  IoTrashOutline,
+  IoWarningOutline,
+  IoAlertCircleOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Settings() {
   const theme = useThemeColors();
+  const navigate = useNavigate();
   const isManager = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard/manager');
   const [activeTab, setActiveTab] = useState(isManager ? 'company' : 'notifications');
+  const [companyId, setCompanyId] = useState('');
+  const [companyRole, setCompanyRole] = useState('');
   const [companySettings, setCompanySettings] = useState({
     name: '',
     description: '',
@@ -34,8 +41,16 @@ export default function Settings() {
     showPhone: false
   });
   const [loading, setLoading] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showDeleteCompanyModal, setShowDeleteCompanyModal] = useState(false);
+  const [confirmationText, setConfirmationText] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    const storedCompanyId = localStorage.getItem('companyId');
+    const role = localStorage.getItem('companyRole');
+    setCompanyId(storedCompanyId || '');
+    setCompanyRole(role || '');
     fetchSettings();
   }, []);
 
@@ -91,7 +106,47 @@ export default function Settings() {
       // await api.put('/api/users/privacy-settings', privacySettings);
       alert('Privacy settings saved successfully!');
     } catch (err) {
-      console.error('Failed to save settings:', err);
+    
+
+  const handleDeleteAccount = async () => {
+    try {
+      setDeleting(true);
+      await api.delete('/api/users/account');
+      alert('Your account has been deleted successfully');
+      localStorage.clear();
+      navigate('/auth');
+    } catch (err) {
+      console.error('Failed to delete account:', err);
+      alert(err.response?.data?.message || 'Failed to delete account');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCompany = async () => {
+    if (confirmationText !== 'DELETE MY COMPANY') {
+      alert('Please type "DELETE MY COMPANY" to confirm');
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await api.delete(`/api/companies/${companyId}`, {
+        data: { confirmation: confirmationText }
+      });
+      alert('Company and all related data have been deleted successfully');
+      localStorage.removeItem('companyId');
+      localStorage.removeItem('companyRole');
+      navigate('/dashboard/manager');
+    } catch (err) {
+      console.error('Failed to delete company:', err);
+      alert(err.response?.data?.message || 'Failed to delete company');
+    } finally {
+      setDeleting(false);
+      setConfirmationText('');
+      setShowDeleteCompanyModal(false);
+    }
+  };  console.error('Failed to save settings:', err);
     } finally {
       setLoading(false);
     }
@@ -347,8 +402,182 @@ export default function Settings() {
               </div>
             </div>
           )}
+
+          {/* Danger Zone */}
+          {activeTab === 'danger' && (
+            <div className="space-y-6">
+              {/* Delete Account */}
+              <div className="bg-white rounded-2xl border-2 border-red-200 overflow-hidden">
+                <div className="px-6 py-4 bg-red-50 border-b border-red-200">
+                  <h2 className="text-lg font-bold text-red-800 flex items-center gap-2">
+                    <IoWarningOutline />
+                    Account Deletion
+                  </h2>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-slate-800 mb-2">Delete Your Account</h3>
+                      <p className="text-sm text-slate-600 mb-3">
+                        Permanently delete your account and all associated data. This action cannot be undone.
+                      </p>
+                      <ul className="text-xs text-slate-500 space-y-1">
+                        <li>• You will be removed from all companies</li>
+                        <li>• Your profile information will be deleted</li>
+                        <li>• Tasks assigned to you will become unassigned</li>
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => setShowDeleteAccountModal(true)}
+                      className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition shadow-lg flex items-center gap-2"
+                    >
+                      <IoTrashOutline className="text-lg" />
+                      Delete Account
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delete Company (Owner Only) */}
+              {companyRole === 'owner' && companyId && (
+                <div className="bg-white rounded-2xl border-2 border-red-300 overflow-hidden">
+                  <div className="px-6 py-4 bg-red-100 border-b border-red-300">
+                    <h2 className="text-lg font-bold text-red-900 flex items-center gap-2">
+                      <IoAlertCircleOutline />
+                      Company Deletion
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-slate-800 mb-2">Delete Company</h3>
+                        <p className="text-sm text-slate-600 mb-3">
+                          Permanently delete this company and all associated data. Only owners can perform this action.
+                        </p>
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-3">
+                          <p className="text-xs font-semibold text-red-700 mb-1">This will delete:</p>
+                          <ul className="text-xs text-red-600 space-y-0.5">
+                            <li>• All company members and roles</li>
+                            <li>• All tasks, projects, teams</li>
+                            <li>• All departments, groups, channels</li>
+                            <li>• All messages and documents</li>
+                          </ul>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowDeleteCompanyModal(true)}
+                        className="px-6 py-3 bg-red-700 text-white rounded-xl font-semibold hover:bg-red-800 transition shadow-lg flex items-center gap-2"
+                      >
+                        <IoTrashOutline className="text-lg" />
+                        Delete Company
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <IoAlertCircleOutline className="text-2xl text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Delete Account?</h2>
+                <p className="text-sm text-slate-600">This action cannot be undone</p>
+              </div>
+            </div>
+            
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-sm text-red-700">
+                Are you sure you want to permanently delete your account? All your data will be lost.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteAccountModal(false)}
+                disabled={deleting}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Company Modal */}
+      {showDeleteCompanyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <IoWarningOutline className="text-2xl text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Delete Company?</h2>
+                <p className="text-sm text-slate-600">This will delete everything</p>
+              </div>
+            </div>
+            
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl">
+              <p className="text-sm text-red-700 font-semibold mb-2">
+                ⚠️ WARNING: This action is IRREVERSIBLE!
+              </p>
+              <p className="text-xs text-red-600">
+                All company data will be permanently deleted.
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Type <span className="text-red-600 font-mono">DELETE MY COMPANY</span> to confirm:
+              </label>
+              <input
+                type="text"
+                value={confirmationText}
+                onChange={(e) => setConfirmationText(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-red-500 focus:outline-none font-mono"
+                placeholder="DELETE MY COMPANY"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteCompanyModal(false);
+                  setConfirmationText('');
+                }}
+                disabled={deleting}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCompany}
+                disabled={deleting || confirmationText !== 'DELETE MY COMPANY'}
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete Company'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

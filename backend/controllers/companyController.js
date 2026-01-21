@@ -362,3 +362,60 @@ export const switchCompany = async (req, res) => {
     res.status(500).json({ message: e.message });
   }
 };
+
+// Delete entire company (owner only)
+export const deleteCompany = async (req, res) => {
+  const { companyId } = req.params;
+  const { confirmation } = req.body; // Require confirmation phrase
+  
+  if (!confirmation || confirmation !== 'DELETE MY COMPANY') {
+    return res.status(400).json({ message: 'Confirmation phrase required: "DELETE MY COMPANY"' });
+  }
+
+  try {
+    const company = await Company.findById(companyId);
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+    
+    const role = company.getMemberRole(req.user._id);
+    if (role !== 'owner') {
+      return res.status(403).json({ message: 'Only the company owner can delete the company' });
+    }
+
+    // Delete all related data
+    const Task = req.app.locals.Task || (await import('../models/Task.js')).default;
+    const Project = req.app.locals.Project || (await import('../models/Project.js')).default;
+    const Department = req.app.locals.Department || (await import('../models/Department.js')).default;
+    const Team = req.app.locals.Team || (await import('../models/Team.js')).default;
+    const Channel = req.app.locals.Channel || (await import('../models/Channel.js')).default;
+    const Group = req.app.locals.Group || (await import('../models/Group.js')).default;
+    const Announcement = req.app.locals.Announcement || (await import('../models/Announcement.js')).default;
+
+    await Promise.all([
+      Task.deleteMany({ company: companyId }),
+      Project.deleteMany({ company: companyId }),
+      Department.deleteMany({ company: companyId }),
+      Team.deleteMany({ company: companyId }),
+      Channel.deleteMany({ company: companyId }),
+      Group.deleteMany({ company: companyId }),
+      Announcement.deleteMany({ company: companyId }),
+      Invitation.deleteMany({ company: companyId }),
+    ]);
+
+    // Remove company from all users
+    await User.updateMany(
+      { companies: companyId },
+      { 
+        $pull: { companies: companyId },
+        $unset: { defaultCompany: companyId }
+      }
+    );
+
+    // Delete the company
+    await Company.deleteOne({ _id: companyId });
+
+    res.json({ message: 'Company and all related data deleted successfully' });
+  } catch (e) {
+    console.error('Company deletion error:', e);
+    res.status(500).json({ message: e.message });
+  }
+};

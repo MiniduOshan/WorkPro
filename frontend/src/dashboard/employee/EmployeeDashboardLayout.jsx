@@ -13,12 +13,8 @@ import api from '../../api/axios';
 const ProfileDropdown = ({ profile, onLogout, onClose, onGoToProfile }) => (
     <div className="absolute right-0 top-14 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-4">
         <div className="flex items-center pb-3 border-b border-gray-100">
-            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 overflow-hidden">
-                <img 
-                    src={profile.profilePic || '/images/default_avatar.png'} 
-                    alt="User" 
-                    className="w-full h-full object-cover" 
-                />
+            <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3">
+                {profile.firstName?.[0]?.toUpperCase() || 'U'}
             </div>
             <div>
                 <p className="text-sm font-semibold text-gray-800">{`${profile.firstName} ${profile.lastName}`}</p>
@@ -135,12 +131,8 @@ const EmployeeDashboardLayout = () => {
                                 {profile.firstName} {profile.lastName}
                             </span>
 
-                            <div className="w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
-                                <img 
-                                    src={profile.profilePic || '/images/default_avatar.png'} 
-                                    alt={profile.firstName ? profile.firstName[0] : 'U'} 
-                                    className="w-full h-full object-cover" 
-                                />
+                            <div className="w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                {profile.firstName?.[0]?.toUpperCase() || 'U'}
                             </div>
                             <IoChevronDown className="w-4 h-4 ml-2 text-gray-500" />
                         </button>

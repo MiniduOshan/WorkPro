@@ -132,10 +132,6 @@ export default function Teams() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Team Members</h1>
             <p className="text-slate-600">Manage and view your team members</p>
           </div>
-          <button onClick={()=>setShowInvite(true)} className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}>
-            <IoPersonAddOutline className="text-xl" />
-            <span>Invite Member</span>
-          </button>
         </div>
 
         {/* Search and Filter Bar */}

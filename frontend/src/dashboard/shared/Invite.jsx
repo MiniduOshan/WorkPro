@@ -59,9 +59,31 @@ export default function Invite() {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (!link) return;
+    navigator.clipboard.writeText(link)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy link:', err);
+        // Fallback method
+        const textArea = document.createElement('textarea');
+        textArea.value = link;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } catch (err2) {
+          console.error('Fallback copy failed:', err2);
+          alert('Failed to copy link. Please copy manually.');
+        }
+        document.body.removeChild(textArea);
+      });
   };
 
   return (

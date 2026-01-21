@@ -25,6 +25,7 @@ router.get('/lookup', userController.getUserByEmail); // Assumes controller is u
 // Protected Routes
 router.get('/profile', protect, userController.getUserProfile);
 router.put('/profile', protect, userController.updateUserProfile);
+router.delete('/account', protect, userController.deleteUserAccount);
 
 // File upload route - requires multer middleware
 router.post('/upload-profile-pic', protect, (req, res, next) => {

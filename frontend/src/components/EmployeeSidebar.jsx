@@ -172,16 +172,8 @@ const EmployeeSidebar = () => {
       {/* User Profile Footer */}
       <div className="p-4 border-t border-slate-100 bg-slate-50">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-200 overflow-hidden">
-            {profile.profilePic && profile.profilePic !== '/images/default_avatar.png' ? (
-              <img 
-                src={profile.profilePic} 
-                alt="Profile" 
-                className="w-full h-full object-cover" 
-              />
-            ) : (
-              getInitials()
-            )}
+          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-200">
+            {getInitials()}
           </div>
           <div className="overflow-hidden flex-grow">
             <p className="text-xs font-bold text-slate-800 truncate">

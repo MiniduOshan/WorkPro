@@ -6,8 +6,8 @@ const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
 
 // Helper function to structure user response (used for both signup and login success)
 const getUserResponse = (user) => {
-    // Check if this is the super admin account
-    const isSuperAdmin = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    // A user is super admin if they are flagged OR they match the fixed email
+    const isSuperAdmin = user.isSuperAdmin === true || user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
     
     console.log(`[AUTH] Processing user: ${user.email}`);
     console.log(`[AUTH] Is SuperAdmin: ${isSuperAdmin} (checking against: ${SUPER_ADMIN_EMAIL})`);
@@ -83,8 +83,8 @@ const authUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await user.matchPassword(password))) {
-            // Update isSuperAdmin flag if this is the admin account
-            const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+            // Keep any existing super-admin flag, but also allow the fixed admin email
+            const isSuperAdmin = user.isSuperAdmin === true || email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
             if (user.isSuperAdmin !== isSuperAdmin) {
                 user.isSuperAdmin = isSuperAdmin;
                 await user.save();
@@ -223,6 +223,34 @@ const uploadProfilePic = async (req, res) => {
     }
 };
 
+// @desc 	Delete user account
+// @route 	DELETE /api/users/account
+// @access 	Private (Requires JWT via 'protect' middleware)
+const deleteUserAccount = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Remove user from all companies
+        const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
+        await Company.updateMany(
+            { 'members.user': user._id },
+            { $pull: { members: { user: user._id } } }
+        );
+
+        // Delete the user
+        await User.deleteOne({ _id: user._id });
+
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Account deletion error:', error);
+        res.status(500).json({ message: 'Failed to delete account: ' + error.message });
+    }
+};
+
 export default {
     registerUser,
     authUser,
@@ -230,4 +258,5 @@ export default {
     getUserProfile,
     updateUserProfile, // <--- Preserved and updated
     uploadProfilePic,   // <--- New file upload endpoint
+    deleteUserAccount,  // <--- Account deletion
 };

@@ -103,7 +103,7 @@ export const getDepartmentMembers = async (req, res) => {
     // Get all company members and filter to show only those in this department
     const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
     const company = await Company.findById(dept.company._id).populate('members.user');
-    const deptMembers = company.members.filter(m => m.department === dept._id.toString());
+    const deptMembers = company.members.filter(m => m.department && m.department.toString() === dept._id.toString());
     
     res.json({ members: deptMembers.map(m => ({ ...m.toObject(), user: m.user })) });
   } catch (e) {
