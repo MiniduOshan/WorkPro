@@ -14,9 +14,7 @@ import {
   IoShieldCheckmarkOutline,
   IoFlashOutline,
   IoDocumentTextOutline,
-  IoSparklesOutline,
-  IoCheckmarkDoneOutline,
-  IoSwapHorizontalOutline
+  IoSparklesOutline
 } from 'react-icons/io5';
 
 const ManagerSidebar = () => {
@@ -68,8 +66,6 @@ const ManagerSidebar = () => {
     { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
     { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },
-    { name: 'Task Approvals', icon: IoCheckmarkDoneOutline, path: '/dashboard/manager/task-approvals' },
-    { name: 'Reassignment Approvals', icon: IoSwapHorizontalOutline, path: '/dashboard/manager/task-reassignments' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
     { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },
     { name: 'Notes', icon: IoDocumentTextOutline, path: '/dashboard/manager/notes' },
