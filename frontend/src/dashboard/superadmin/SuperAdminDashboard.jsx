@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   IoBarChartOutline,
   IoBusinessOutline,
@@ -22,13 +22,11 @@ const SuperAdminDashboard = () => {
     features: [],
   });
 
-  const token = localStorage.getItem('token');
-
   useEffect(() => {
     fetchAllAnalytics();
-  }, []);
+  }, [fetchAllAnalytics]);
 
-  const fetchAllAnalytics = async () => {
+  const fetchAllAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Fetching SuperAdmin analytics...');
@@ -63,7 +61,7 @@ const SuperAdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleAddPlan = async (e) => {
     e.preventDefault();

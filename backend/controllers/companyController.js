@@ -178,7 +178,10 @@ export const getInvitationDetails = async (req, res) => {
     if (!inv) return res.status(404).json({ message: 'Invitation not found' });
     if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
     if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
-    res.json(inv);
+    
+    // Return invitation without department field
+    const { department, ...invWithoutDept } = inv.toObject();
+    res.json(invWithoutDept);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
