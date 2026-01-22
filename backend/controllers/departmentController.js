@@ -128,7 +128,16 @@ export const getDepartmentDetail = async (req, res) => {
     if (error) return res.status(403).json({ message: error });
 
     const company = await Company.findById(dept.company).populate('members.user', 'firstName lastName email _id');
-    const members = company.members.filter(m => String(m.department) === String(dept._id));
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+    
+    // Get all members assigned to this department
+    const members = company.members
+      .filter(m => m.department && String(m.department) === String(dept._id))
+      .map(m => ({
+        user: m.user,
+        role: m.role,
+        department: m.department
+      }));
 
     const tasks = await Task.find({ department: dept._id });
     const stats = {
@@ -140,7 +149,7 @@ export const getDepartmentDetail = async (req, res) => {
 
     res.json({
       ...dept.toObject(),
-      members,
+      members: members,
       taskStats: {
         ...stats,
         progress: stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0,

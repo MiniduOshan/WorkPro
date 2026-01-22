@@ -83,7 +83,10 @@ export default function Departments() {
 
       setAvailableMembers(available);
       setViewDept(detail);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error('Failed to open department detail:', err.response?.data || err.message);
+      alert(err.response?.data?.message || 'Failed to load department details');
+    }
   };
 
   const isUserInDepartment = () => {

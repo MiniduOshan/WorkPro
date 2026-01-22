@@ -205,10 +205,9 @@ export const listMembers = async (req, res) => {
   }
 };
 
-// Update member role — disabled to enforce invitation-only role assignment
-export const updateMemberRole = async (req, res) => {
-  return res.status(403).json({ message: 'Role changes are disabled. Use invitations to add members with the desired role.' });
-};
+// updateMemberRole has been completely removed and the route endpoint deleted
+// Role changes after account creation are now impossible
+// Roles can ONLY be assigned during invitation acceptance, not after
 
 // Remove a member from company (cannot remove owner)
 export const removeMember = async (req, res) => {

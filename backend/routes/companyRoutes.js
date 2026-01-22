@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { searchCompanies, createCompany, myCompanies, getCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, updateMemberRole, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany, deleteCompany } from '../controllers/companyController.js';
+import { searchCompanies, createCompany, myCompanies, getCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany, deleteCompany } from '../controllers/companyController.js';
 import { loadCompanyContext, requireRole } from '../middleware/companyAuth.js';
 
 const router = Router();
@@ -27,7 +27,8 @@ router.get('/:id', protect, getCompany);
 router.delete('/:companyId', protect, deleteCompany);
 router.post('/:companyId/invitations', protect, createInvitation);
 router.get('/:companyId/members', protect, listMembers);
-router.put('/:companyId/members/:userId/role', protect, updateMemberRole);
+// ROLE CHANGES DISABLED - Roles can only be assigned via invitation links
+// There is NO PUT endpoint for member roles; this prevents post-creation role changes
 router.delete('/:companyId/members/:userId', protect, removeMember);
 
 export default router;
