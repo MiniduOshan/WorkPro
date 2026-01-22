@@ -20,12 +20,17 @@ export const createNote = async (req, res) => {
 
 export const updateNote = async (req, res) => {
   try {
+    // Only allow updates if the note belongs to the requesting user
+    const updateData = {};
+    if (req.body.title !== undefined) updateData.title = req.body.title;
+    if (req.body.content !== undefined) updateData.content = req.body.content;
+    
     const note = await Note.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
-      { title: req.body.title ?? undefined, content: req.body.content ?? undefined },
+      updateData,
       { new: true }
     );
-    if (!note) return res.status(404).json({ message: 'Note not found' });
+    if (!note) return res.status(404).json({ message: 'Note not found or access denied' });
     res.json(note);
   } catch (err) {
     res.status(500).json({ message: 'Failed to update note' });

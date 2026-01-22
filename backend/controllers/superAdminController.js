@@ -11,7 +11,7 @@ import Notification from '../models/Notification.js';
 const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
 
 // Check if user is super admin
-const isSuperAdmin = async (userId) => {
+export const isSuperAdmin = async (userId) => {
   const user = await User.findById(userId);
   if (!user) return false;
 

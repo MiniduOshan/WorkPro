@@ -37,7 +37,7 @@ const fileFilter = (req, file, cb) => {
 
 export const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter,
 });
 
@@ -239,7 +239,7 @@ export const getDocumentStats = async (req, res) => {
     }
 
     const stats = await Document.aggregate([
-      { $match: { company: mongoose.Types.ObjectId(companyId), isArchived: false } },
+      { $match: { company: new mongoose.Types.ObjectId(companyId), isArchived: false } },
       {
         $group: {
           _id: null,

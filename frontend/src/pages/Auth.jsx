@@ -6,7 +6,9 @@ import {
   IoArrowBackOutline, 
   IoPersonOutline, 
   IoEyeOutline, 
-  IoEyeOffOutline 
+  IoEyeOffOutline,
+  IoLogoGoogle,
+  IoCloseOutline
 } from 'react-icons/io5';
 import api from '../api/axios';
 
@@ -49,10 +51,35 @@ const Auth = ({ type }) => {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError('');
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotPasswordMessage('');
+    
+    try {
+      await api.post('/api/users/forgot-password', { email: forgotEmail });
+      setForgotPasswordMessage('Password reset link sent to your email!');
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotEmail('');
+        setForgotPasswordMessage('');
+      }, 3000);
+    } catch (err) {
+      setForgotPasswordMessage(err.response?.data?.message || 'Failed to send reset link');
+    }
+  };
+
+  const handleGoogleSignIn = () => {
+    // Redirect to backend Google OAuth endpoint
+    window.location.href = `${api.defaults.baseURL || 'http://localhost:5000'}/api/users/auth/google`;
   };
 
   const handleSubmit = async (e) => {
@@ -226,6 +253,18 @@ const Auth = ({ type }) => {
               handleChange={handleChange} 
             />
 
+            {isLogin && (
+              <div className="flex justify-end mb-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+
             {!isLogin && (
               <AuthInput 
                 name="confirmPassword" 
@@ -251,6 +290,15 @@ const Auth = ({ type }) => {
             <div className="grow border-t border-gray-200"></div>
           </div>
 
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="w-full flex items-center justify-center gap-3 py-3 mb-4 border-2 border-gray-300 text-gray-700 text-lg font-semibold rounded-lg hover:bg-gray-50 transition-all"
+          >
+            <IoLogoGoogle className="w-6 h-6 text-red-500" />
+            {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
+          </button>
+
           <Link 
             to={isLogin ? '/signup' : '/login'} 
             className="w-full block text-center py-3 border-2 border-blue-600 text-blue-600 text-lg font-semibold rounded-lg hover:bg-blue-50 transition-all"
@@ -272,6 +320,62 @@ const Auth = ({ type }) => {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <button
+              onClick={() => {
+                setShowForgotPassword(false);
+                setForgotEmail('');
+                setForgotPasswordMessage('');
+              }}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <IoCloseOutline className="w-6 h-6 text-gray-500" />
+            </button>
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Reset Password</h2>
+              <p className="text-gray-600 text-sm">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+            </div>
+
+            {forgotPasswordMessage && (
+              <div className={`p-4 mb-4 text-sm rounded-lg ${
+                forgotPasswordMessage.includes('sent') 
+                  ? 'text-green-700 bg-green-50 border border-green-200' 
+                  : 'text-red-700 bg-red-50 border border-red-200'
+              }`}>
+                {forgotPasswordMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword}>
+              <div className="relative mb-6">
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                  className="w-full py-3 pl-12 pr-4 border border-gray-300 rounded-lg focus:ring-blue-600 focus:border-blue-600 outline-none transition-all"
+                />
+                <IoMailOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-none transition-all active:scale-[0.98]"
+              >
+                Send Reset Link
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

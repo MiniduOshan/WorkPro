@@ -410,8 +410,9 @@ export default function Groups() {
 
                       {/* Check if current user is in this group */}
                       {groupMembers?.some(m => {
-                        const memberId = typeof m === 'string' ? m : m._id;
-                        return memberId === localStorage.getItem('userId');
+                        const memberId = typeof m === 'string' ? m : (m._id?.toString() || m.toString());
+                        const currentUserId = localStorage.getItem('userId');
+                        return memberId === currentUserId;
                       }) ? (
                         <>
                           {groupMembers?.length ? (

@@ -8,8 +8,7 @@ import {
   IoEllipsisVerticalOutline,
   IoSearchOutline,
   IoPeopleOutline,
-  IoRadioButtonOnOutline,
-  IoLockClosedOutline
+  IoRadioButtonOnOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
 
@@ -22,7 +21,6 @@ export default function Channels() {
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newChannelName, setNewChannelName] = useState('');
-  const [newChannelType, setNewChannelType] = useState('public');
   const [userProfile, setUserProfile] = useState(null);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [companyMembers, setCompanyMembers] = useState([]);
@@ -125,6 +123,18 @@ export default function Channels() {
     try {
       await api.post(`/api/channels/${selected._id}/approve-join`, { userId });
       alert('Join request approved!');
+      
+      // Immediately update the selected channel state
+      setSelected(prev => ({
+        ...prev,
+        joinRequests: prev.joinRequests?.filter(req => {
+          const reqUserId = req.user?._id || req.user;
+          return reqUserId !== userId;
+        }) || [],
+        members: [...(prev.members || []), userId]
+      }));
+      
+      // Refresh channel list and messages
       loadChannels();
       loadMessages(selected);
     } catch (err) {
@@ -139,6 +149,17 @@ export default function Channels() {
     try {
       await api.post(`/api/channels/${selected._id}/reject-join`, { userId });
       alert('Join request rejected');
+      
+      // Immediately update the selected channel state
+      setSelected(prev => ({
+        ...prev,
+        joinRequests: prev.joinRequests?.filter(req => {
+          const reqUserId = req.user?._id || req.user;
+          return reqUserId !== userId;
+        }) || []
+      }));
+      
+      // Refresh channel list
       loadChannels();
       loadMessages(selected);
     } catch (err) {
@@ -194,7 +215,7 @@ export default function Channels() {
       await api.post('/api/channels', { 
         name: newChannelName, 
         companyId,
-        type: newChannelType 
+        type: 'public'
       });
       setNewChannelName('');
       setShowAddModal(false);
@@ -294,9 +315,6 @@ export default function Channels() {
                     >
                       <IoRadioButtonOnOutline className="text-lg shrink-0" />
                       <span className="truncate grow">{channel.name}</span>
-                      {channel.type === 'private' && (
-                        <IoLockClosedOutline className="text-sm text-slate-400" />
-                      )}
                     </button>
                     {/* Delete Button */}
                     <button
@@ -326,9 +344,6 @@ export default function Channels() {
                   <div>
                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
                       {selected.name}
-                      {selected.type === 'private' && (
-                        <IoLockClosedOutline className="text-sm text-slate-400" />
-                      )}
                     </h3>
                     <p className="text-xs text-slate-500">
                       <IoPeopleOutline className="inline mr-1" />
@@ -496,37 +511,6 @@ export default function Channels() {
                   placeholder="e.g., general, team-updates"
                   required
                 />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Channel Type
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setNewChannelType('public')}
-                    className={`px-4 py-3 rounded-xl border-2 transition-all font-semibold ${
-                      newChannelType === 'public'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-slate-200 hover:border-blue-300 text-slate-700'
-                    }`}
-                  >
-                    <IoRadioButtonOnOutline className="inline mr-2" />
-                    Public
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewChannelType('private')}
-                    className={`px-4 py-3 rounded-xl border-2 transition-all font-semibold ${
-                      newChannelType === 'private'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-slate-200 hover:border-blue-300 text-slate-700'
-                    }`}
-                  >
-                    <IoLockClosedOutline className="inline mr-2" />
-                    Private
-                  </button>
-                </div>
               </div>
               <div className="flex gap-3">
                 <button

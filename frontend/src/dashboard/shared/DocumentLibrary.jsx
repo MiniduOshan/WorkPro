@@ -52,6 +52,7 @@ const DocumentLibrary = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [uploadData, setUploadData] = useState({ name: '', category: 'general', tags: '' });
   const [stats, setStats] = useState({ totalDocuments: 0, totalSize: 0, totalAccess: 0 });
+  const [uploadError, setUploadError] = useState('');
 
   const token = localStorage.getItem('token');
   const companyId = localStorage.getItem('companyId');
@@ -94,6 +95,7 @@ const DocumentLibrary = () => {
     e.preventDefault();
     if (!selectedFile) return;
 
+    setUploadError('');
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -104,7 +106,10 @@ const DocumentLibrary = () => {
       await api.post('/api/documents', formData, {
         headers: {
           'x-company-id': companyId,
+          'Content-Type': 'multipart/form-data',
         },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
       });
 
       setShowUploadModal(false);
@@ -114,8 +119,44 @@ const DocumentLibrary = () => {
       fetchStats();
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Upload failed. Please try again.';
-      alert(`Upload failed: ${errorMsg}`);
+      setUploadError(errorMsg);
       console.error('Document upload error:', err);
+    }
+  };
+
+  const handleDownload = async (docId, docName) => {
+    try {
+      const response = await api.get(`/api/documents/${docId}/download`, {
+        headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', docName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert('Download failed. Please try again.');
+    }
+  };
+
+  const handleDelete = async (docId) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    
+    try {
+      await api.delete(`/api/documents/${docId}`, {
+        headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
+      });
+      fetchDocuments();
+      fetchStats();
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Delete failed. Please try again.');
     }
   };
 
@@ -213,8 +254,9 @@ const DocumentLibrary = () => {
               key={doc._id} 
               doc={doc}
               theme={theme}
-              onDownload={() => {}} // Connect handleDownload
-              onDelete={() => {}}   // Connect handleDelete
+              onDownload={() => handleDownload(doc._id, doc.originalName)}
+              onDelete={() => handleDelete(doc._id)}
+              formatFileSize={formatFileSize}
             />
           ))}
         </div>
@@ -223,7 +265,10 @@ const DocumentLibrary = () => {
       {/* Modals */}
       {showUploadModal && (
         <UploadModal 
-          onClose={() => setShowUploadModal(false)} 
+          onClose={() => {
+            setShowUploadModal(false);
+            setUploadError('');
+          }} 
           onUpload={handleUpload}
           uploadData={uploadData}
           setUploadData={setUploadData}
@@ -231,6 +276,7 @@ const DocumentLibrary = () => {
           setSelectedFile={setSelectedFile}
           formatFileSize={formatFileSize}
           theme={theme}
+          uploadError={uploadError}
         />
       )}
     </div>
@@ -251,7 +297,7 @@ const StatCard = ({ label, value, icon, theme }) => (
   </div>
 );
 
-const DocumentCard = ({ doc, theme, onDownload, onDelete }) => (
+const DocumentCard = ({ doc, theme, onDownload, onDelete, formatFileSize }) => (
   <div className="bg-white p-5 rounded-2xl border border-slate-200 transition-all group flex flex-col shadow-sm hover:shadow-md" style={{ borderColor: 'rgb(226, 232, 240)' }}>
     <div className="flex justify-between items-start mb-4">
       <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
@@ -281,8 +327,8 @@ const DocumentCard = ({ doc, theme, onDownload, onDelete }) => (
     </div>
 
     <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-center text-[10px] font-medium text-slate-400">
-      <span>{doc.uploadedBy?.firstName} • Today</span>
-      <span className="text-slate-500 font-bold">1.2 MB</span>
+      <span>{doc.uploadedBy?.firstName} • {new Date(doc.createdAt).toLocaleDateString()}</span>
+      <span className="text-slate-500 font-bold">{formatFileSize(doc.fileSize)}</span>
     </div>
   </div>
 );
@@ -295,7 +341,7 @@ const FileIcon = ({ type, theme }) => {
   return <IoDocumentOutline className="text-slate-400" />;
 };
 
-const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFile, setSelectedFile, formatFileSize, theme }) => (
+const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFile, setSelectedFile, formatFileSize, theme, uploadError }) => (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
       <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -364,6 +410,12 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
             />
           </div>
         </div>
+
+        {uploadError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <strong>Upload Error:</strong> {uploadError}
+          </div>
+        )}
 
         <div className="flex gap-3 pt-4">
           <button type="button" onClick={onClose} className="flex-1 py-3 font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>

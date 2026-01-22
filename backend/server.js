@@ -72,7 +72,8 @@ const upload = multer({
 // Middleware
 const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()) : undefined;
 app.use(cors({ origin: corsOrigins || true }));
-app.use(express.json()); // For parsing application/json
+app.use(express.json({ limit: '50mb' })); // For parsing application/json with increased limit
+app.use(express.urlencoded({ limit: '50mb', extended: true })); // For parsing form data with increased limit
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(uploadsDir));

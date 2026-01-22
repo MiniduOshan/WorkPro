@@ -11,6 +11,7 @@ import Contact from './pages/contact.jsx';
 
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 
 import EmployeeDashboardLayout from './dashboard/employee/EmployeeDashboardLayout.jsx';
 import ManagerDashboardLayout from './dashboard/manager/ManagerDashboardLayout.jsx';
@@ -99,6 +100,9 @@ function App() {
                 
                 {/* Signup Page: Now independent, outside the PublicLayout */}
                 <Route path="/signup" element={<Auth type="signup" />} />
+                
+                {/* Reset Password Page: Independent */}
+                <Route path="/reset-password" element={<ResetPassword />} />
                 
                 
                 {/* 2. PUBLIC PAGES (Routes that **SHOULD** have the Header and Footer via PublicLayout) */}

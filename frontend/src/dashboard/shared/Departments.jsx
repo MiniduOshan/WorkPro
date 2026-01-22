@@ -520,9 +520,30 @@ export default function Departments() {
                     <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No members in this department yet.</p>
                   )}
                   
-                  {deptMembers?.some(m => m.user._id === localStorage.getItem('userId')) && (
+                  {deptMembers?.some(m => {
+                    const memberId = m.user?._id?.toString() || m.user?.toString();
+                    const currentUserId = localStorage.getItem('userId');
+                    return memberId === currentUserId;
+                  }) ? (
                     <div className="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                      <p className="text-sm text-emerald-700 font-medium">✓ You are a member of this department</p>
+                      <p className="text-sm text-emerald-700 font-medium flex items-center gap-2">
+                        <IoCheckmarkOutline /> You are a member of this department
+                      </p>
+                      <button
+                        onClick={leaveDepartment}
+                        className="mt-2 w-full px-3 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm flex items-center justify-center gap-2"
+                      >
+                        <IoPersonRemoveOutline /> Leave Department
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <button
+                        onClick={joinDepartment}
+                        className="w-full px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition text-sm flex items-center justify-center gap-2"
+                      >
+                        <IoPersonAddOutline /> Join Department
+                      </button>
                     </div>
                   )}
                 </div>

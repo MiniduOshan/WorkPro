@@ -58,32 +58,58 @@ export default function Invite() {
     }
   };
 
-  const copyLink = () => {
+  const copyLink = async () => {
     if (!link) return;
-    navigator.clipboard.writeText(link)
-      .then(() => {
+    
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-      })
-      .catch((err) => {
-        console.error('Failed to copy link:', err);
-        // Fallback method
-        const textArea = document.createElement('textarea');
-        textArea.value = link;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand('copy');
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch (err2) {
-          console.error('Fallback copy failed:', err2);
-          alert('Failed to copy link. Please copy manually.');
-        }
-        document.body.removeChild(textArea);
-      });
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        copyToClipboardFallback(link);
+      }
+    } catch (err) {
+      console.error('Clipboard API failed:', err);
+      // Use fallback method
+      copyToClipboardFallback(link);
+    }
+  };
+
+  const copyToClipboardFallback = (text) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.width = '2em';
+    textArea.style.height = '2em';
+    textArea.style.padding = '0';
+    textArea.style.border = 'none';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = 'none';
+    textArea.style.background = 'transparent';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        setMsg('Failed to copy link. Please copy manually.');
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      setMsg('Failed to copy link. Please copy manually.');
+    }
+    
+    document.body.removeChild(textArea);
   };
 
   return (

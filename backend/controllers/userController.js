@@ -1,5 +1,7 @@
 import User from '../models/User.js';
 import generateToken from '../config/generateToken.js';
+import crypto from 'crypto';
+import { sendPasswordResetEmail } from '../config/email.js';
 
 // Fixed super admin email - cannot be changed through website
 const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
@@ -251,6 +253,111 @@ const deleteUserAccount = async (req, res) => {
     }
 };
 
+// @desc    Request password reset
+// @route   POST /api/users/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            // Don't reveal if user exists or not for security
+            return res.json({ message: 'If an account exists, a password reset link will be sent.' });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        
+        // Hash token and set expiry (1 hour)
+        user.resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+        user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+        
+        await user.save();
+
+        // Create reset URL
+        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+
+        try {
+            await sendPasswordResetEmail({
+                to: user.email,
+                resetLink: resetUrl,
+                firstName: user.firstName
+            });
+
+            res.json({ message: 'Password reset email sent successfully' });
+        } catch (emailError) {
+            console.error('Email sending error:', emailError);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save();
+            
+            return res.status(500).json({ 
+                message: 'Email could not be sent. Please try again later.' 
+            });
+        }
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+};
+
+// @desc    Reset password with token
+// @route   POST /api/users/reset-password
+// @access  Public
+const resetPassword = async (req, res) => {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+        return res.status(400).json({ message: 'Token and password are required' });
+    }
+
+    try {
+        // Hash the token to compare with stored hash
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ 
+                message: 'Invalid or expired password reset token' 
+            });
+        }
+
+        // Set new password (will be hashed by User model pre-save hook)
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save();
+
+        res.json({ 
+            message: 'Password reset successful',
+            token: generateToken(user._id)
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Failed to reset password' });
+    }
+};
+
+// @desc    Google OAuth callback
+// @route   GET /api/users/auth/google
+// @access  Public
+const googleAuth = async (req, res) => {
+    // This will be implemented with Google OAuth strategy
+    res.status(501).json({ message: 'Google authentication not yet implemented' });
+};
+
 export default {
     registerUser,
     authUser,
@@ -259,4 +366,7 @@ export default {
     updateUserProfile, // <--- Preserved and updated
     uploadProfilePic,   // <--- New file upload endpoint
     deleteUserAccount,  // <--- Account deletion
+    forgotPassword,     // <--- Password reset request
+    resetPassword,      // <--- Password reset with token
+    googleAuth,         // <--- Google OAuth
 };

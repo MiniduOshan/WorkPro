@@ -13,6 +13,8 @@ const UserSchema = new mongoose.Schema(
     companies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Company' }], // Array of company IDs user belongs to
     defaultCompany: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }, // Last selected or default company
     isSuperAdmin: { type: Boolean, default: false }, // For super admin access to analytics
+    resetPasswordToken: { type: String }, // Hashed token for password reset
+    resetPasswordExpire: { type: Date }, // Expiration time for reset token
   },
   { timestamps: true }
 );

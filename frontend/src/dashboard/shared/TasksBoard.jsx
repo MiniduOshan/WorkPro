@@ -22,12 +22,14 @@ export default function TasksBoard() {
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('to-do');
   const [priority, setPriority] = useState('medium');
   const [assignee, setAssignee] = useState('');
   const [department, setDepartment] = useState('');
+  const [group, setGroup] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -45,6 +47,7 @@ export default function TasksBoard() {
   const [editPriority, setEditPriority] = useState('');
   const [editAssignee, setEditAssignee] = useState('');
   const [editDepartment, setEditDepartment] = useState('');
+  const [editGroup, setEditGroup] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
 
   const sampleTasks = () => ([
@@ -159,6 +162,16 @@ export default function TasksBoard() {
     }
   };
 
+  const loadGroups = async () => {
+    if (!companyId) return;
+    try {
+      const { data } = await api.get('/api/groups', { params: { companyId } });
+      setGroups(data);
+    } catch (err) {
+      console.error('Failed to load groups:', err);
+    }
+  };
+
   const load = async () => {
     if (!companyId) return;
     try {
@@ -178,6 +191,7 @@ export default function TasksBoard() {
     if (companyId) {
       loadEmployees();
       loadDepartments();
+      loadGroups();
       load();
     }
   }, [companyId, filterDepartment]);
@@ -209,6 +223,7 @@ export default function TasksBoard() {
       };
       if (assignee) taskData.assignee = assignee;
       if (department && department !== '') taskData.department = department;
+      if (group && group !== '') taskData.group = group;
       if (dueDate) taskData.dueDate = dueDate;
       
       await api.post('/api/tasks', taskData);
@@ -227,6 +242,7 @@ export default function TasksBoard() {
     setPriority('medium');
     setAssignee('');
     setDepartment('');
+    setGroup('');
     setDueDate('');
     setShowAddModal(false);
   };
@@ -267,6 +283,7 @@ export default function TasksBoard() {
     setEditPriority(task.priority || 'medium');
     setEditAssignee(task.assignee?._id || '');
     setEditDepartment(task.department?._id || '');
+    setEditGroup(task.group?._id || '');
     setEditDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
     setShowViewModal(true);
   };
@@ -294,6 +311,7 @@ export default function TasksBoard() {
       if (['owner', 'manager'].includes(companyRole)) {
         if (editAssignee) payload.assignee = editAssignee;
         if (editDepartment && editDepartment !== '') payload.department = editDepartment;
+        if (editGroup && editGroup !== '') payload.group = editGroup;
       }
       
       await api.put(`/api/tasks/${viewTask._id}`, payload);
@@ -518,6 +536,25 @@ export default function TasksBoard() {
                   </select>
                 </div>
 
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Group
+                  </label>
+                  <select
+                    value={group}
+                    onChange={(e) => setGroup(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                  >
+                    <option value="">No Group</option>
+                    {groups.map((grp) => (
+                      <option key={grp._id} value={grp._id}>{grp.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Select a group to track progress on group-related tasks
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Assign To
@@ -700,6 +737,15 @@ export default function TasksBoard() {
                     </div>
                   </div>
 
+                  {/* Group */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-600 mb-2">Group</label>
+                    <div className="flex items-center gap-2 text-slate-700">
+                      <IoPeopleOutline className="text-indigo-500" />
+                      <span>{viewTask.group?.name || 'No group'}</span>
+                    </div>
+                  </div>
+
                   {/* Due Date */}
                   {viewTask.dueDate && (
                     <div>
@@ -813,6 +859,20 @@ export default function TasksBoard() {
                           <option value="">Select Employee</option>
                           {employees.filter(emp => !editDepartment || emp.department === editDepartment || ['owner', 'manager'].includes(emp.role)).map((emp) => (
                             <option key={emp._id} value={emp._id}>{emp.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Group</label>
+                        <select
+                          value={editGroup}
+                          onChange={(e) => setEditGroup(e.target.value)}
+                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                        >
+                          <option value="">No Group</option>
+                          {groups.map((grp) => (
+                            <option key={grp._id} value={grp._id}>{grp.name}</option>
                           ))}
                         </select>
                       </div>
