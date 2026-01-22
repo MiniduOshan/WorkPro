@@ -205,27 +205,9 @@ export const listMembers = async (req, res) => {
   }
 };
 
-// Update a member's role (owner can set any; manager can set manager/employee)
+// Update member role — disabled to enforce invitation-only role assignment
 export const updateMemberRole = async (req, res) => {
-  const { companyId, userId } = { companyId: req.params.companyId, userId: req.params.userId };
-  const { role: newRole } = req.body;
-  if (!['owner', 'manager', 'employee'].includes(newRole)) return res.status(400).json({ message: 'Invalid role' });
-  try {
-    const company = await Company.findById(companyId);
-    if (!company) return res.status(404).json({ message: 'Company not found' });
-    const actorRole = company.getMemberRole(req.user._id);
-    if (!actorRole) return res.status(403).json({ message: 'Not a member' });
-    if (actorRole !== 'owner' && newRole === 'owner') return res.status(403).json({ message: 'Only owner can assign owner role' });
-    if (!['owner', 'manager'].includes(actorRole)) return res.status(403).json({ message: 'Insufficient role' });
-
-    const m = company.members.find((x) => x.user.toString() === userId);
-    if (!m) return res.status(404).json({ message: 'Member not found' });
-    m.role = newRole;
-    await company.save();
-    res.json({ user: userId, role: newRole });
-  } catch (e) {
-    res.status(500).json({ message: e.message });
-  }
+  return res.status(403).json({ message: 'Role changes are disabled. Use invitations to add members with the desired role.' });
 };
 
 // Remove a member from company (cannot remove owner)

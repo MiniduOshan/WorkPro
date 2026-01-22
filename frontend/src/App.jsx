@@ -45,7 +45,7 @@ const isAuthenticated = () => {
     return localStorage.getItem('token') !== null;
 };
 
-const ProtectedRoute = ({ children, requireCompany = false }) => {
+const ProtectedRoute = ({ children, requireCompany = false, allowedRoles }) => {
     if (!isAuthenticated()) {
         return <Navigate to="/login" />;
     }
@@ -64,6 +64,19 @@ const ProtectedRoute = ({ children, requireCompany = false }) => {
     
     if (requireCompany && !localStorage.getItem('companyId')) {
         return <Navigate to="/select-company" />;
+    }
+
+    // Check role restrictions if specified (don't allow all roles)
+    if (allowedRoles && allowedRoles.length > 0 && allowedRoles.length < 3) {
+        const role = localStorage.getItem('companyRole');
+        // If companyRole is not set, user must select a company first
+        if (!role) {
+            return <Navigate to="/select-company" />;
+        }
+        // If role is set but not in allowed list, redirect to employee dashboard
+        if (!allowedRoles.includes(role)) {
+            return <Navigate to="/dashboard" />;
+        }
     }
     
     return children;
@@ -129,7 +142,7 @@ function App() {
                 <Route
                     path="/dashboard"
                     element={
-                        <ProtectedRoute requireCompany={true}>
+                        <ProtectedRoute requireCompany={true} allowedRoles={['owner','manager','employee']}>
                             <EmployeeDashboardLayout />
                         </ProtectedRoute>
                     }
@@ -152,7 +165,7 @@ function App() {
                 <Route
                     path="/dashboard/manager"
                     element={
-                        <ProtectedRoute requireCompany={true}>
+                        <ProtectedRoute requireCompany={true} allowedRoles={['owner','manager']}>
                             <ManagerDashboardLayout />
                         </ProtectedRoute>
                     }
