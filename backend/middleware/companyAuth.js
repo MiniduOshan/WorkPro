@@ -29,7 +29,8 @@ export const requireRole = (allowedRoles) => (req, res, next) => {
 export const enforceRole = (allowedRoles) => async (req, res, next) => {
   try {
     const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-    const companyId = req.params.companyId || req.body.companyId || req.query.companyId || req.headers['x-company-id'];
+    // Use optional chaining to avoid crashes when body/params/query are undefined
+    const companyId = req.params?.companyId || req.body?.companyId || req.query?.companyId || req.headers['x-company-id'];
     
     if (!companyId) {
       return res.status(400).json({ message: 'Company ID is required' });

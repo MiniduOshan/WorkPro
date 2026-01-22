@@ -13,11 +13,12 @@ export default function CalendarWidget() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const cid = localStorage.getItem('companyId');
+    const normalizeId = (raw) => (raw && raw !== 'null' ? raw : '');
+    const cid = normalizeId(localStorage.getItem('companyId'));
     const r = localStorage.getItem('companyRole') || '';
     let profile = null;
     try { profile = JSON.parse(localStorage.getItem('userProfile') || '{}'); } catch {}
-    setCompanyId(cid || '');
+    setCompanyId(cid);
     setRole(r);
     setUserProfile(profile);
     if (cid) loadTasks(cid, r, profile);
