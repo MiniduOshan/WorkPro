@@ -68,7 +68,7 @@ export default function TasksBoard() {
       _id: 't3',
       title: 'API contract review',
       description: 'Review task service responses and update client typings.',
-      status: 'blocked',
+      status: 'cancelled',
       assignedTo: { firstName: 'Sarah' },
       dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000)
     },
@@ -308,7 +308,7 @@ export default function TasksBoard() {
   const columns = [
     { id: 'to-do', label: 'To Do', icon: IoTimeOutline, color: 'slate', count: tasks.filter(t => t.status === 'to-do').length },
     { id: 'in-progress', label: 'In Progress', icon: IoCreateOutline, color: 'blue', count: tasks.filter(t => t.status === 'in-progress').length },
-    { id: 'blocked', label: 'Cancel', icon: IoAlertCircleOutline, color: 'red', count: tasks.filter(t => t.status === 'blocked').length },
+    { id: 'cancelled', label: 'Cancelled', icon: IoAlertCircleOutline, color: 'red', count: tasks.filter(t => t.status === 'cancelled').length },
     { id: 'done', label: 'Done', icon: IoCheckmarkDoneOutline, color: 'green', count: tasks.filter(t => t.status === 'done').length },
   ];
 
@@ -316,7 +316,7 @@ export default function TasksBoard() {
     const colors = {
       'to-do': 'border-l-slate-500 hover:border-slate-600',
       'in-progress': 'border-l-blue-500 hover:border-blue-600',
-      'blocked': 'border-l-red-500 hover:border-red-600',
+      'cancelled': 'border-l-red-500 hover:border-red-600',
       'done': 'border-l-green-600 hover:border-green-600',
     };
     return colors[status] || 'border-l-slate-500';
@@ -558,7 +558,7 @@ export default function TasksBoard() {
                   >
                     <option value="to-do">To Do</option>
                     <option value="in-progress">In Progress</option>
-                    <option value="blocked">Blocked</option>
+                    <option value="cancelled">Cancelled</option>
                     <option value="done">Done</option>
                   </select>
                 </div>
@@ -658,7 +658,7 @@ export default function TasksBoard() {
                       <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${
                         viewTask.status === 'done' ? 'bg-green-100 text-green-700' :
                         viewTask.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                        viewTask.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                        viewTask.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                         'bg-slate-100 text-slate-700'
                       }`}>
                         {viewTask.status.toUpperCase()}
@@ -764,7 +764,7 @@ export default function TasksBoard() {
                       >
                         <option value="to-do">To Do</option>
                         <option value="in-progress">In Progress</option>
-                        <option value="blocked">Blocked</option>
+                        <option value="cancelled">Cancelled</option>
                         <option value="done">Done</option>
                       </select>
                     </div>

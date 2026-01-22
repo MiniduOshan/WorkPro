@@ -10,7 +10,7 @@ const TaskSchema = new mongoose.Schema(
     assignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
     group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
-    status: { type: String, enum: ['to-do', 'in-progress', 'blocked', 'done'], default: 'to-do' },
+    status: { type: String, enum: ['to-do', 'in-progress', 'cancelled', 'done'], default: 'to-do' },
     priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
     dueDate: { type: Date },
     category: { type: String, default: '' },
@@ -21,6 +21,12 @@ const TaskSchema = new mongoose.Schema(
         done: { type: Boolean, default: false },
       },
     ],
+    pendingReassignment: {
+      newAssignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      requestedAt: { type: Date },
+      reason: { type: String }
+    }
   },
   { timestamps: true }
 );

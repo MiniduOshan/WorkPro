@@ -1,5 +1,6 @@
-import { IoPencilOutline, IoCameraOutline, IoSaveOutline, IoCloseOutline } from 'react-icons/io5';
+import { IoPencilOutline, IoSaveOutline, IoCloseOutline } from 'react-icons/io5';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import api from '../../api/axios'; 
 
@@ -13,6 +14,7 @@ const Profile = () => {
         const EDIT_HOVER = isManager ? 'blue-700' : 'green-700';
         const SAVE_COLOR = isManager ? 'blue-600' : 'green-600';
         const SAVE_HOVER = isManager ? 'blue-700' : 'green-700';
+    const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [profileData, setProfileData] = useState({
@@ -22,9 +24,8 @@ const Profile = () => {
         mobileNumber: '',
         profilePic: '', 
     });
-    const [tempPicUrl, setTempPicUrl] = useState(''); // To hold the URL during image edit prompt
     const [error, setError] = useState(null);
-    const fileInputRef = React.useRef(null); // Reference for file input
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -54,7 +55,6 @@ const Profile = () => {
                 };
                 
                 setProfileData(initialData);
-                setTempPicUrl(initialData.profilePic); // Initialize temp URL
                 
                 // Store in localStorage for sidebar and header
                 localStorage.setItem('userProfile', JSON.stringify({
@@ -144,60 +144,33 @@ const Profile = () => {
         });
     };
     
-    // Allows editing the profile picture via file upload
-    const handlePictureChange = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            alert('Please select a valid image file');
-            return;
-        }
-
-        // Create FormData for multipart upload
-        const formData = new FormData();
-        formData.append('profilePic', file);
-
-        try {
-            // Use backend upload route that is wired with multer
-            const { data } = await api.post('/api/users/upload-profile-pic', formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            const updatedProfilePic = data.profilePic;
-            if (!updatedProfilePic) {
-                throw new Error('Upload did not return profilePic');
-            }
-
-            // Update profile data with new image URL
-            setProfileData({ ...profileData, profilePic: updatedProfilePic });
-            setTempPicUrl(updatedProfilePic);
-
-            // Update localStorage to reflect changes in header and sidebar
-            const currentProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-            const mergedProfile = { ...currentProfile, profilePic: updatedProfilePic };
-            localStorage.setItem('userProfile', JSON.stringify(mergedProfile));
-
-            // Trigger a refresh by dispatching a custom event
-            window.dispatchEvent(new Event('profileUpdated'));
-
-            alert('Profile picture updated successfully!');
-        } catch (err) {
-            console.error('Picture upload failed:', err);
-            alert('Failed to upload picture: ' + (err.response?.data?.message || err.message));
-        }
-    };
-
     // --- RENDER HELPERS ---
     const renderValue = (value) => value === 'Add number' || value === '' ? (
         <span className="text-gray-400 italic">Not specified</span>
     ) : (
         <span className="text-gray-800">{value}</span>
     );
+
+    const handleDeleteAccount = async () => {
+        if (deleteLoading) return;
+        const confirmText = window.prompt('Type DELETE to confirm account removal. This cannot be undone.');
+        if (confirmText !== 'DELETE') return;
+        try {
+            setDeleteLoading(true);
+            await api.delete('/api/users/account', config);
+            localStorage.removeItem('token');
+            localStorage.removeItem('companyId');
+            localStorage.removeItem('companyRole');
+            localStorage.removeItem('userProfile');
+            alert('Account deleted. Sorry to see you go.');
+            navigate('/login');
+        } catch (err) {
+            console.error('Delete account failed:', err);
+            alert('Failed to delete account: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
     
 
     if (loading) return <div className="text-center p-10">Loading Profile...</div>;
@@ -215,10 +188,9 @@ const Profile = () => {
                         {/* Avatar Image or Initial Placeholder */}
                         {/* Avatar initial placeholder color updated to ACCENT_PURPLE for brand consistency */}
                         <div className={`w-full h-full bg-${ACCENT_PURPLE} rounded-full flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-2 border-white shadow-md`}>
-                            {(isEditing ? tempPicUrl : profileData.profilePic) && 
-                             (isEditing ? tempPicUrl : profileData.profilePic) !== '/images/default_avatar.png' ? (
+                            {profileData.profilePic && profileData.profilePic !== '/images/default_avatar.png' ? (
                                 <img 
-                                    src={isEditing ? tempPicUrl : profileData.profilePic} 
+                                    src={profileData.profilePic} 
                                     alt="User Avatar" 
                                     className="w-full h-full object-cover" 
                                 />
@@ -226,28 +198,6 @@ const Profile = () => {
                                 initialAvatar
                             )}
                         </div>
-                        
-                        {/* Camera Button */}
-                        {isEditing && (
-                            <>
-                                <button 
-                                    onClick={() => fileInputRef.current?.click()}
-                                    type="button"
-                                    // Camera button color updated to ACCENT_PURPLE
-                                    className={`absolute bottom-0 right-0 p-2 bg-${ACCENT_PURPLE} text-white rounded-full border-2 border-white hover:bg-purple-800 transition-colors shadow-md`}
-                                    title="Change Profile Picture"
-                                >
-                                    <IoCameraOutline className="w-5 h-5" />
-                                </button>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handlePictureChange}
-                                    className="hidden"
-                                />
-                            </>
-                        )}
                     </div>
                     
                     {/* User Info (Name/Email) */}
@@ -350,6 +300,18 @@ const Profile = () => {
                 {isEditing && <button type="submit" hidden />}
 
             </form>
+
+            <div className="mt-8 pt-6 border-t border-red-100">
+                <h3 className="text-lg font-bold text-red-700 mb-3">Danger Zone</h3>
+                <p className="text-sm text-red-600 mb-4">Delete your account and remove all workspace memberships. This action is permanent.</p>
+                <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleteLoading}
+                    className="px-4 py-2 rounded-lg border border-red-200 text-red-700 font-semibold hover:bg-red-50 disabled:opacity-60"
+                >
+                    {deleteLoading ? 'Deleting...' : 'Delete My Account'}
+                </button>
+            </div>
         </div>
     );
 };

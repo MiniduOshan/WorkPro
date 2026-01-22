@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import CalendarWidget from '../shared/CalendarWidget.jsx';
 import { 
@@ -271,6 +271,7 @@ export default function ManagerDashboard() {
   const [companyData, setCompanyData] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [showCompanyModal, setShowCompanyModal] = useState(isFirstTime);
+  const companyRole = localStorage.getItem('companyRole') || 'employee';
   const [stats, setStats] = useState({
     completedProjects: 124,
     avgCompletionTime: '3.4 Days',
@@ -287,6 +288,7 @@ export default function ManagerDashboard() {
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
   const [aiSummary, setAiSummary] = useState('');
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [tasks, setTasks] = useState([]);
   const [companyForm, setCompanyForm] = useState({
     name: '', description: '', website: '', mission: '', vision: '', industry: '', departments: ['Tech', 'Marketing', 'HR']
   });
@@ -294,6 +296,7 @@ export default function ManagerDashboard() {
   const [inviteForm, setInviteForm] = useState({
     role: 'employee', department: ''
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -306,6 +309,16 @@ export default function ManagerDashboard() {
       setUserProfile(data);
     } catch (err) {
       console.error('Failed to fetch user profile:', err);
+    }
+  };
+
+  const fetchManagerTasks = async (companyId) => {
+    if (!companyId) return;
+    try {
+      const { data } = await api.get('/api/tasks', { params: { companyId } });
+      setTasks(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load manager tasks:', err);
     }
   };
 
@@ -324,9 +337,10 @@ export default function ManagerDashboard() {
       const summary = managerRes.data;
       setStats((prev) => ({
         ...prev,
-        overdueTasks: (summary.tasks.byStatus?.blocked || 0),
+        overdueTasks: (summary.tasks.byStatus?.cancelled || 0),
       }));
       fetchProgressSummary(companyId);
+      fetchManagerTasks(companyId);
       setTeamMembers((companyRes.data.members || []).map(m => ({
         id: m.user?._id || m.user,
         name: `${m.user?.firstName || ''} ${m.user?.lastName || ''}`.trim(),
@@ -569,17 +583,19 @@ export default function ManagerDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-slate-500 text-[10px] font-semibold uppercase">Team Members</p>
-                        <h3 className="text-xl font-bold text-slate-800 mt-1">{teamMembers.length}</h3>
-                      </div>
-                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                        <i className="fa-solid fa-people-group text-green-600 text-sm"></i>
+                  {companyRole === 'owner' && (
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-slate-500 text-[10px] font-semibold uppercase">Team Members</p>
+                          <h3 className="text-xl font-bold text-slate-800 mt-1">{teamMembers.length}</h3>
+                        </div>
+                        <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                          <i className="fa-solid fa-people-group text-green-600 text-sm"></i>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center justify-between">
@@ -592,6 +608,29 @@ export default function ManagerDashboard() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-4 mt-2">
+                    <h3 className="text-xl font-bold text-slate-800">Priority Tasks</h3>
+                    <button
+                      onClick={() => navigate('/dashboard/manager/tasks')}
+                      className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-lg transition-colors"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  {tasks.length === 0 ? (
+                    <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+                      <p className="text-slate-400">No tasks assigned yet.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {tasks.slice(0, 4).map((task) => (
+                        <TaskCardManagerCompact key={task._id} task={task} navigate={navigate} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -609,3 +648,46 @@ export default function ManagerDashboard() {
     </>
   );
 }
+
+const TaskCardManagerCompact = ({ task, navigate }) => {
+  const isDone = task.status?.toLowerCase() === 'done';
+  const priority = (task.priority || 'medium').toLowerCase();
+  const handleLaunch = () => {
+    navigate('/dashboard/manager/tasks', { state: { taskId: task._id } });
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all flex flex-col group relative overflow-hidden">
+      <div className="flex justify-between items-center mb-4">
+        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-md uppercase ${
+            priority === 'urgent' ? 'bg-red-50 text-red-600' : 
+            priority === 'high' ? 'bg-orange-50 text-orange-600' : 
+            priority === 'medium' ? 'bg-yellow-50 text-yellow-600' :
+            'bg-green-50 text-green-600'
+        }`}>
+          {priority || 'medium'}
+        </span>
+        <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold shadow-sm">
+          {task.createdBy?.firstName?.[0] || 'A'}
+        </div>
+      </div>
+      <h4 className="font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors leading-snug">{task.title}</h4>
+      <p className="text-xs text-slate-500 line-clamp-2 mb-6 h-8 leading-relaxed">{task.description || 'No description provided.'}</p>
+
+      <div className="flex justify-between items-center mt-auto border-t border-slate-50 pt-4">
+        <span className="text-[10px] font-bold text-slate-400">
+          <i className="fa-regular fa-clock mr-1"></i>
+          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Set Date'}
+        </span>
+        <button
+          onClick={handleLaunch}
+          className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${
+            isDone ? 'bg-slate-50 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+          }`}
+        >
+          {isDone ? 'Finished' : 'Launch'}
+        </button>
+      </div>
+    </div>
+  );
+};

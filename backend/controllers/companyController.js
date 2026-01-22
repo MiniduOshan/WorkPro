@@ -236,7 +236,10 @@ export const removeMember = async (req, res) => {
     if (!company) return res.status(404).json({ message: 'Company not found' });
     const actorRole = company.getMemberRole(req.user._id);
     if (!actorRole) return res.status(403).json({ message: 'Not a member' });
-    if (!['owner', 'manager'].includes(actorRole)) return res.status(403).json({ message: 'Insufficient role' });
+    
+    // Only owners can remove members, not managers
+    if (actorRole !== 'owner') return res.status(403).json({ message: 'Only owners can remove members' });
+    
     const target = company.members.find((x) => x.user.toString() === userId);
     if (!target) return res.status(404).json({ message: 'Member not found' });
     if (target.role === 'owner') return res.status(400).json({ message: 'Owner cannot be removed' });

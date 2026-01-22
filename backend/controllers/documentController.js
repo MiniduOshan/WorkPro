@@ -5,13 +5,14 @@ import Document from '../models/Document.js';
 import mongoose from 'mongoose';
 import Task from '../models/Task.js';
 
+// Root uploads directory (absolute) to avoid cwd issues in container/VM setups
+const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+
 // Configure multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const companyId = req.headers['x-company-id'];
-    const uploadPath = path.join('uploads', 'documents', companyId);
-    
-    // Create directory if it doesn't exist
+    const uploadPath = path.join(uploadsRoot, 'documents', companyId || 'unknown');
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
@@ -102,7 +103,7 @@ export const uploadDocument = async (req, res) => {
       originalName: req.file.originalname,
       fileType: path.extname(req.file.originalname).toLowerCase(),
       fileSize: req.file.size,
-      filePath: req.file.path,
+      filePath: req.file.path, // absolute path from multer; safe for downloads in containers
       category,
       uploadedBy: req.user._id,
       tags: parsedTags,

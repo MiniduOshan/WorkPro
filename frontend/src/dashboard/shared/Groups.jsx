@@ -94,7 +94,10 @@ export default function Groups() {
       setTaskStats(groupRes.data.taskStats || null);
 
       // Get available members (company members not in group)
-      const groupMemberIds = members.map(m => (typeof m === 'string' ? m : m._id));
+      const groupMemberIds = members.map(m => {
+        if (typeof m === 'string') return m;
+        return m._id || m;
+      });
       const available = (companyRes.data.members || []).filter(m => {
         const userId = m.user?._id || m.user;
         return !groupMemberIds.includes(userId);

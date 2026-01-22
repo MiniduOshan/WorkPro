@@ -64,7 +64,7 @@ const ManagerSidebar = () => {
   const managementLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/manager' },
     { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
-    { name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
+    ...(companyRole === 'owner' ? [{ name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' }] : []),
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
     { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },

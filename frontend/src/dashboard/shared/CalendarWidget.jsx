@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 
 export default function CalendarWidget() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tasks, setTasks] = useState([]);
   const [companyId, setCompanyId] = useState('');
@@ -151,6 +153,10 @@ export default function CalendarWidget() {
                           {dayTasks.slice(0, 2).map((task) => (
                             <div
                               key={task._id}
+                              onClick={() => {
+                                const target = role === 'manager' ? '/dashboard/manager/tasks' : '/dashboard/tasks';
+                                navigate(target, { state: { taskId: task._id } });
+                              }}
                               className={`text-[10px] px-1.5 py-0.5 rounded font-semibold truncate cursor-pointer transition-colors ${
                                 task.priority === 'urgent'
                                   ? 'bg-red-100 text-red-700 hover:bg-red-200'

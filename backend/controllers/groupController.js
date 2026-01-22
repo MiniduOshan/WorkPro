@@ -48,7 +48,12 @@ export const listGroups = async (req, res) => {
   try {
     const { error } = await ensureMember(companyId, req.user._id);
     if (error) return res.status(403).json({ message: error });
-    const groups = await Group.find({ company: companyId }).sort({ name: 1 });
+    const groups = await Group.find({ company: companyId })
+      .populate({
+        path: 'members',
+        select: 'firstName lastName email _id'
+      })
+      .sort({ name: 1 });
     
     // Get task statistics for each group
     const Task = req.app.locals.Task || (await import('../models/Task.js')).default;
@@ -73,7 +78,10 @@ export const listGroups = async (req, res) => {
 
 export const getGroup = async (req, res) => {
   try {
-    const group = await Group.findById(req.params.id).populate('members');
+    const group = await Group.findById(req.params.id).populate({
+      path: 'members',
+      select: 'firstName lastName email _id'
+    });
     if (!group) return res.status(404).json({ message: 'Group not found' });
     const { error } = await ensureMember(group.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
@@ -85,18 +93,19 @@ export const getGroup = async (req, res) => {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status === 'done').length;
     const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
-    const blockedTasks = tasks.filter(t => t.status === 'blocked').length;
+    const cancelledTasks = tasks.filter(t => t.status === 'cancelled').length;
     const todoTasks = tasks.filter(t => t.status === 'to-do').length;
     
     const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
     res.json({
       ...group.toObject(),
+      members: group.members,
       taskStats: {
         total: totalTasks,
         completed: completedTasks,
         inProgress: inProgressTasks,
-        blocked: blockedTasks,
+        cancelled: cancelledTasks,
         todo: todoTasks,
         progress
       }

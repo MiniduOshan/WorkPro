@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import CalendarWidget from '../shared/CalendarWidget.jsx';
 
 const EmployeeDashboard = () => {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState({ tasks: { total: 0, byStatus: {} } });
   const [companyId, setCompanyId] = useState('');
   const [tasks, setTasks] = useState([]);
@@ -77,7 +79,12 @@ const EmployeeDashboard = () => {
           <div className="xl:col-span-2 space-y-8">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-800">Priority Tasks</h3>
-              <button className="text-sm font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1 rounded-lg transition-colors">View All</button>
+              <button
+                onClick={() => navigate('/dashboard/tasks')}
+                className="text-sm font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1 rounded-lg transition-colors"
+              >
+                View All
+              </button>
             </div>
 
             {loading ? (
@@ -89,7 +96,7 @@ const EmployeeDashboard = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {tasks.slice(0, 4).map((task) => (
-                  <TaskCardCompact key={task._id} task={task} />
+                  <TaskCardCompact key={task._id} task={task} navigate={navigate} />
                 ))}
               </div>
             )}
@@ -146,15 +153,22 @@ const StatCard = ({ icon, color, label, value }) => {
   );
 };
 
-const TaskCardCompact = ({ task }) => {
+const TaskCardCompact = ({ task, navigate }) => {
   const isDone = task.status?.toLowerCase() === 'done';
+  const priority = (task.priority || 'medium').toLowerCase();
+  const handleLaunch = () => {
+    navigate('/dashboard/tasks', { state: { taskId: task._id } });
+  };
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-green-300 transition-all flex flex-col group relative overflow-hidden">
       <div className="flex justify-between items-center mb-4">
         <span className={`text-[10px] font-extrabold px-2 py-1 rounded-md uppercase ${
-            task.priority === 'High' ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'
+            priority === 'urgent' ? 'bg-red-50 text-red-600' :
+            priority === 'high' ? 'bg-orange-50 text-orange-600' :
+            priority === 'medium' ? 'bg-yellow-50 text-yellow-600' :
+            'bg-green-50 text-green-600'
         }`}>
-          {task.priority || 'Medium'}
+          {priority || 'medium'}
         </span>
         <div className="w-7 h-7 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold shadow-sm">
           {task.createdBy?.firstName?.[0] || 'A'}
@@ -168,7 +182,9 @@ const TaskCardCompact = ({ task }) => {
           <i className="fa-regular fa-clock mr-1"></i> 
           {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Set Date'}
         </span>
-        <button className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${
+        <button 
+          onClick={handleLaunch}
+          className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${
           isDone ? 'bg-slate-50 text-slate-400' : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
         }`}>
           {isDone ? 'Finished' : 'Launch'}

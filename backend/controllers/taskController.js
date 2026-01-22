@@ -105,6 +105,14 @@ export const updateTask = async (req, res) => {
     const oldPriority = task.priority;
     const oldAssignee = task.assignee?.toString();
 
+    // Handle status update separately - allow managers and assignees to update status
+    if (status !== undefined) {
+      if (!isAssignee && !canManage) {
+        return res.status(403).json({ message: 'Only assignee or manager can change status' });
+      }
+      task.status = status;
+    }
+
     if (canManage) {
       if (title !== undefined) task.title = title;
       if (description !== undefined) task.description = description;
@@ -138,11 +146,6 @@ export const updateTask = async (req, res) => {
         requestedAt: new Date(),
         reason: req.body.reassignReason || 'Employee requested reassignment'
       };
-    }
-    
-    if (status !== undefined) {
-      if (!isAssignee && !canManage) return res.status(403).json({ message: 'Only assignee or manager can change status' });
-      task.status = status;
     }
 
     const updated = await task.save();

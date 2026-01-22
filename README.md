@@ -24,7 +24,7 @@ WorkPro helps companies:
 
 ### 🗂️ Projects & Tasks
 - Project lifecycle statuses (planned, active, on-hold, completed)
-- Tasks with `to-do`, `in-progress`, `blocked`, `done` + priority/due date
+- Tasks with `to-do`, `in-progress`, `cancelled`, `done` + priority/due date
 - Managers assign tasks; assignees update status
 
 ### 💬 Channels & Conversations

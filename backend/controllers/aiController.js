@@ -100,7 +100,7 @@ export const generateAISummary = async (req, res) => {
 
     const activeTasks = await Task.countDocuments({
       company: companyId,
-      status: { $in: ['to-do', 'in-progress', 'blocked'] },
+      status: { $in: ['to-do', 'in-progress', 'cancelled'] },
     });
 
     // Build text summary for AI
@@ -181,17 +181,17 @@ export const progressSummary = async (req, res) => {
     const since = new Date();
     since.setDate(since.getDate() - 1);
 
-    const [completed, started, blocked, announcements] = await Promise.all([
+    const [completed, started, cancelled, announcements] = await Promise.all([
       Task.find({ company: companyId, status: 'done', updatedAt: { $gte: since } }).select('title assignee').populate('assignee', 'firstName lastName'),
       Task.find({ company: companyId, status: 'in-progress', updatedAt: { $gte: since } }).select('title assignee').populate('assignee', 'firstName lastName'),
-      Task.find({ company: companyId, status: 'blocked', updatedAt: { $gte: since } }).select('title assignee blockerReason').populate('assignee', 'firstName lastName'),
+      Task.find({ company: companyId, status: 'cancelled', updatedAt: { $gte: since } }).select('title assignee blockerReason').populate('assignee', 'firstName lastName'),
       Announcement.find({ company: companyId, createdAt: { $gte: since } }).select('title'),
     ]);
 
     const summaryText = `Last 24h updates for company ${companyId}.
 Completed: ${completed.length} -> ${completed.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
 Started: ${started.length} -> ${started.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
-Blocked: ${blocked.length} -> ${blocked.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
+Cancelled: ${cancelled.length} -> ${cancelled.slice(0, 5).map((t) => t.title).join('; ') || 'none'}
 Announcements: ${announcements.length}`;
 
     const aiResult = await generateAIResponse(
@@ -199,7 +199,7 @@ Announcements: ${announcements.length}`;
       summaryText,
       {
         maxTokens: 260,
-        fallback: `Updates: Completed ${completed.length}, In-progress ${started.length}, Blocked ${blocked.length}, Announcements ${announcements.length}.`,
+        fallback: `Updates: Completed ${completed.length}, In-progress ${started.length}, Cancelled ${cancelled.length}, Announcements ${announcements.length}.`,
       }
     );
 

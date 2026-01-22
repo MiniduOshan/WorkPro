@@ -423,7 +423,7 @@ export default function Departments() {
                           <span className={`px-2 py-0.5 rounded-full ${
                             task.status === 'done' ? 'bg-green-100 text-green-700' :
                             task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                            task.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                            task.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                             'bg-slate-100 text-slate-700'
                           }`}>
                             {task.status}

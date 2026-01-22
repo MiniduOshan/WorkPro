@@ -35,7 +35,7 @@ export const managerSummary = async (req, res) => {
     const statusMap = tasksByStatus.reduce((acc, x) => { acc[x._id] = x.count; return acc; }, {});
     res.json({
       tasks: {
-        total: (statusMap['to-do']||0)+(statusMap['in-progress']||0)+(statusMap['blocked']||0)+(statusMap['done']||0),
+        total: (statusMap['to-do']||0)+(statusMap['in-progress']||0)+(statusMap['cancelled']||0)+(statusMap['done']||0),
         byStatus: statusMap,
       },
       teams: teams.map(t => ({ _id: t._id, name: t.name, members: t.members.length })),
@@ -111,7 +111,7 @@ export const getTaskAnalytics = async (req, res) => {
       completed: byStatus['done'] || 0,
       inProgress: byStatus['in-progress'] || 0,
       todo: byStatus['to-do'] || 0,
-      blocked: byStatus['blocked'] || 0,
+      cancelled: byStatus['cancelled'] || 0,
     });
   } catch (e) {
     res.status(500).json({ message: e.message });

@@ -29,6 +29,8 @@ export default function Teams() {
   const [inviteResult, setInviteResult] = useState(null);
   const [copied, setCopied] = useState(false);
   const [companyRole, setCompanyRole] = useState('');
+  const [removalConfirm, setRemovalConfirm] = useState({ show: false, member: null, step: 1, verificationCode: '' });
+  const [generatedCode, setGeneratedCode] = useState('');
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -79,6 +81,30 @@ export default function Teams() {
       setCompany(data);
     } catch (err) {
       console.error('Failed to fetch company details:', err);
+    }
+  };
+
+  const initiateRemoval = (member) => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setGeneratedCode(code);
+    setRemovalConfirm({ show: true, member, step: 1, verificationCode: '' });
+  };
+
+  const confirmRemovalStep2 = async () => {
+    if (removalConfirm.verificationCode !== generatedCode) {
+      alert('Verification code is incorrect. Please try again.');
+      return;
+    }
+
+    try {
+      await api.delete(`/api/companies/${companyId}/members/${removalConfirm.member._id}`);
+      setMembers(prev => prev.filter(m => m._id !== removalConfirm.member._id));
+      setRemovalConfirm({ show: false, member: null, step: 1, verificationCode: '' });
+      alert('Member successfully removed.');
+    } catch (e) {
+      const msg = e.response?.data?.message || 'Failed to remove member';
+      alert(msg);
+      console.error('Failed to remove member', e);
     }
   };
 
@@ -271,16 +297,7 @@ export default function Teams() {
                     View Profile
                   </button>
                   {['owner', 'manager'].includes(companyRole) && (
-                    <button onClick={async ()=>{
-                      try {
-                        await api.delete(`/api/companies/${companyId}/members/${member._id}`);
-                        setMembers(prev=>prev.filter(m=>m._id!==member._id));
-                      } catch(e){
-                        const msg = e.response?.data?.message || 'Failed to remove member';
-                        alert(msg);
-                        console.error('Failed to remove member', e);
-                      }
-                    }} className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
+                    <button onClick={() => initiateRemoval(member)} className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
                       Remove
                     </button>
                   )}
@@ -380,6 +397,78 @@ export default function Teams() {
                   Done
                 </button>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Two-Step Removal Confirmation Modal */}
+      {removalConfirm.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            {removalConfirm.step === 1 ? (
+              <>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Confirm Removal</h2>
+                <p className="text-slate-600 mb-6">
+                  Are you sure you want to remove <strong>{removalConfirm.member?.firstName} {removalConfirm.member?.lastName}</strong> from the company?
+                </p>
+                <div className="p-4 bg-red-50 rounded-lg border border-red-200 mb-6">
+                  <p className="text-sm text-red-800">
+                    ⚠️ This action cannot be undone. The member will lose access to all company resources.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setRemovalConfirm({ show: false, member: null, step: 1, verificationCode: '' })}
+                    className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => setRemovalConfirm({ ...removalConfirm, step: 2 })}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Verify Removal</h2>
+                <p className="text-slate-600 mb-4">
+                  Enter the verification code sent to confirm the removal. This is an additional security measure.
+                </p>
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 mb-6">
+                  <p className="text-sm font-semibold text-blue-900 mb-2">Verification Code:</p>
+                  <p className="text-lg font-mono text-blue-700 tracking-widest">{generatedCode}</p>
+                </div>
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Enter Code</label>
+                  <input
+                    type="text"
+                    value={removalConfirm.verificationCode}
+                    onChange={(e) => setRemovalConfirm({ ...removalConfirm, verificationCode: e.target.value.toUpperCase() })}
+                    placeholder="Enter the code above"
+                    maxLength="6"
+                    className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-center font-mono tracking-widest"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setRemovalConfirm({ show: false, member: null, step: 1, verificationCode: '' })}
+                    className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmRemovalStep2}
+                    disabled={removalConfirm.verificationCode.length !== 6}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Remove Member
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
