@@ -15,7 +15,6 @@ export default function Invite() {
   const [companyId, setCompanyId] = useState('');
   const [company, setCompany] = useState(null);
   const [role, setRole] = useState('employee');
-  const [department, setDepartment] = useState('');
   const [link, setLink] = useState('');
   const [msg, setMsg] = useState('');
   const [copied, setCopied] = useState(false);
@@ -45,12 +44,10 @@ export default function Invite() {
     setLoading(true);
     try {
       const { data } = await api.post(`/api/companies/${companyId}/invitations`, { 
-        role,
-        department 
+        role
       });
       setLink(data.link);
       setMsg('Invitation created successfully! 🎉');
-      setDepartment('');
     } catch (err) {
       setMsg(err.response?.data?.message || 'Failed to create invitation');
     } finally {
@@ -178,25 +175,6 @@ export default function Invite() {
                     </button>
                   </div>
                 </div>
-
-                {/* Department Selection */}
-                {company?.departments?.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Department (Optional)
-                    </label>
-                    <select
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                    >
-                      <option value="">Let them choose</option>
-                      {company.departments.map((dept) => (
-                        <option key={dept} value={dept}>{dept}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
 
                 {/* Submit Button */}
                 <button
@@ -336,8 +314,8 @@ export default function Invite() {
               <ul className="space-y-2 text-sm text-amber-800">
                 <li>• Links expire after 7 days</li>
                 <li>• Can be used only once</li>
-                <li>• Choose department for auto-categorization</li>
                 <li>• Managers can invite other members</li>
+                <li>• Members can join departments after accepting</li>
               </ul>
             </div>
           </div>

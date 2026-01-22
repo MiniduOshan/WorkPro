@@ -28,9 +28,7 @@ const SuperAdminPricing = () => {
   const fetchPricingPlans = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/super-admin/pricing-plans', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/super-admin/pricing-plans');
       setPricingPlans(response.data);
     } catch (err) {
       console.error('Failed to fetch pricing plans:', err);
@@ -61,8 +59,7 @@ const SuperAdminPricing = () => {
     try {
       await api.put(
         '/api/super-admin/pricing-plans',
-        { plans: [...pricingPlans, newPlan] },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { plans: [...pricingPlans, newPlan] }
       );
 
       setPricingPlans([...pricingPlans, newPlan]);
@@ -80,8 +77,7 @@ const SuperAdminPricing = () => {
         const updatedPlans = pricingPlans.filter((_, i) => i !== index);
         await api.put(
           '/api/super-admin/pricing-plans',
-          { plans: updatedPlans },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { plans: updatedPlans }
         );
         setPricingPlans(updatedPlans);
       } catch (err) {

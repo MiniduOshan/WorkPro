@@ -24,22 +24,33 @@ export default function NotificationCenter() {
 
   const fetchNotifications = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const { data } = await api.get('/api/super-admin/notifications', { headers });
-      setNotifications(data);
-      const unread = data.filter(n => !n.isRead).length;
+      if (!token) {
+        setNotifications([]);
+        setUnreadCount(0);
+        setLoading(false);
+        return;
+      }
+      const { data } = await api.get('/api/super-admin/notifications');
+      const notifArray = Array.isArray(data) ? data : [];
+      setNotifications(notifArray);
+      const unread = notifArray.filter(n => !n.isRead).length;
       setUnreadCount(unread);
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setLoading(false);
     }
   };
 
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await api.post(`/api/super-admin/notifications/${notificationId}/read`, {}, { headers });
+      if (!token) return;
+      await api.post(`/api/super-admin/notifications/${notificationId}/read`, {});
       setNotifications(notifications.map(n => 
         n._id === notificationId ? { ...n, isRead: true } : n
       ));

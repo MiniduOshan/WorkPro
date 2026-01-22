@@ -21,9 +21,7 @@ const SuperAdminUsers = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/super-admin/analytics/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/super-admin/analytics/users');
       setUserAnalytics(response.data);
     } catch (err) {
       console.error('Failed to fetch users:', err);

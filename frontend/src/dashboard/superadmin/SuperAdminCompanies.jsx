@@ -26,9 +26,7 @@ const SuperAdminCompanies = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/super-admin/analytics/companies', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/super-admin/analytics/companies');
       setCompanies(response.data);
     } catch (err) {
       console.error('Failed to fetch companies:', err);
@@ -52,8 +50,7 @@ const SuperAdminCompanies = () => {
     setIsDeleting(true);
     try {
       await api.delete(`/api/companies/${selectedCompany._id}`, {
-        data: { confirmation: 'DELETE MY COMPANY' },
-        headers: { Authorization: `Bearer ${token}` },
+        data: { confirmation: 'DELETE MY COMPANY' }
       });
       
       setCompanies(companies.filter(c => c._id !== selectedCompany._id));

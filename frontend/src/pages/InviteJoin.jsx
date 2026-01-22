@@ -20,7 +20,6 @@ export default function InviteJoin() {
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState(null);
   const [error, setError] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState('');
   const [joining, setJoining] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -37,7 +36,6 @@ export default function InviteJoin() {
     try {
       const { data } = await api.get('/api/companies/invitations/details', { params: { token } });
       setInvitation(data);
-      if (data.department) setSelectedDepartment(data.department);
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load invitation');
@@ -53,17 +51,11 @@ export default function InviteJoin() {
       return;
     }
 
-    if (!selectedDepartment && invitation?.company?.departments?.length > 0) {
-      setError('Please select a department');
-      return;
-    }
-
     setJoining(true);
     setError('');
     try {
       const { data } = await api.post('/api/companies/invitations/accept', { 
-        token, 
-        department: selectedDepartment 
+        token
       });
       
       localStorage.setItem('companyId', data.companyId);
@@ -210,32 +202,7 @@ export default function InviteJoin() {
               </div>
             </div>
 
-            {/* Department Selection */}
-            {invitation?.company?.departments && invitation.company.departments.length > 0 && (
-              <div className="mb-8">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Select Your Department
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {invitation.company.departments.map((dept) => (
-                    <button
-                      type="button"
-                      key={dept}
-                      onClick={() => setSelectedDepartment(dept)}
-                      className={`px-4 py-3 rounded-lg border-2 transition-all font-medium ${
-                        selectedDepartment === dept
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 hover:border-indigo-300 text-gray-700'
-                      }`}
-                    >
-                      {dept}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Error Message */}
+            {/* Error Message */
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <IoAlertCircleOutline className="text-2xl text-red-500 flex-shrink-0 mt-0.5" />

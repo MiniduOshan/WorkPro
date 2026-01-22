@@ -38,9 +38,7 @@ const PlatformContent = () => {
   const fetchPlatformContent = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/super-admin/platform-content', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/super-admin/platform-content');
       setPlatformContent(response.data);
     } catch (err) {
       console.error('Failed to fetch platform content:', err);
@@ -60,8 +58,7 @@ const PlatformContent = () => {
       setSaving(true);
       await api.put(
         '/api/super-admin/platform-content',
-        platformContent,
-        { headers: { Authorization: `Bearer ${token}` } }
+        platformContent
       );
       showMessage('success', 'Platform content updated successfully! Changes are now live on the landing page.');
     } catch (err) {

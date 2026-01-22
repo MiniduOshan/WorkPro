@@ -21,9 +21,7 @@ const SuperAdminAnalytics = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/super-admin/analytics', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/api/super-admin/analytics');
       setAnalytics(response.data);
     } catch (err) {
       console.error('Failed to fetch analytics:', err);

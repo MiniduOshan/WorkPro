@@ -34,18 +34,10 @@ const SuperAdminDashboard = () => {
       console.log('Fetching SuperAdmin analytics...');
       
       const [analData, compData, userData, pricingData] = await Promise.all([
-        api.get('/api/super-admin/analytics', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get('/api/super-admin/analytics/companies', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get('/api/super-admin/analytics/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        api.get('/api/super-admin/pricing-plans', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        api.get('/api/super-admin/analytics'),
+        api.get('/api/super-admin/analytics/companies'),
+        api.get('/api/super-admin/analytics/users'),
+        api.get('/api/super-admin/pricing-plans'),
       ]);
 
       console.log('Analytics data:', analData.data);
@@ -78,8 +70,7 @@ const SuperAdminDashboard = () => {
     try {
       await api.put(
         '/api/super-admin/pricing-plans',
-        { plans: [...pricingPlans, newPlan] },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { plans: [...pricingPlans, newPlan] }
       );
 
       setPricingPlans([...pricingPlans, newPlan]);

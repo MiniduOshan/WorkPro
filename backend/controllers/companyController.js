@@ -94,7 +94,7 @@ export const getCompany = async (req, res) => {
 
 // Create invitation for email with role
 export const createInvitation = async (req, res) => {
-  const { role, department } = req.body;
+  const { role } = req.body;
   const companyId = req.params.companyId;
   if (!role) return res.status(400).json({ message: 'role is required' });
   if (!['manager', 'employee'].includes(role)) return res.status(400).json({ message: 'Invalid role' });
@@ -105,12 +105,6 @@ export const createInvitation = async (req, res) => {
     if (!inviterRole) return res.status(403).json({ message: 'Not a member' });
     if (!['owner', 'manager'].includes(inviterRole)) return res.status(403).json({ message: 'Insufficient role' });
 
-    // Auto-add department to company if it doesn't exist
-    if (department && department.trim() && !company.departments.includes(department.trim())) {
-      company.departments.push(department.trim());
-      await company.save();
-    }
-
     const token = crypto.randomBytes(24).toString('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
     const invitation = await Invitation.create({ 
@@ -118,7 +112,6 @@ export const createInvitation = async (req, res) => {
       inviter: req.user._id, 
       email: '', // email is optional; invites are link-based
       role, 
-      department: department || '',
       token, 
       expiresAt 
     });
@@ -134,7 +127,7 @@ export const createInvitation = async (req, res) => {
 
 // Accept invitation by token; adds user to company
 export const acceptInvitation = async (req, res) => {
-  const { token, department } = req.body;
+  const { token } = req.body;
   if (!token) return res.status(400).json({ message: 'token is required' });
   try {
     const inv = await Invitation.findOne({ token });
@@ -149,8 +142,7 @@ export const acceptInvitation = async (req, res) => {
     if (!already) {
       company.members.push({ 
         user: req.user._id, 
-        role: inv.role,
-        department: department || inv.department || ''
+        role: inv.role
       });
     }
 
@@ -269,8 +261,7 @@ export const acceptInvitationPublic = async (req, res) => {
     if (!already) {
       company.members.push({ 
         user: userId, 
-        role: inv.role,
-        department: inv.department || ''
+        role: inv.role
       });
     }
 
@@ -349,6 +340,7 @@ export const switchCompany = async (req, res) => {
     res.json({ 
       message: 'Company switched successfully',
       defaultCompany: companyId,
+      role: role,
       company: { _id: company._id, name: company.name }
     });
   } catch (e) {

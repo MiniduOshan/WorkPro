@@ -44,7 +44,7 @@ const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
   const handleCompanySelect = async (companyId) => {
     try {
       const token = localStorage.getItem('token');
-      await api.post(
+      const response = await api.post(
         '/api/companies/switch',
         { companyId },
         { headers: { Authorization: `Bearer ${token}` } }
@@ -53,6 +53,13 @@ const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
       const selected = companies.find(c => c._id === companyId);
       setCurrentCompany(selected);
       localStorage.setItem('companyId', companyId);
+      
+      // Update the role in localStorage based on the backend response
+      if (response.data && response.data.role) {
+        localStorage.setItem('companyRole', response.data.role);
+        setCurrentRole(response.data.role);
+      }
+      
       setShowDropdown(false);
       
       if (onCompanySwitch) {

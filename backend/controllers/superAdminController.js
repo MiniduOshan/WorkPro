@@ -524,17 +524,25 @@ export const getUserNotifications = async (req, res) => {
     const notifications = await Notification.find({
       isActive: true,
       startDate: { $lte: currentDate },
-      $or: [
-        { endDate: null },
-        { endDate: { $gte: currentDate } }
-      ],
-      $or: [
-        { targetUsers: { $size: 0 } },
-        { targetUsers: req.user._id }
-      ],
-      $or: [
-        { targetCompanies: { $size: 0 } },
-        { targetCompanies: { $in: companyIds } }
+      $and: [
+        {
+          $or: [
+            { endDate: null },
+            { endDate: { $gte: currentDate } }
+          ]
+        },
+        {
+          $or: [
+            { targetUsers: { $size: 0 } },
+            { targetUsers: req.user._id }
+          ]
+        },
+        {
+          $or: [
+            { targetCompanies: { $size: 0 } },
+            { targetCompanies: { $in: companyIds } }
+          ]
+        }
       ]
     })
       .populate('createdBy', 'firstName lastName')
