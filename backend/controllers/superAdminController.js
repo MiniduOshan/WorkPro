@@ -563,7 +563,7 @@ export const getUserNotifications = async (req, res) => {
         {
           $or: [
             { targetUsers: { $size: 0 } },
-            { targetUsers: req.user._id }
+            { targetUsers: { $in: [req.user._id] } }
           ]
         },
         {
