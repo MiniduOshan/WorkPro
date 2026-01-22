@@ -1,9 +1,6 @@
-// src/App.jsx
-
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
-// Import Header, Footer, and Page components
 import Header from './components/header.jsx';
 import Footer from './components/footer.jsx';
 import About from './pages/about.jsx';
@@ -44,31 +41,27 @@ import SelectCompany from './pages/SelectCompany.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
 
 
-// Simple Auth Check Simulation
 const isAuthenticated = () => {
     return localStorage.getItem('token') !== null;
 };
 
-// Protected Route Wrapper Component
 const ProtectedRoute = ({ children, requireCompany = false }) => {
     if (!isAuthenticated()) {
         return <Navigate to="/login" />;
     }
     
-    // Check if user is SuperAdmin - they don't need a company
     const userProfile = localStorage.getItem('userProfile');
     if (userProfile) {
         try {
             const profile = JSON.parse(userProfile);
             if (profile.isSuperAdmin) {
-                return children; // SuperAdmins can access everything
+                return children;
             }
         } catch (err) {
             console.error('Error parsing user profile', err);
         }
     }
     
-    // For non-SuperAdmin users, check company requirement
     if (requireCompany && !localStorage.getItem('companyId')) {
         return <Navigate to="/select-company" />;
     }
@@ -76,11 +69,9 @@ const ProtectedRoute = ({ children, requireCompany = false }) => {
     return children;
 };
 
-// Layout component to wrap public pages with both Header AND Footer
 const PublicLayout = () => (
     <div className="flex flex-col min-h-screen">
         <Header />
-        {/* The main content area that renders the child route */}
         <main className="grow">
             <Outlet />
         </main>

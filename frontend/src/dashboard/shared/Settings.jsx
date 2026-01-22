@@ -155,7 +155,8 @@ export default function Settings() {
   const tabs = [
     ...(isManager ? [{ id: 'company', label: 'Company', icon: IoBusinessOutline }] : []),
     { id: 'notifications', label: 'Notifications', icon: IoNotificationsOutline },
-    { id: 'privacy', label: 'Privacy', icon: IoLockClosedOutline }
+    { id: 'privacy', label: 'Privacy', icon: IoLockClosedOutline },
+    { id: 'danger', label: 'Danger Zone', icon: IoWarningOutline }
   ];
 
   return (

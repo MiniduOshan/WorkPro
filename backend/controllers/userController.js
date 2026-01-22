@@ -11,9 +11,6 @@ const getUserResponse = (user) => {
     // A user is super admin if they are flagged OR they match the fixed email
     const isSuperAdmin = user.isSuperAdmin === true || user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
     
-    console.log(`[AUTH] Processing user: ${user.email}`);
-    console.log(`[AUTH] Is SuperAdmin: ${isSuperAdmin} (checking against: ${SUPER_ADMIN_EMAIL})`);
-    
     return {
         _id: user._id,
         firstName: user.firstName,
@@ -38,9 +35,6 @@ const getUserResponse = (user) => {
 const registerUser = async (req, res) => {
     const { firstName, lastName, email, password, confirmPassword } = req.body;
 
-    console.log(`[AUTH] Attempting signup for email: ${email}`);
-    console.log("Received Body:", req.body);
-
     if (password !== confirmPassword) {
         return res.status(400).json({ message: 'Passwords do not match' });
     }
@@ -64,7 +58,6 @@ const registerUser = async (req, res) => {
         });
 
         if (user) {
-            console.log(`[AUTH] User created successfully: ${user.email}${isSuperAdmin ? ' (Super Admin)' : ''}`);
             res.status(201).json(getUserResponse(user));
         } else {
             res.status(400).json({ message: 'Invalid user data (Mongoose validation error)' });
@@ -236,14 +229,88 @@ const deleteUserAccount = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Remove user from all companies
+        // Import all necessary models
         const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
+        const Task = req.app.locals.Task || (await import('../models/Task.js')).default;
+        const Project = req.app.locals.Project || (await import('../models/Project.js')).default;
+        const Note = req.app.locals.Note || (await import('../models/Note.js')).default;
+        const Group = req.app.locals.Group || (await import('../models/Group.js')).default;
+        const Department = req.app.locals.Department || (await import('../models/Department.js')).default;
+        const Team = req.app.locals.Team || (await import('../models/Team.js')).default;
+        const Channel = req.app.locals.Channel || (await import('../models/Channel.js')).default;
+        const Notification = req.app.locals.Notification || (await import('../models/Notification.js')).default;
+        const Invitation = req.app.locals.Invitation || (await import('../models/Invitation.js')).default;
+
+        // 1. Delete companies where user is the owner
+        await Company.deleteMany({ owner: user._id });
+
+        // 2. Remove user from company members arrays
         await Company.updateMany(
             { 'members.user': user._id },
             { $pull: { members: { user: user._id } } }
         );
 
-        // Delete the user
+        // 3. Delete user's personal notes
+        await Note.deleteMany({ user: user._id });
+
+        // 4. Remove user from groups
+        await Group.updateMany(
+            { members: user._id },
+            { $pull: { members: user._id } }
+        );
+
+        // 5. Remove user from departments (managers)
+        await Department.updateMany(
+            { managers: user._id },
+            { $pull: { managers: user._id } }
+        );
+
+        // 6. Remove user from teams
+        await Team.updateMany(
+            { members: user._id },
+            { $pull: { members: user._id } }
+        );
+
+        // 7. Remove user from channels
+        await Channel.updateMany(
+            { members: user._id },
+            { $pull: { members: user._id } }
+        );
+
+        // 8. Delete user's channels
+        await Channel.deleteMany({ user: user._id });
+
+        // 9. Unassign tasks assigned to user (set assignee to null instead of deleting)
+        await Task.updateMany(
+            { assignee: user._id },
+            { $unset: { assignee: "" } }
+        );
+
+        // 10. Update tasks created by user (keep them but mark createdBy as deleted)
+        await Task.updateMany(
+            { createdBy: user._id },
+            { createdBy: null }
+        );
+
+        // 11. Update projects created by user
+        await Project.updateMany(
+            { createdBy: user._id },
+            { createdBy: null }
+        );
+
+        // 12. Delete notifications related to user
+        await Notification.deleteMany({
+            $or: [
+                { createdBy: user._id },
+                { targetUsers: user._id },
+                { 'readBy.user': user._id }
+            ]
+        });
+
+        // 13. Delete invitations created by user
+        await Invitation.deleteMany({ inviter: user._id });
+
+        // 14. Delete the user account
         await User.deleteOne({ _id: user._id });
 
         res.json({ message: 'Account deleted successfully' });

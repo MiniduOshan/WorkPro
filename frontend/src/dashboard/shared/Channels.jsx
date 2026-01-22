@@ -134,9 +134,8 @@ export default function Channels() {
         members: [...(prev.members || []), userId]
       }));
       
-      // Refresh channel list and messages
+      // Only refresh channel list, not messages (to avoid overwriting state)
       loadChannels();
-      loadMessages(selected);
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to approve request';
       console.error('Failed to approve request:', err);
@@ -159,9 +158,8 @@ export default function Channels() {
         }) || []
       }));
       
-      // Refresh channel list
+      // Only refresh channel list, not messages (to avoid overwriting state)
       loadChannels();
-      loadMessages(selected);
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to reject request';
       console.error('Failed to reject request:', err);

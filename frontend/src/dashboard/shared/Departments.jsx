@@ -387,27 +387,7 @@ export default function Departments() {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Teams Section */}
-              <div>
-                <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-                  <IoPeopleOutline className="text-blue-600" />
-                  Teams ({viewDept.teams?.length || 0})
-                </h4>
-                {viewDept.teams?.length ? (
-                  <div className="space-y-2">
-                    {viewDept.teams.map(t => (
-                      <div key={t._id} className="px-4 py-3 bg-blue-50 rounded-xl border border-blue-200">
-                        <p className="font-semibold text-slate-800">{t.name}</p>
-                        <p className="text-xs text-slate-600">{t.members?.length || 0} members</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No teams in this department yet.</p>
-                )}
-              </div>
-
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Tasks Section */}
               <div>
                 <h4 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">

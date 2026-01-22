@@ -10,7 +10,10 @@ import {
   IoPeopleOutline,
   IoLinkOutline,
   IoCopyOutline,
-  IoCheckmarkCircleOutline
+  IoCheckmarkCircleOutline,
+  IoCloseOutline,
+  IoClipboardOutline,
+  IoLayersOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
 
@@ -31,6 +34,10 @@ export default function Teams() {
   const [companyRole, setCompanyRole] = useState('');
   const [removalConfirm, setRemovalConfirm] = useState({ show: false, member: null, step: 1, verificationCode: '' });
   const [generatedCode, setGeneratedCode] = useState('');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [memberProfile, setMemberProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -49,9 +56,8 @@ export default function Teams() {
     try {
       setLoading(true);
       const { data } = await api.get(`/api/companies/${id}`);
-      console.log('Company data received:', data); // Debug log
-      if (data && data.members) {
-        const mappedMembers = data.members.map(m => ({
+      if (data) {
+        const mappedMembers = (data.members || []).map(m => ({
           _id: m.user?._id || m.user,
           firstName: m.user?.firstName || '',
           lastName: m.user?.lastName || '',
@@ -61,10 +67,28 @@ export default function Teams() {
           mobileNumber: m.user?.mobileNumber || '',
           profilePic: m.user?.profilePic || ''
         }));
-        console.log('Mapped members:', mappedMembers); // Debug log
+        
+        // Include the owner as well
+        if (data.owner) {
+          const ownerData = {
+            _id: data.owner._id,
+            firstName: data.owner.firstName || '',
+            lastName: data.owner.lastName || '',
+            email: data.owner.email || '',
+            role: 'owner',
+            department: '',
+            mobileNumber: data.owner.mobileNumber || '',
+            profilePic: data.owner.profilePic || ''
+          };
+          // Check if owner is already in members array (shouldn't be, but let's be safe)
+          const ownerAlreadyInMembers = mappedMembers.some(m => m._id === ownerData._id);
+          if (!ownerAlreadyInMembers) {
+            mappedMembers.unshift(ownerData); // Add owner at the beginning
+          }
+        }
+        
         setMembers(mappedMembers);
       } else {
-        console.log('No members found in company data');
         setMembers([]);
       }
     } catch (err) {
@@ -88,6 +112,47 @@ export default function Teams() {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setGeneratedCode(code);
     setRemovalConfirm({ show: true, member, step: 1, verificationCode: '' });
+  };
+
+  const viewMemberProfile = async (member) => {
+    setSelectedMember(member);
+    setShowProfileModal(true);
+    setLoadingProfile(true);
+    
+    try {
+      // Fetch member's tasks
+      const tasksRes = await api.get('/api/tasks', { 
+        params: { companyId, assignee: member._id } 
+      });
+      
+      // Fetch groups member belongs to
+      const groupsRes = await api.get('/api/groups', { 
+        params: { companyId } 
+      });
+      const memberGroups = groupsRes.data.filter(g => 
+        g.members?.some(m => (m._id || m) === member._id)
+      );
+      
+      // Fetch departments
+      const deptsRes = await api.get('/api/departments', { 
+        params: { companyId } 
+      });
+      const memberDepts = deptsRes.data.filter(d => 
+        d.members?.some(m => (m._id || m) === member._id)
+      );
+      
+      setMemberProfile({
+        ...member,
+        tasks: tasksRes.data || [],
+        groups: memberGroups || [],
+        departments: memberDepts || []
+      });
+    } catch (err) {
+      console.error('Failed to load member profile:', err);
+      setMemberProfile({ ...member, tasks: [], groups: [], departments: [] });
+    } finally {
+      setLoadingProfile(false);
+    }
   };
 
   const confirmRemovalStep2 = async () => {
@@ -293,7 +358,10 @@ export default function Teams() {
 
                 {/* Actions */}
                 <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
-                  <button className={`flex-1 px-4 py-2 bg-${theme.primaryLight} text-${theme.primary} rounded-lg font-semibold hover:bg-${theme.primaryLighter} transition text-sm`}>
+                  <button 
+                    onClick={() => viewMemberProfile(member)}
+                    className={`flex-1 px-4 py-2 bg-${theme.primaryLight} text-${theme.primary} rounded-lg font-semibold hover:bg-${theme.primaryLighter} transition text-sm`}
+                  >
                     View Profile
                   </button>
                   {['owner', 'manager'].includes(companyRole) && (
@@ -470,6 +538,166 @@ export default function Teams() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+      
+      {/* Member Profile Modal */}
+      {showProfileModal && selectedMember && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-16 h-16 bg-gradient-to-br from-${theme.primary} to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold`}>
+                  {getInitials(selectedMember.firstName, selectedMember.lastName)}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">{selectedMember.firstName} {selectedMember.lastName}</h2>
+                  <span className={`inline-block mt-1 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide border-2 ${getRoleBadgeColor(selectedMember.role)}`}>
+                    {selectedMember.role}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => { setShowProfileModal(false); setMemberProfile(null); }} className="p-2 hover:bg-slate-100 rounded-lg transition">
+                <IoCloseOutline className="text-2xl text-slate-400" />
+              </button>
+            </div>
+            
+            {loadingProfile ? (
+              <div className="px-8 py-16 flex items-center justify-center">
+                <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme.primary}`}></div>
+              </div>
+            ) : memberProfile ? (
+              <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
+                {/* Contact Information */}
+                <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+                  <h3 className="text-lg font-bold text-slate-800 mb-3">Contact Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 text-slate-700">
+                      <IoMailOutline className="text-slate-500" />
+                      <span>{memberProfile.email}</span>
+                    </div>
+                    {memberProfile.mobileNumber && (
+                      <div className="flex items-center gap-3 text-slate-700">
+                        <IoCallOutline className="text-slate-500" />
+                        <span>{memberProfile.mobileNumber}</span>
+                      </div>
+                    )}
+                    {memberProfile.department && (
+                      <div className="flex items-center gap-3 text-slate-700">
+                        <IoBusinessOutline className="text-slate-500" />
+                        <span>{memberProfile.department}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Ongoing Tasks */}
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                      <IoClipboardOutline className="text-purple-600" />
+                      Ongoing Tasks ({memberProfile.tasks?.filter(t => t.status !== 'done' && t.status !== 'cancelled').length || 0})
+                    </h3>
+                    {memberProfile.tasks?.filter(t => t.status !== 'done' && t.status !== 'cancelled').length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {memberProfile.tasks.filter(t => t.status !== 'done' && t.status !== 'cancelled').map(task => (
+                          <div key={task._id} className="p-3 bg-purple-50 rounded-xl border border-purple-200">
+                            <p className="font-semibold text-slate-800 text-sm mb-1">{task.title}</p>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className={`px-2 py-0.5 rounded-full ${
+                                task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                                task.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {task.status}
+                              </span>
+                              {task.priority && (
+                                <span className={`px-2 py-0.5 rounded-full ${
+                                  task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                  task.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
+                                  'bg-green-100 text-green-700'
+                                }`}>
+                                  {task.priority}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">No ongoing tasks</p>
+                    )}
+                  </div>
+
+                  {/* Groups */}
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                      <IoLayersOutline className="text-blue-600" />
+                      Groups ({memberProfile.groups?.length || 0})
+                    </h3>
+                    {memberProfile.groups?.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {memberProfile.groups.map(group => (
+                          <div key={group._id} className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                            <p className="font-semibold text-slate-800 text-sm">{group.name}</p>
+                            <p className="text-xs text-slate-600 mt-1">{group.members?.length || 0} members</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">Not in any groups</p>
+                    )}
+                  </div>
+
+                  {/* Departments */}
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                      <IoBusinessOutline className="text-emerald-600" />
+                      Departments ({memberProfile.departments?.length || 0})
+                    </h3>
+                    {memberProfile.departments?.length > 0 ? (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {memberProfile.departments.map(dept => (
+                          <div key={dept._id} className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                            <p className="font-semibold text-slate-800 text-sm">{dept.name}</p>
+                            {dept.description && (
+                              <p className="text-xs text-slate-600 mt-1 line-clamp-2">{dept.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl">Not in any departments</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* All Tasks Summary */}
+                <div className="mt-6 p-4 bg-slate-50 rounded-xl">
+                  <h3 className="text-lg font-bold text-slate-800 mb-3">Task Summary</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-white rounded-lg border border-slate-200">
+                      <p className="text-2xl font-bold text-slate-800">{memberProfile.tasks?.length || 0}</p>
+                      <p className="text-xs text-slate-600 mt-1">Total Tasks</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-2xl font-bold text-blue-700">{memberProfile.tasks?.filter(t => t.status === 'in-progress').length || 0}</p>
+                      <p className="text-xs text-slate-600 mt-1">In Progress</p>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-2xl font-bold text-green-700">{memberProfile.tasks?.filter(t => t.status === 'done').length || 0}</p>
+                      <p className="text-xs text-slate-600 mt-1">Completed</p>
+                    </div>
+                    <div className="text-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <p className="text-2xl font-bold text-yellow-700">{memberProfile.tasks?.filter(t => t.status === 'to-do' || t.status === 'pending').length || 0}</p>
+                      <p className="text-xs text-slate-600 mt-1">Pending</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

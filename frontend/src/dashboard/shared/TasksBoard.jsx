@@ -11,7 +11,8 @@ import {
   IoPersonOutline,
   IoBusinessOutline,
   IoCalendarOutline,
-  IoFunnelOutline
+  IoFunnelOutline,
+  IoPeopleOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
 
@@ -281,9 +282,9 @@ export default function TasksBoard() {
     setEditDescription(task.description || '');
     setEditStatus(task.status);
     setEditPriority(task.priority || 'medium');
-    setEditAssignee(task.assignee?._id || '');
-    setEditDepartment(task.department?._id || '');
-    setEditGroup(task.group?._id || '');
+    setEditAssignee(task.assignee?._id || task.assignee || '');
+    setEditDepartment(task.department?._id || task.department || '');
+    setEditGroup(task.group?._id || task.group || '');
     setEditDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
     setShowViewModal(true);
   };
@@ -857,7 +858,12 @@ export default function TasksBoard() {
                           className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
                         >
                           <option value="">Select Employee</option>
-                          {employees.filter(emp => !editDepartment || emp.department === editDepartment || ['owner', 'manager'].includes(emp.role)).map((emp) => (
+                          {employees.filter(emp => {
+                            if (!editDepartment) return true;
+                            if (['owner', 'manager'].includes(emp.role)) return true;
+                            const selectedDept = departments.find(d => d._id === editDepartment);
+                            return emp.department === selectedDept?.name;
+                          }).map((emp) => (
                             <option key={emp._id} value={emp._id}>{emp.name}</option>
                           ))}
                         </select>

@@ -74,7 +74,7 @@ export const myCompanies = async (req, res) => {
 export const getCompany = async (req, res) => {
   try {
     const company = await Company.findById(req.params.id)
-      .populate('owner', 'firstName lastName email')
+      .populate('owner', 'firstName lastName email profilePic mobileNumber')
       .populate('members.user', 'firstName lastName email profilePic mobileNumber');
     if (!company) return res.status(404).json({ message: 'Company not found' });
     
