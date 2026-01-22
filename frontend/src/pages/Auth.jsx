@@ -7,10 +7,18 @@ import {
   IoPersonOutline, 
   IoEyeOutline, 
   IoEyeOffOutline,
-  IoLogoGoogle,
   IoCloseOutline
 } from 'react-icons/io5';
 import api from '../api/axios';
+
+const GoogleGlyph = ({ className = 'w-6 h-6' }) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path fill="#4285F4" d="M23.49 12.27c0-.78-.07-1.53-.2-2.25H12v4.26h6.48c-.28 1.45-1.12 2.68-2.39 3.51v2.91h3.86c2.26-2.09 3.54-5.17 3.54-8.43z" />
+    <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.9l-3.86-2.91c-1.08.72-2.47 1.14-4.08 1.14-3.14 0-5.8-2.12-6.75-4.97H1.26v3.11C3.24 21.33 7.31 24 12 24z" />
+    <path fill="#FBBC05" d="M5.25 14.36c-.24-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.71H1.26A11.99 11.99 0 0 0 0 12.09c0 1.95.46 3.79 1.26 5.38l4-3.11z" />
+    <path fill="#EA4335" d="M12 4.77c1.76 0 3.33.61 4.57 1.82l3.43-3.43C17.96 1.12 15.24 0 12 0 7.31 0 3.24 2.67 1.26 6.71l4 3.11C6.2 6.89 8.86 4.77 12 4.77z" />
+  </svg>
+);
 
 const AuthInput = ({ name, placeholder, type = 'text', icon: Icon, formData, handleChange }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -273,7 +281,7 @@ const Auth = ({ type }) => {
             onClick={handleGoogleSignIn}
             className="w-full flex items-center justify-center gap-3 py-3 mb-4 border-2 border-gray-300 text-gray-700 text-lg font-semibold rounded-lg hover:bg-gray-50 transition-all"
           >
-            <IoLogoGoogle className="w-6 h-6 text-red-500" />
+            <GoogleGlyph className="w-6 h-6" />
             {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
           </button>
 

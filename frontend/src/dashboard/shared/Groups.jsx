@@ -86,77 +86,81 @@ export default function Groups() {
   if (loading) return <div className="p-20 text-center font-black text-slate-300 animate-pulse">LOADING WORKSPACE...</div>;
 
   return (
-    <div className="grow bg-[#F8FAFC] min-h-screen p-6 lg:p-12">
-      {/* Header Section */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Project Groups</h1>
-          <p className="text-slate-500 font-medium">Coordinate your team and track collective progress</p>
+    <div className="grow flex flex-col overflow-hidden bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-8 py-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 mb-1">Project Groups</h1>
+            <p className="text-slate-600">Coordinate your team and track collective progress</p>
+          </div>
+          {['owner', 'manager'].includes(companyRole) && (
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all active:scale-95"
+            >
+              + Create New Group
+            </button>
+          )}
         </div>
-        {['owner', 'manager'].includes(companyRole) && (
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-[2rem] font-bold shadow-xl shadow-indigo-100 transition-all active:scale-95"
-          >
-            + Create New Group
-          </button>
-        )}
       </div>
 
-      {/* Cards Grid */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {groups.map(g => (
-          <div key={g._id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
-              <div className="bg-indigo-50 p-4 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-                <IoPeopleOutline size={30}/>
+      {/* Content */}
+      <div className="grow overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groups.map(g => (
+            <div key={g._id} className="bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all group">
+              <div className="flex justify-between items-center mb-5">
+                <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-200">
+                  <IoPeopleOutline size={30}/>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Progress</p>
+                  <p className="text-lg font-bold text-slate-800 mt-1">{g.progress}%</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Progress</p>
-                <p className="text-xl font-black text-slate-700 leading-none mt-1">{g.progress}%</p>
-              </div>
+              
+              <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">{g.name}</h3>
+              <p className="text-slate-500 text-sm mb-6 line-clamp-2">{g.description || "Active collaboration squad for group projects."}</p>
+              
+              <button 
+                onClick={() => openView(g)} 
+                className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-all"
+              >
+                VIEW DETAILS
+              </button>
             </div>
-            
-            <h3 className="text-2xl font-bold text-slate-800 mb-2 leading-tight">{g.name}</h3>
-            <p className="text-slate-400 text-sm mb-10 line-clamp-2 h-10">{g.description || "Active collaboration squad for group projects."}</p>
-            
-            <button 
-              onClick={() => openView(g)} 
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all tracking-wide"
-            >
-              VIEW DETAILS
-            </button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Detail Modal */}
       {viewGroup && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-start mb-10">
+          <div className="bg-white rounded-2xl w-full max-w-xl p-8 lg:p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <h2 className="text-4xl font-black text-slate-900 leading-none">{viewGroup.name}</h2>
-                <p className="text-slate-400 font-bold mt-2">{viewGroup.description}</p>
+                <h2 className="text-3xl font-bold text-slate-900 leading-tight">{viewGroup.name}</h2>
+                <p className="text-slate-500 mt-2">{viewGroup.description}</p>
               </div>
-              <button onClick={() => setViewGroup(null)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={36}/>
+              <button onClick={() => setViewGroup(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <IoCloseOutline size={28}/>
               </button>
             </div>
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-3 gap-4 mb-10">
-              <div className="bg-slate-50 p-5 rounded-[2rem] text-center border border-slate-100">
-                <p className="text-3xl font-black text-slate-800 leading-none">{viewGroup.taskStats?.total || 0}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Tasks</p>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              <div className="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
+                <p className="text-2xl font-bold text-slate-800 leading-none">{viewGroup.taskStats?.total || 0}</p>
+                <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Tasks</p>
               </div>
-              <div className="bg-emerald-50 p-5 rounded-[2rem] text-center border border-emerald-100">
-                <p className="text-3xl font-black text-emerald-600 leading-none">{viewGroup.taskStats?.completed || 0}</p>
-                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-2">Done</p>
+              <div className="bg-emerald-50 p-4 rounded-xl text-center border border-emerald-100">
+                <p className="text-2xl font-bold text-emerald-600 leading-none">{viewGroup.taskStats?.completed || 0}</p>
+                <p className="text-[11px] text-emerald-500 font-semibold uppercase tracking-wide mt-1">Done</p>
               </div>
-              <div className="bg-blue-50 p-5 rounded-[2rem] text-center border border-blue-100">
-                <p className="text-3xl font-black text-blue-600 leading-none">{viewGroup.taskStats?.inProgress || 0}</p>
-                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-2">Active</p>
+              <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
+                <p className="text-2xl font-bold text-blue-600 leading-none">{viewGroup.taskStats?.inProgress || 0}</p>
+                <p className="text-[11px] text-blue-500 font-semibold uppercase tracking-wide mt-1">Active</p>
               </div>
             </div>
 
@@ -166,18 +170,18 @@ export default function Groups() {
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">Group Members</h4>
                 <span className="text-xs font-black text-indigo-500">{viewGroup.members?.length} Total</span>
               </div>
-              <div className="space-y-3 max-h-44 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
                 {viewGroup.members?.map(m => (
-                  <div key={m._id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl group/member hover:bg-indigo-50/30 transition-all">
+                  <div key={m._id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl group/member hover:bg-indigo-50/50 transition-all">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px]">
+                      <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-[11px]">
                         {(m.firstName?.[0] || '?')}{(m.lastName?.[0] || '')}
                       </div>
-                      <span className="text-sm font-bold text-slate-700">{m.firstName} {m.lastName}</span>
+                      <span className="text-sm font-semibold text-slate-800">{m.firstName} {m.lastName}</span>
                     </div>
                     {['owner', 'manager'].includes(companyRole) && m._id !== currentUserId && (
                       <button onClick={() => removeMember(m._id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                        <IoTrashOutline size={20}/>
+                        <IoTrashOutline size={18}/>
                       </button>
                     )}
                   </div>
@@ -190,14 +194,14 @@ export default function Groups() {
               {viewGroup.members?.some(m => m._id === currentUserId) ? (
                 <button 
                   onClick={() => handleMemberAction('leave')}
-                  className="flex-1 py-5 bg-red-50 text-red-600 rounded-[2rem] font-black hover:bg-red-100 flex items-center justify-center gap-3 transition-all active:scale-95"
+                  className="flex-1 py-4 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <IoLogOutOutline size={22}/> LEAVE TEAM
                 </button>
               ) : (
                 <button 
                   onClick={() => handleMemberAction('join')}
-                  className="flex-1 py-5 bg-indigo-600 text-white rounded-[2rem] font-black hover:bg-indigo-700 flex items-center justify-center gap-3 shadow-2xl shadow-indigo-200 transition-all active:scale-95"
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
                 >
                   <IoEnterOutline size={22}/> JOIN TEAM
                 </button>
@@ -210,18 +214,18 @@ export default function Groups() {
       {/* Create Group Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-start mb-8">
+          <div className="bg-white rounded-2xl w-full max-w-md p-8 lg:p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-3xl font-black text-slate-900 leading-none">Create New Group</h2>
-                <p className="text-slate-400 font-bold mt-2">Build your team collaboration space</p>
+                <h2 className="text-2xl font-bold text-slate-900 leading-tight">Create New Group</h2>
+                <p className="text-slate-500 mt-1">Build your team collaboration space</p>
               </div>
-              <button onClick={() => setShowCreateModal(false)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={28}/>
+              <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <IoCloseOutline size={24}/>
               </button>
             </div>
 
-            <form onSubmit={createGroup} className="space-y-5">
+            <form onSubmit={createGroup} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Group Name *</label>
                 <input
@@ -229,7 +233,7 @@ export default function Groups() {
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="Enter group name"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:outline-none font-semibold"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium"
                 />
               </div>
 
@@ -240,23 +244,23 @@ export default function Groups() {
                   onChange={(e) => setNewGroupDesc(e.target.value)}
                   placeholder="Enter group description (optional)"
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:outline-none font-semibold resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium resize-none"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                   disabled={creatingGroup}
-                  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-[2rem] font-black hover:bg-slate-200 transition-all disabled:opacity-50"
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatingGroup}
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-[2rem] font-black hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-2xl shadow-indigo-200 transition-all disabled:opacity-50 active:scale-95"
+                  className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50 active:scale-95"
                 >
                   <IoAddOutline size={22}/> {creatingGroup ? 'Creating...' : 'Create Group'}
                 </button>

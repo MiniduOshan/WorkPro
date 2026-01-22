@@ -130,77 +130,81 @@ export default function Departments() {
   if (loading) return <div className="p-20 text-center font-black text-slate-300 animate-pulse">LOADING DEPARTMENTS...</div>;
 
   return (
-    <div className="grow bg-[#F8FAFC] min-h-screen p-6 lg:p-12">
-      {/* Header Section */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Departments</h1>
-          <p className="text-slate-500 font-medium">Organize teams and manage departmental collaboration</p>
+    <div className="grow flex flex-col overflow-hidden bg-slate-50">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-8 py-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 mb-1">Departments</h1>
+            <p className="text-slate-600">Organize teams and manage departmental collaboration</p>
+          </div>
+          {['owner', 'manager'].includes(companyRole) && (
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all active:scale-95"
+            >
+              + Create New Department
+            </button>
+          )}
         </div>
-        {['owner', 'manager'].includes(companyRole) && (
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-[2rem] font-bold shadow-xl shadow-indigo-100 transition-all active:scale-95"
-          >
-            + Create New Department
-          </button>
-        )}
       </div>
 
-      {/* Cards Grid */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {departments.map(dept => (
-          <div key={dept._id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
-              <div className="bg-amber-50 p-4 rounded-2xl text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-300">
-                <IoBusinessOutline size={30}/>
+      {/* Content */}
+      <div className="grow overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {departments.map(dept => (
+            <div key={dept._id} className="bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all relative">
+              <div className="flex justify-between items-center mb-5">
+                <div className="bg-amber-50 p-3 rounded-xl text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-200">
+                  <IoBusinessOutline size={30}/>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Members</p>
+                  <p className="text-lg font-bold text-slate-800 mt-1">{dept.memberCount || 0}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Members</p>
-                <p className="text-xl font-black text-slate-700 leading-none mt-1">{dept.memberCount || 0}</p>
-              </div>
+              
+              <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">{dept.name}</h3>
+              <p className="text-slate-500 text-sm mb-6 line-clamp-2">{dept.description || "Department workspace for team collaboration."}</p>
+              
+              <button 
+                onClick={() => openView(dept)} 
+                className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-all"
+              >
+                VIEW DETAILS
+              </button>
             </div>
-            
-            <h3 className="text-2xl font-bold text-slate-800 mb-2 leading-tight">{dept.name}</h3>
-            <p className="text-slate-400 text-sm mb-10 line-clamp-2 h-10">{dept.description || "Department workspace for team collaboration."}</p>
-            
-            <button 
-              onClick={() => openView(dept)} 
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all tracking-wide"
-            >
-              VIEW DETAILS
-            </button>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Detail Modal */}
       {viewDept && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-start mb-10">
+          <div className="bg-white rounded-2xl w-full max-w-xl p-8 lg:p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <h2 className="text-4xl font-black text-slate-900 leading-none">{viewDept.name}</h2>
-                <p className="text-slate-400 font-bold mt-2">{viewDept.description}</p>
+                <h2 className="text-3xl font-bold text-slate-900 leading-tight">{viewDept.name}</h2>
+                <p className="text-slate-500 mt-2">{viewDept.description}</p>
               </div>
-              <button onClick={() => setViewDept(null)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={36}/>
+              <button onClick={() => setViewDept(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <IoCloseOutline size={28}/>
               </button>
             </div>
 
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-3 gap-4 mb-10">
-              <div className="bg-slate-50 p-5 rounded-[2rem] text-center border border-slate-100">
-                <p className="text-3xl font-black text-slate-800 leading-none">{viewDept.taskStats?.total || 0}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Tasks</p>
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              <div className="bg-slate-50 p-4 rounded-xl text-center border border-slate-100">
+                <p className="text-2xl font-bold text-slate-800 leading-none">{viewDept.taskStats?.total || 0}</p>
+                <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-1">Tasks</p>
               </div>
-              <div className="bg-emerald-50 p-5 rounded-[2rem] text-center border border-emerald-100">
-                <p className="text-3xl font-black text-emerald-600 leading-none">{viewDept.taskStats?.completed || 0}</p>
-                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-2">Done</p>
+              <div className="bg-emerald-50 p-4 rounded-xl text-center border border-emerald-100">
+                <p className="text-2xl font-bold text-emerald-600 leading-none">{viewDept.taskStats?.completed || 0}</p>
+                <p className="text-[11px] text-emerald-500 font-semibold uppercase tracking-wide mt-1">Done</p>
               </div>
-              <div className="bg-blue-50 p-5 rounded-[2rem] text-center border border-blue-100">
-                <p className="text-3xl font-black text-blue-600 leading-none">{viewDept.taskStats?.inProgress || 0}</p>
-                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-2">Active</p>
+              <div className="bg-blue-50 p-4 rounded-xl text-center border border-blue-100">
+                <p className="text-2xl font-bold text-blue-600 leading-none">{viewDept.taskStats?.inProgress || 0}</p>
+                <p className="text-[11px] text-blue-500 font-semibold uppercase tracking-wide mt-1">Active</p>
               </div>
             </div>
 
@@ -210,21 +214,21 @@ export default function Departments() {
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">Department Members</h4>
                 <span className="text-xs font-black text-indigo-500">{deptMembers.length} Total</span>
               </div>
-              <div className="space-y-3 max-h-44 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
                 {deptMembers.map(m => (
-                  <div key={m.user?._id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl group/member hover:bg-amber-50/30 transition-all">
+                  <div key={m.user?._id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl group/member hover:bg-amber-50/50 transition-all">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-black text-[10px]">
+                      <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-[11px]">
                         {(m.user?.firstName?.[0] || '?')}{(m.user?.lastName?.[0] || '')}
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-slate-700">{m.user?.firstName} {m.user?.lastName}</span>
-                        {String(m.user?._id) === String(localStorage.getItem('userId')) && <span className="text-xs text-indigo-600 font-bold ml-2">(You)</span>}
+                        <span className="text-sm font-semibold text-slate-800">{m.user?.firstName} {m.user?.lastName}</span>
+                        {String(m.user?._id) === String(localStorage.getItem('userId')) && <span className="text-xs text-indigo-600 font-semibold ml-2">(You)</span>}
                       </div>
                     </div>
                     {['owner', 'manager'].includes(companyRole) && String(m.user?._id) !== String(localStorage.getItem('userId')) && (
                       <button onClick={() => removeMemberFromDepartment(m.user?._id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                        <IoTrashOutline size={20}/>
+                        <IoTrashOutline size={18}/>
                       </button>
                     )}
                   </div>
@@ -234,13 +238,13 @@ export default function Departments() {
 
             {/* Add Member Section */}
             {['owner', 'manager'].includes(companyRole) && availableMembers.length > 0 && (
-              <div className="mb-10 pb-10 border-b">
+              <div className="mb-8 pb-8 border-b">
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-3">Add Members</h4>
                 <div className="flex gap-2">
                   <select 
                     value={selectedMember} 
                     onChange={(e) => setSelectedMember(e.target.value)} 
-                    className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-semibold bg-white"
+                    className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium bg-white"
                   >
                     <option value="">Select a member...</option>
                     {availableMembers.map(m => <option key={m.user?._id} value={m.user?._id}>{m.user?.firstName} {m.user?.lastName}</option>)}
@@ -248,7 +252,7 @@ export default function Departments() {
                   <button 
                     onClick={addMemberToDepartment} 
                     disabled={!selectedMember || addingMember}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 active:scale-95"
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all disabled:opacity-50 active:scale-95"
                   >
                     {addingMember ? '...' : '+'}
                   </button>
@@ -261,14 +265,14 @@ export default function Departments() {
               {isUserInDepartment() ? (
                 <button 
                   onClick={leaveDepartment}
-                  className="flex-1 py-5 bg-red-50 text-red-600 rounded-[2rem] font-black hover:bg-red-100 flex items-center justify-center gap-3 transition-all active:scale-95"
+                  className="flex-1 py-4 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <IoPersonRemoveOutline size={22}/> LEAVE DEPARTMENT
                 </button>
               ) : (
                 <button 
                   onClick={joinDepartment}
-                  className="flex-1 py-5 bg-indigo-600 text-white rounded-[2rem] font-black hover:bg-indigo-700 flex items-center justify-center gap-3 shadow-2xl shadow-indigo-200 transition-all active:scale-95"
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
                 >
                   <IoPersonAddOutline size={22}/> JOIN DEPARTMENT
                 </button>
@@ -281,18 +285,18 @@ export default function Departments() {
       {/* Create Department Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-start mb-8">
+          <div className="bg-white rounded-2xl w-full max-w-md p-8 lg:p-10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-3xl font-black text-slate-900 leading-none">Create Department</h2>
-                <p className="text-slate-400 font-bold mt-2">Build a new organizational unit</p>
+                <h2 className="text-2xl font-bold text-slate-900 leading-tight">Create Department</h2>
+                <p className="text-slate-500 mt-1">Build a new organizational unit</p>
               </div>
-              <button onClick={() => setShowCreateModal(false)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={28}/>
+              <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <IoCloseOutline size={24}/>
               </button>
             </div>
 
-            <form onSubmit={createDepartment} className="space-y-5">
+            <form onSubmit={createDepartment} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Department Name *</label>
                 <input
@@ -300,7 +304,7 @@ export default function Departments() {
                   value={newDepartment.name}
                   onChange={(e) => setNewDepartment({ ...newDepartment, name: e.target.value })}
                   placeholder="e.g., Engineering, Marketing"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:outline-none font-semibold"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium"
                 />
               </div>
 
@@ -311,23 +315,23 @@ export default function Departments() {
                   onChange={(e) => setNewDepartment({ ...newDepartment, description: e.target.value })}
                   placeholder="Enter department description (optional)"
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:outline-none font-semibold resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium resize-none"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
                   disabled={creatingDept}
-                  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-[2rem] font-black hover:bg-slate-200 transition-all disabled:opacity-50"
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creatingDept}
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-[2rem] font-black hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-2xl shadow-indigo-200 transition-all disabled:opacity-50 active:scale-95"
+                  className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50 active:scale-95"
                 >
                   <IoAddOutline size={22}/> {creatingDept ? 'Creating...' : 'Create'}
                 </button>

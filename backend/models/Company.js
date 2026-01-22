@@ -26,6 +26,7 @@ const CompanySchema = new mongoose.Schema(
 );
 
 CompanySchema.methods.getMemberRole = function (userId) {
+  if (this.owner?.toString() === userId?.toString()) return 'owner';
   const m = this.members.find((x) => x.user?.toString() === userId?.toString());
   return m ? m.role : null;
 };
