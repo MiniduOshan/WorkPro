@@ -5,11 +5,28 @@ import Task from '../models/Task.js';
 
 const ensureMember = async (companyId, userId) => {
   if (!companyId) return { error: 'Company ID is required' };
-  const company = await Company.findById(companyId);
-  if (!company) return { error: 'Company not found' };
-  const role = company.getMemberRole(userId);
-  if (!role) return { error: 'Not a member of this company' };
-  return { company, role };
+  try {
+    // Populate members.user to ensure getMemberRole works correctly
+    const company = await Company.findById(companyId).populate('members.user', '_id');
+    if (!company) return { error: 'Company not found' };
+    
+    const role = company.getMemberRole(userId);
+    if (!role) {
+      console.error(`User ${userId} is not a member of company ${companyId}`);
+      console.error(`Owner: ${company.owner?._id || company.owner}`);
+      console.error(`Members count: ${company.members.length}`);
+      console.error(`Members: ${company.members.map(m => {
+        const mId = m.user?._id ? m.user._id.toString() : m.user?.toString();
+        return `${mId} (${m.role})`;
+      }).join(', ')}`);
+      return { error: 'Not a member of this company' };
+    }
+    
+    return { company, role };
+  } catch (err) {
+    console.error('ensureMember error:', err);
+    return { error: 'Failed to verify company membership' };
+  }
 };
 
 export const createDepartment = async (req, res) => {

@@ -26,9 +26,23 @@ const CompanySchema = new mongoose.Schema(
 );
 
 CompanySchema.methods.getMemberRole = function (userId) {
-  if (this.owner?.toString() === userId?.toString()) return 'owner';
-  const m = this.members.find((x) => x.user?.toString() === userId?.toString());
-  return m ? m.role : null;
+  if (!userId) return null;
+  
+  // Check if user is the owner (handle both populated and unpopulated owner field)
+  const ownerId = this.owner?._id ? this.owner._id.toString() : this.owner?.toString();
+  const userIdStr = userId.toString();
+  
+  if (ownerId === userIdStr) {
+    return 'owner';
+  }
+  
+  // Check if user is in members array
+  const member = this.members.find((m) => {
+    const memberId = m.user?._id ? m.user._id.toString() : m.user?.toString();
+    return memberId === userIdStr;
+  });
+  
+  return member ? member.role : null;
 };
 
 const Company = mongoose.model('Company', CompanySchema);

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import Header from './components/header.jsx';
 import Footer from './components/footer.jsx';
@@ -66,16 +66,27 @@ const ProtectedRoute = ({ children, requireCompany = false, allowedRoles }) => {
         return <Navigate to="/select-company" />;
     }
 
-    // Check role restrictions if specified (don't allow all roles)
+    // Enforce role-based routing - users CANNOT access wrong dashboard by typing URL
     if (allowedRoles && allowedRoles.length > 0 && allowedRoles.length < 3) {
         const role = localStorage.getItem('companyRole');
+        
         // If companyRole is not set, user must select a company first
         if (!role) {
             return <Navigate to="/select-company" />;
         }
-        // If role is set but not in allowed list, redirect to employee dashboard
+        
+        // If role doesn't match allowed roles for this route, redirect to their correct dashboard
         if (!allowedRoles.includes(role)) {
-            return <Navigate to="/dashboard" />;
+            // Managers/Owners trying to access employee routes → redirect to manager dashboard
+            if (role === 'manager' || role === 'owner') {
+                return <Navigate to="/dashboard/manager" replace />;
+            }
+            // Employees trying to access manager routes → redirect to employee dashboard
+            if (role === 'employee') {
+                return <Navigate to="/dashboard" replace />;
+            }
+            // Fallback: send to employee dashboard
+            return <Navigate to="/dashboard" replace />;
         }
     }
     
@@ -93,6 +104,48 @@ const PublicLayout = () => (
 );
 
 function App() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Global route guard - enforce role-based routing on EVERY navigation
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('companyRole');
+        const companyId = localStorage.getItem('companyId');
+        
+        // Only enforce on dashboard routes
+        if (!location.pathname.startsWith('/dashboard')) return;
+        
+        // Must be authenticated
+        if (!token) {
+            navigate('/login', { replace: true });
+            return;
+        }
+        
+        // Must have company selected (except for create-company route)
+        if (!companyId && !location.pathname.includes('create-company') && !location.pathname.includes('select-company')) {
+            navigate('/select-company', { replace: true });
+            return;
+        }
+        
+        // STRICT ROLE ENFORCEMENT - prevent URL manipulation
+        if (role && companyId) {
+            // Managers/Owners trying to access /dashboard → redirect to /dashboard/manager
+            if ((role === 'manager' || role === 'owner') && 
+                location.pathname.startsWith('/dashboard') && 
+                !location.pathname.startsWith('/dashboard/manager')) {
+                navigate('/dashboard/manager', { replace: true });
+                return;
+            }
+            
+            // Employees trying to access /dashboard/manager → redirect to /dashboard
+            if (role === 'employee' && location.pathname.startsWith('/dashboard/manager')) {
+                navigate('/dashboard', { replace: true });
+                return;
+            }
+        }
+    }, [location.pathname, navigate]);
+
     return (
         <> 
             <Routes>
@@ -138,11 +191,11 @@ function App() {
                     }
                 />
 
-                {/* 3. PROTECTED ROUTES - Employee Dashboard */}
+                {/* 3. PROTECTED ROUTES - Employee Dashboard (EMPLOYEES ONLY) */}
                 <Route
                     path="/dashboard"
                     element={
-                        <ProtectedRoute requireCompany={true} allowedRoles={['owner','manager','employee']}>
+                        <ProtectedRoute requireCompany={true} allowedRoles={['employee']}>
                             <EmployeeDashboardLayout />
                         </ProtectedRoute>
                     }
@@ -161,7 +214,7 @@ function App() {
                     <Route path="create-company" element={<CompanyCreate />} />
                 </Route>
 
-                {/* 4. PROTECTED ROUTES - Manager Dashboard */}
+                {/* 4. PROTECTED ROUTES - Manager Dashboard (MANAGERS AND OWNERS ONLY) */}
                 <Route
                     path="/dashboard/manager"
                     element={
