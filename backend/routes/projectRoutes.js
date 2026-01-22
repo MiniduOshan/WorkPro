@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import protect from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import { createProject, listProjects, updateProject, deleteProject } from '../controllers/projectController.js';
 
 const router = Router();

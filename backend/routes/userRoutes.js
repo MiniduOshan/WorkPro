@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import userController from '../controllers/userController.js';
-import protect from '../middleware/authMiddleware.js';
+import {protect} from '../middleware/authMiddleware.js';
 
 // Multer will be passed via app.upload from server.js
 let upload;

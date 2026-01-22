@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import protect from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import { searchCompanies, createCompany, myCompanies, getCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, updateMemberRole, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany, deleteCompany } from '../controllers/companyController.js';
 import { loadCompanyContext, requireRole } from '../middleware/companyAuth.js';
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import protect from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import { createDepartment, listDepartments, updateDepartment, deleteDepartment, getDepartmentMembers, addMemberToDepartment, removeMemberFromDepartment } from '../controllers/departmentController.js';
 
 const router = Router();

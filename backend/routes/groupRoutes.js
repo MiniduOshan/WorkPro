@@ -1,17 +1,36 @@
 import { Router } from 'express';
-import protect from '../middleware/authMiddleware.js';
-import { createGroup, listGroups, getGroup, updateGroup, deleteGroup, addMemberToGroup, removeMemberFromGroup, joinGroup, leaveGroup } from '../controllers/groupController.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { 
+  createGroup, 
+  listGroups, 
+  getGroup, 
+  joinGroup, 
+  leaveGroup, 
+  removeMemberFromGroup, 
+  deleteGroup 
+} from '../controllers/groupController.js';
 
 const router = Router();
 
-router.post('/', protect, createGroup);
+// List groups for a company
 router.get('/', protect, listGroups);
+
+// Get specific group details
 router.get('/:id', protect, getGroup);
-router.put('/:id', protect, updateGroup);
-router.post('/:id/members/add', protect, addMemberToGroup);
-router.post('/:id/members/remove', protect, removeMemberFromGroup);
+
+// Create a new group
+router.post('/', protect, createGroup);
+
+// Join a group
 router.post('/:id/join', protect, joinGroup);
+
+// Leave a group
 router.post('/:id/leave', protect, leaveGroup);
+
+// Remove a member from group (manager/owner only)
+router.post('/:id/remove-member', protect, removeMemberFromGroup);
+
+// Delete a group (manager/owner only)
 router.delete('/:id', protect, deleteGroup);
 
 export default router;

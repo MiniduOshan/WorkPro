@@ -1,229 +1,267 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import {
-  IoPeopleCircleOutline, IoAddOutline, IoTrashOutline, IoCloseOutline, 
-  IoPersonAddOutline, IoPersonRemoveOutline, IoPeopleOutline, IoStatsChartOutline
+import { 
+  IoAddOutline, IoCloseOutline, IoPeopleOutline, 
+  IoLogOutOutline, IoEnterOutline, IoTrashOutline 
 } from 'react-icons/io5';
-import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Groups() {
-  const theme = useThemeColors();
-  const [companyId, setCompanyId] = useState('');
   const [groups, setGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newGroup, setNewGroup] = useState({ name: '', description: '' });
-  const [companyRole, setCompanyRole] = useState('');
-
   const [viewGroup, setViewGroup] = useState(null);
-  const [groupMembers, setGroupMembers] = useState([]);
-  const [availableMembers, setAvailableMembers] = useState([]);
-  const [selectedMember, setSelectedMember] = useState('');
-  const [taskStats, setTaskStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  
+  const companyRole = localStorage.getItem('companyRole');
+  const currentUserId = localStorage.getItem('userId');
 
-  useEffect(() => {
-    const storedCompanyId = localStorage.getItem('companyId');
-    const role = localStorage.getItem('companyRole');
-    setCompanyRole(role || '');
-    if (storedCompanyId && storedCompanyId !== 'null') {
-      setCompanyId(storedCompanyId);
-      fetchGroups(storedCompanyId);
-    } else {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => { fetchGroups(); }, []);
 
-  const fetchGroups = async (id) => {
+  const fetchGroups = async () => {
     try {
-      setLoading(true);
-      const { data } = await api.get('/api/groups', { params: { companyId: id } });
+      const companyId = localStorage.getItem('companyId');
+      const { data } = await api.get('/api/groups', { params: { companyId } });
       setGroups(data);
-    } catch (err) {
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error("Error loading groups"); } finally { setLoading(false); }
   };
 
   const openView = async (group) => {
     try {
-      const groupRes = await api.get(`/api/groups/${group._id}`);
-      const fetchedGroup = groupRes.data;
-      
-      setViewGroup(fetchedGroup);
-      setGroupMembers(fetchedGroup.members || []);
-      setTaskStats(fetchedGroup.taskStats || null);
-
-      // Only fetch available members if user is owner/manager
-      if (['owner', 'manager'].includes(companyRole)) {
-        const companyRes = await api.get(`/api/companies/${companyId}`);
-        const groupMemberIds = (fetchedGroup.members || []).map(m => String(m._id));
-        const available = (companyRes.data.members || []).filter(m => 
-          !groupMemberIds.includes(String(m.user?._id))
-        );
-        setAvailableMembers(available);
-      }
+      const { data } = await api.get(`/api/groups/${group._id}`);
+      setViewGroup(data);
     } catch (err) {
-      alert('Could not open group details');
+      alert(err.response?.data?.message || "Permission Denied: Cannot view group details");
     }
   };
 
-  const handleAddMember = async () => {
-    if (!selectedMember) return;
+  const handleMemberAction = async (action) => {
     try {
-      await api.post(`/api/groups/${viewGroup._id}/members`, { userId: selectedMember });
-      setSelectedMember('');
-      openView(viewGroup);
+      await api.post(`/api/groups/${viewGroup._id}/${action}`);
+      setViewGroup(null);
+      fetchGroups();
     } catch (err) {
-      alert('Failed to add member');
+      alert(err.response?.data?.message || "Action failed");
     }
   };
 
-  const isUserInGroup = () => {
-    const currentUserId = localStorage.getItem('userId');
-    return groupMembers.some(m => String(m._id) === String(currentUserId));
+  const removeMember = async (userId) => {
+    if(!window.confirm("Kick this member from the group?")) return;
+    try {
+      await api.post(`/api/groups/${viewGroup._id}/remove-member`, { userId });
+      // Refresh the group details after removing member
+      const { data } = await api.get(`/api/groups/${viewGroup._id}`);
+      setViewGroup(data);
+    } catch (err) { alert("Failed to remove member"); }
   };
 
-  if (loading) return <div className="p-10 text-center font-medium">Loading Workspace...</div>;
+  const createGroup = async (e) => {
+    e.preventDefault();
+    if (!newGroupName.trim()) {
+      alert("Group name is required");
+      return;
+    }
+    
+    try {
+      setCreatingGroup(true);
+      const companyId = localStorage.getItem('companyId');
+      await api.post('/api/groups', {
+        name: newGroupName,
+        description: newGroupDesc,
+        companyId: companyId
+      });
+      setNewGroupName('');
+      setNewGroupDesc('');
+      setShowCreateModal(false);
+      fetchGroups();
+      alert('Group created successfully!');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create group');
+    } finally {
+      setCreatingGroup(false);
+    }
+  };
+
+  if (loading) return <div className="p-20 text-center font-black text-slate-300 animate-pulse">LOADING WORKSPACE...</div>;
 
   return (
-    <div className="grow flex flex-col bg-[#F8FAFC] overflow-hidden">
-      {/* Header */}
-      <div className="bg-white border-b px-8 py-6 flex justify-between items-center">
+    <div className="grow bg-[#F8FAFC] min-h-screen p-6 lg:p-12">
+      {/* Header Section */}
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Team Groups</h1>
-          <p className="text-slate-500 text-sm">Organize projects and department workflows</p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Project Groups</h1>
+          <p className="text-slate-500 font-medium">Coordinate your team and track collective progress</p>
         </div>
         {['owner', 'manager'].includes(companyRole) && (
           <button 
-            onClick={() => setShowAddModal(true)} 
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95"
+            onClick={() => setShowCreateModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-[2rem] font-bold shadow-xl shadow-indigo-100 transition-all active:scale-95"
           >
-            <IoAddOutline size={20} /> <span className="font-semibold">Create New Group</span>
+            + Create New Group
           </button>
         )}
       </div>
 
-      {/* Main Grid */}
-      <div className="p-8 overflow-y-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {groups.map(g => (
-            <div key={g._id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:border-indigo-300 hover:shadow-xl transition-all group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                  <IoPeopleCircleOutline size={24} />
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progress</span>
-                  <p className="text-lg font-bold text-slate-700">{g.progress}%</p>
-                </div>
+      {/* Cards Grid */}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {groups.map(g => (
+          <div key={g._id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden">
+            <div className="flex justify-between items-center mb-6">
+              <div className="bg-indigo-50 p-4 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                <IoPeopleOutline size={30}/>
               </div>
-              
-              <h3 className="text-lg font-bold text-slate-800 mb-1">{g.name}</h3>
-              <p className="text-slate-500 text-sm line-clamp-2 mb-6 h-10">{g.description || 'No description provided.'}</p>
-              
-              <div className="w-full bg-slate-100 h-2 rounded-full mb-6 overflow-hidden">
-                <div 
-                  className="bg-indigo-600 h-full rounded-full transition-all duration-500" 
-                  style={{ width: `${g.progress}%` }}
-                ></div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Status</p>
+                <p className="text-xl font-black text-slate-700 leading-none mt-1">{g.progress}%</p>
               </div>
-
-              <button 
-                onClick={() => openView(g)} 
-                className="w-full py-2.5 bg-slate-50 hover:bg-indigo-50 text-indigo-600 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors border border-transparent hover:border-indigo-100"
-              >
-                <IoPeopleOutline /> View Group
-              </button>
             </div>
-          ))}
-        </div>
+            
+            <h3 className="text-2xl font-bold text-slate-800 mb-2 leading-tight">{g.name}</h3>
+            <p className="text-slate-400 text-sm mb-10 line-clamp-2 h-10">{g.description || "Active collaboration squad."}</p>
+            
+            <button 
+              onClick={() => openView(g)} 
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all tracking-wide"
+            >
+              VIEW DETAILS
+            </button>
+          </div>
+        ))}
       </div>
 
-      {/* View Modal */}
+      {/* Focus Modal */}
       {viewGroup && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">{viewGroup.name}</h2>
-                  <p className="text-slate-500">{viewGroup.description}</p>
-                </div>
-                <button onClick={() => setViewGroup(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                  <IoCloseOutline size={28} />
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-start mb-10">
+              <div>
+                <h2 className="text-4xl font-black text-slate-900 leading-none">{viewGroup.name}</h2>
+                <p className="text-slate-400 font-bold mt-2">{viewGroup.description}</p>
               </div>
+              <button onClick={() => setViewGroup(null)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <IoCloseOutline size={36}/>
+              </button>
+            </div>
 
-              {/* Stats Bar */}
-              {taskStats && (
-                <div className="grid grid-cols-4 gap-4 mb-8">
-                  {[
-                    { label: 'Total Tasks', val: taskStats.total, color: 'bg-slate-50 text-slate-700' },
-                    { label: 'Completed', val: taskStats.completed, color: 'bg-green-50 text-green-700' },
-                    { label: 'In Progress', val: taskStats.inProgress, color: 'bg-blue-50 text-blue-700' },
-                    { label: 'To Do', val: taskStats.todo, color: 'bg-amber-50 text-amber-700' },
-                  ].map((stat, i) => (
-                    <div key={i} className={`${stat.color} p-4 rounded-2xl text-center`}>
-                      <p className="text-xl font-black">{stat.val}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-tight opacity-70">{stat.label}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Members Section */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-bold text-slate-700 flex items-center gap-2">
-                    <IoPeopleOutline /> Members ({groupMembers.length})
-                  </h4>
-                  {['owner', 'manager'].includes(companyRole) && (
-                    <div className="flex gap-2">
-                      <select 
-                        className="text-sm border rounded-lg px-2 py-1 outline-none focus:ring-2 ring-indigo-500"
-                        value={selectedMember}
-                        onChange={(e) => setSelectedMember(e.target.value)}
-                      >
-                        <option value="">Add member...</option>
-                        {availableMembers.map(m => (
-                          <option key={m.user?._id} value={m.user?._id}>
-                            {m.user?.firstName} {m.user?.lastName}
-                          </option>
-                        ))}
-                      </select>
-                      <button onClick={handleAddMember} className="bg-indigo-600 text-white p-2 rounded-lg"><IoPersonAddOutline /></button>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                  {groupMembers.map(m => (
-                    <div key={m._id} className="p-3 bg-slate-50 rounded-xl flex justify-between items-center group/member">
-                      <span className="font-medium text-slate-700">{m.firstName} {m.lastName}</span>
-                      {['owner', 'manager'].includes(companyRole) && (
-                        <button className="text-slate-300 hover:text-red-500 transition-colors">
-                          <IoPersonRemoveOutline size={18} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-10">
+              <div className="bg-slate-50 p-5 rounded-[2rem] text-center border border-slate-100">
+                <p className="text-3xl font-black text-slate-800 leading-none">{viewGroup.taskStats?.total || 0}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Tasks</p>
               </div>
-
-              {/* Action Button */}
-              <div className="mt-8 pt-6 border-t">
-                {isUserInGroup() ? (
-                  <button onClick={() => {/* logic */}} className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold transition-colors">
-                    Leave This Group
-                  </button>
-                ) : (
-                  <button onClick={() => {/* logic */}} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-200">
-                    Join Group
-                  </button>
-                )}
+              <div className="bg-emerald-50 p-5 rounded-[2rem] text-center border border-emerald-100">
+                <p className="text-3xl font-black text-emerald-600 leading-none">{viewGroup.taskStats?.completed || 0}</p>
+                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mt-2">Done</p>
+              </div>
+              <div className="bg-blue-50 p-5 rounded-[2rem] text-center border border-blue-100">
+                <p className="text-3xl font-black text-blue-600 leading-none">{viewGroup.taskStats?.inProgress || 0}</p>
+                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-2">Active</p>
               </div>
             </div>
+
+            {/* Member Management */}
+            <div className="mb-12">
+              <div className="flex justify-between items-center mb-5 border-b pb-2">
+                <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">Group Members</h4>
+                <span className="text-xs font-black text-indigo-500">{viewGroup.members?.length} Total</span>
+              </div>
+              <div className="space-y-3 max-h-44 overflow-y-auto pr-2 custom-scrollbar">
+                {viewGroup.members?.map(m => (
+                  <div key={m._id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl group/member hover:bg-indigo-50/30 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-black text-[10px]">
+                        {(m.firstName?.[0] || '?')}{(m.lastName?.[0] || '')}
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">{m.firstName} {m.lastName}</span>
+                    </div>
+                    {['owner', 'manager'].includes(companyRole) && m._id !== currentUserId && (
+                      <button onClick={() => removeMember(m._id)} className="text-slate-300 hover:text-red-500 transition-colors">
+                        <IoTrashOutline size={20}/>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Final Action */}
+            <div className="flex gap-4">
+              {viewGroup.members?.some(m => m._id === currentUserId) ? (
+                <button 
+                  onClick={() => handleMemberAction('leave')}
+                  className="flex-1 py-5 bg-red-50 text-red-600 rounded-[2rem] font-black hover:bg-red-100 flex items-center justify-center gap-3 transition-all active:scale-95"
+                >
+                  <IoLogOutOutline size={22}/> LEAVE TEAM
+                </button>
+              ) : (
+                <button 
+                  onClick={() => handleMemberAction('join')}
+                  className="flex-1 py-5 bg-indigo-600 text-white rounded-[2rem] font-black hover:bg-indigo-700 flex items-center justify-center gap-3 shadow-2xl shadow-indigo-200 transition-all active:scale-95"
+                >
+                  <IoEnterOutline size={22}/> JOIN TEAM
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Group Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h2 className="text-3xl font-black text-slate-900 leading-none">Create New Group</h2>
+                <p className="text-slate-400 font-bold mt-2">Build your team collaboration space</p>
+              </div>
+              <button onClick={() => setShowCreateModal(false)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                <IoCloseOutline size={28}/>
+              </button>
+            </div>
+
+            <form onSubmit={createGroup} className="space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Group Name *</label>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="Enter group name"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:outline-none font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                <textarea
+                  value={newGroupDesc}
+                  onChange={(e) => setNewGroupDesc(e.target.value)}
+                  placeholder="Enter group description (optional)"
+                  rows="3"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-indigo-600 focus:outline-none font-semibold resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creatingGroup}
+                  className="flex-1 py-4 bg-slate-100 text-slate-700 rounded-[2rem] font-black hover:bg-slate-200 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingGroup}
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-[2rem] font-black hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-2xl shadow-indigo-200 transition-all disabled:opacity-50 active:scale-95"
+                >
+                  <IoAddOutline size={22}/> {creatingGroup ? 'Creating...' : 'Create Group'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

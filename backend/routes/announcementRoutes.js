@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import protect from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import { createAnnouncement, listAnnouncements, getAnnouncement, deleteAnnouncement } from '../controllers/announcementController.js';
 
 const router = Router();

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import protect from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 import { createTeam, listTeams, updateTeam, deleteTeam } from '../controllers/teamController.js';
 
 const router = Router();
