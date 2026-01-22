@@ -19,17 +19,22 @@ export const createDepartment = async (req, res) => {
     if (error) return res.status(403).json({ message: error });
     if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can create departments' });
     
-    // Auto-add to company.departments array if not present
+    const finalManagers = managers && managers.length > 0 ? managers : [req.user._id];
+
+    const dept = await Department.create({ 
+      name, 
+      company: company._id, 
+      description: description || '', 
+      managers: finalManagers 
+    });
+    
     if (!company.departments.includes(name)) {
       company.departments.push(name);
       await company.save();
     }
     
-    const dept = await Department.create({ name, company: company._id, description: description || '', managers: managers || [] });
-    
-    // Automatically create a channel for the department
     try {
-      const channelName = `#${name.toLowerCase().replace(/\\s+/g, '-')}`;
+      const channelName = `#${name.toLowerCase().replace(/\s+/g, '-')}`;
       await Channel.create({
         name: channelName,
         company: company._id,
@@ -38,8 +43,7 @@ export const createDepartment = async (req, res) => {
         type: 'public'
       });
     } catch (channelErr) {
-      console.error('Failed to create department channel:', channelErr);
-      // Continue even if channel creation fails
+      console.error('Channel error:', channelErr.message);
     }
     
     res.status(201).json(dept);
@@ -61,17 +65,21 @@ export const listDepartments = async (req, res) => {
   }
 };
 
+// ADDED: updateDepartment fix
 export const updateDepartment = async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
     if (!dept) return res.status(404).json({ message: 'Department not found' });
+    
     const { role, error } = await ensureMember(dept.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
-    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can update departments' });
+    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Unauthorized' });
+
     const { name, description, managers } = req.body;
     if (name !== undefined) dept.name = name;
     if (description !== undefined) dept.description = description;
     if (managers !== undefined) dept.managers = managers;
+
     const updated = await dept.save();
     res.json(updated);
   } catch (e) {
@@ -79,13 +87,16 @@ export const updateDepartment = async (req, res) => {
   }
 };
 
+// ADDED: deleteDepartment fix
 export const deleteDepartment = async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
     if (!dept) return res.status(404).json({ message: 'Department not found' });
+    
     const { role, error } = await ensureMember(dept.company, req.user._id);
     if (error) return res.status(403).json({ message: error });
-    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can delete departments' });
+    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Unauthorized' });
+
     await Department.deleteOne({ _id: dept._id });
     res.json({ message: 'Department removed' });
   } catch (e) {
@@ -95,29 +106,14 @@ export const deleteDepartment = async (req, res) => {
 
 export const getDepartmentMembers = async (req, res) => {
   try {
-    const dept = await Department.findById(req.params.id).populate('company');
+    const dept = await Department.findById(req.params.id);
     if (!dept) return res.status(404).json({ message: 'Department not found' });
-    const { error } = await ensureMember(dept.company._id, req.user._id);
-    if (error) return res.status(403).json({ message: error });
     
-    // Get all company members and filter to show only those in this department
-    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
-    const company = await Company.findById(dept.company._id).populate('members.user', 'firstName lastName email _id');
-    const deptMembers = company.members.filter(m => m.department && m.department.toString() === dept._id.toString());
+    const CompanyModel = (await import('../models/Company.js')).default;
+    const company = await CompanyModel.findById(dept.company).populate('members.user', 'firstName lastName email _id');
     
-    res.json({ 
-      members: deptMembers.map(m => ({
-        _id: m._id,
-        user: {
-          _id: m.user._id,
-          firstName: m.user.firstName,
-          lastName: m.user.lastName,
-          email: m.user.email
-        },
-        role: m.role,
-        department: m.department
-      }))
-    });
+    const deptMembers = company.members.filter(m => String(m.department) === String(dept._id));
+    res.json({ members: deptMembers });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -126,28 +122,18 @@ export const getDepartmentMembers = async (req, res) => {
 export const addMemberToDepartment = async (req, res) => {
   try {
     const { userId } = req.body;
-    if (!userId) return res.status(400).json({ message: 'userId required' });
-    
     const dept = await Department.findById(req.params.id);
-    if (!dept) return res.status(404).json({ message: 'Department not found' });
-    const { role, error } = await ensureMember(dept.company, req.user._id);
-    if (error) return res.status(403).json({ message: error });
-    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can add members' });
+    const CompanyModel = (await import('../models/Company.js')).default;
+    const company = await CompanyModel.findById(dept.company);
     
-    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
-    const company = await Company.findById(dept.company);
-    
-    // Update or add member in company
-    const memberIndex = company.members.findIndex(m => m.user.toString() === userId);
+    const memberIndex = company.members.findIndex(m => String(m.user) === String(userId));
     if (memberIndex >= 0) {
       company.members[memberIndex].department = dept._id;
-    } else {
-      company.members.push({ user: userId, role: 'employee', department: dept._id });
+      await company.save();
     }
     
-    await company.save();
     const updated = await company.populate('members.user');
-    res.json({ message: 'Member added to department', company: updated });
+    res.json({ message: 'Member added', company: updated });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -156,76 +142,52 @@ export const addMemberToDepartment = async (req, res) => {
 export const removeMemberFromDepartment = async (req, res) => {
   try {
     const { userId } = req.body;
-    if (!userId) return res.status(400).json({ message: 'userId required' });
-    
     const dept = await Department.findById(req.params.id);
-    if (!dept) return res.status(404).json({ message: 'Department not found' });
-    const { role, error } = await ensureMember(dept.company, req.user._id);
-    if (error) return res.status(403).json({ message: error });
-    if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can remove members' });
+    const CompanyModel = (await import('../models/Company.js')).default;
+    const company = await CompanyModel.findById(dept.company);
     
-    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
-    const company = await Company.findById(dept.company);
+    const memberIndex = company.members.findIndex(m => String(m.user) === String(userId));
+    if (memberIndex >= 0) {
+      company.members[memberIndex].department = undefined;
+      await company.save();
+    }
     
-    // Remove member from company
-    company.members = company.members.filter(m => m.user.toString() !== userId);
-    
-    await company.save();
     const updated = await company.populate('members.user');
-    res.json({ message: 'Member removed from department', company: updated });
+    res.json({ message: 'Member removed', company: updated });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
 
-// Join department - employees can join departments
 export const joinDepartment = async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
-    if (!dept) return res.status(404).json({ message: 'Department not found' });
-    const { error } = await ensureMember(dept.company, req.user._id);
-    if (error) return res.status(403).json({ message: error });
+    const CompanyModel = (await import('../models/Company.js')).default;
+    const company = await CompanyModel.findById(dept.company);
     
-    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
-    const company = await Company.findById(dept.company);
-    
-    // Add current user to department
-    const memberIndex = company.members.findIndex(m => m.user.toString() === req.user._id.toString());
+    const memberIndex = company.members.findIndex(m => String(m.user) === String(req.user._id));
     if (memberIndex >= 0) {
-      if (company.members[memberIndex].department === dept._id.toString()) {
-        return res.status(400).json({ message: 'Already a member of this department' });
-      }
       company.members[memberIndex].department = dept._id;
+      await company.save();
     }
-    
-    await company.save();
-    const updated = await company.populate('members.user');
-    res.json({ message: 'Joined department', company: updated });
+    res.json({ message: 'Joined' });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };
 
-// Leave department - employees can leave departments
 export const leaveDepartment = async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
-    if (!dept) return res.status(404).json({ message: 'Department not found' });
-    const { error } = await ensureMember(dept.company, req.user._id);
-    if (error) return res.status(403).json({ message: error });
+    const CompanyModel = (await import('../models/Company.js')).default;
+    const company = await CompanyModel.findById(dept.company);
     
-    const Company = req.app.locals.Company || (await import('../models/Company.js')).default;
-    const company = await Company.findById(dept.company);
-    
-    // Remove current user from department
-    const memberIndex = company.members.findIndex(m => m.user.toString() === req.user._id.toString());
+    const memberIndex = company.members.findIndex(m => String(m.user) === String(req.user._id));
     if (memberIndex >= 0) {
-      company.members[memberIndex].department = '';
+      company.members[memberIndex].department = undefined;
+      await company.save();
     }
-    
-    await company.save();
-    const updated = await company.populate('members.user');
-    res.json({ message: 'Left department', company: updated });
+    res.json({ message: 'Left' });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
