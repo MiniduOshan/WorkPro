@@ -1,6 +1,7 @@
 import Department from '../models/Department.js';
 import Company from '../models/Company.js';
 import Channel from '../models/Channel.js';
+import Task from '../models/Task.js';
 
 const ensureMember = async (companyId, userId) => {
   if (!companyId) return { error: 'Company ID is required' };
@@ -58,8 +59,22 @@ export const listDepartments = async (req, res) => {
   try {
     const { error } = await ensureMember(companyId, req.user._id);
     if (error) return res.status(403).json({ message: error });
+
+    // Get all company members to calculate member counts per department
+    const company = await Company.findById(companyId).populate('members.user', 'firstName lastName email _id');
+    const memberCountMap = {};
+    company.members.forEach(m => {
+      const deptId = String(m.department || '');
+      if (deptId) memberCountMap[deptId] = (memberCountMap[deptId] || 0) + 1;
+    });
+
     const depts = await Department.find({ company: companyId }).sort({ name: 1 });
-    res.json(depts);
+    const enriched = depts.map(d => ({
+      ...d.toObject(),
+      memberCount: memberCountMap[String(d._id)] || 0
+    }));
+
+    res.json(enriched);
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -104,16 +119,33 @@ export const deleteDepartment = async (req, res) => {
   }
 };
 
-export const getDepartmentMembers = async (req, res) => {
+export const getDepartmentDetail = async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
     if (!dept) return res.status(404).json({ message: 'Department not found' });
-    
-    const CompanyModel = (await import('../models/Company.js')).default;
-    const company = await CompanyModel.findById(dept.company).populate('members.user', 'firstName lastName email _id');
-    
-    const deptMembers = company.members.filter(m => String(m.department) === String(dept._id));
-    res.json({ members: deptMembers });
+
+    const { error } = await ensureMember(dept.company, req.user._id);
+    if (error) return res.status(403).json({ message: error });
+
+    const company = await Company.findById(dept.company).populate('members.user', 'firstName lastName email _id');
+    const members = company.members.filter(m => String(m.department) === String(dept._id));
+
+    const tasks = await Task.find({ department: dept._id });
+    const stats = {
+      total: tasks.length,
+      completed: tasks.filter(t => t.status === 'done').length,
+      inProgress: tasks.filter(t => t.status === 'in-progress' || t.status === 'doing').length,
+      todo: tasks.filter(t => t.status === 'to-do' || t.status === 'pending').length,
+    };
+
+    res.json({
+      ...dept.toObject(),
+      members,
+      taskStats: {
+        ...stats,
+        progress: stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0,
+      },
+    });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

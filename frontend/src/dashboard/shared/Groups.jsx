@@ -112,13 +112,13 @@ export default function Groups() {
                 <IoPeopleOutline size={30}/>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Status</p>
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">Progress</p>
                 <p className="text-xl font-black text-slate-700 leading-none mt-1">{g.progress}%</p>
               </div>
             </div>
             
             <h3 className="text-2xl font-bold text-slate-800 mb-2 leading-tight">{g.name}</h3>
-            <p className="text-slate-400 text-sm mb-10 line-clamp-2 h-10">{g.description || "Active collaboration squad."}</p>
+            <p className="text-slate-400 text-sm mb-10 line-clamp-2 h-10">{g.description || "Active collaboration squad for group projects."}</p>
             
             <button 
               onClick={() => openView(g)} 
@@ -130,7 +130,7 @@ export default function Groups() {
         ))}
       </div>
 
-      {/* Focus Modal */}
+      {/* Detail Modal */}
       {viewGroup && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-[3.5rem] w-full max-w-xl p-10 lg:p-14 shadow-2xl animate-in zoom-in-95 duration-300">
