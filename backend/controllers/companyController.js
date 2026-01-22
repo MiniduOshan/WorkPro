@@ -157,12 +157,15 @@ export const acceptInvitation = async (req, res) => {
     const company = await Company.findById(inv.company);
     if (!company) return res.status(404).json({ message: 'Company not found' });
 
-    // Check if user is already a manager/owner or trying to accept manager/owner role as employee
+    // Check if user exists
     const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Check if user is already a manager/owner or trying to accept manager/owner role as employee
     if (user) {
       // Check user's current role in any existing company
       const existingCompanies = await Company.find({ 'members.user': req.user._id });
-      let currentHighestRole = 'employee'; // Default to employee
+      let currentHighestRole = null; // null means new user (no companies)
       
       existingCompanies.forEach(comp => {
         const member = comp.members.find(m => 
@@ -172,26 +175,21 @@ export const acceptInvitation = async (req, res) => {
           currentHighestRole = 'owner';
         } else if (member?.role === 'manager' && currentHighestRole !== 'owner') {
           currentHighestRole = 'manager';
+        } else if (!currentHighestRole) {
+          currentHighestRole = 'employee';
         }
       });
 
-      // Managers cannot accept employee role invitations
-      if (currentHighestRole === 'manager' && inv.role === 'employee') {
-        return res.status(403).json({ message: 'Managers cannot accept employee role invitations. Only manager or owner roles are allowed.' });
-      }
-
-      // Employees in THIS company cannot accept manager/owner roles
-      // BUT employees can accept manager/owner roles in OTHER companies (role promotion to manager)
-      const memberInThisCompany = company.members.find(m => 
-        (m.user?._id || m.user).toString() === user._id.toString()
-      );
-      
-      if (currentHighestRole === 'employee' && !memberInThisCompany && (inv.role === 'manager' || inv.role === 'owner')) {
-        // This is a different company, allow promotion from employee to manager/owner
-        // Only block if they're already an employee in THIS company trying to get elevated role
-      } else if (currentHighestRole === 'employee' && memberInThisCompany && memberInThisCompany.role === 'employee' && (inv.role === 'manager' || inv.role === 'owner')) {
-        // Employee in the same company cannot be promoted to manager
-        return res.status(403).json({ message: 'Employees cannot accept manager or owner role invitations in the same company. Only employee roles are allowed.' });
+      // If user has existing role, they can ONLY accept invitations matching their role
+      // New users (currentHighestRole === null) can accept any role
+      if (currentHighestRole) {
+        if (currentHighestRole === 'employee' && inv.role !== 'employee') {
+          return res.status(403).json({ message: 'Employees can only accept employee role invitations.' });
+        }
+        
+        if ((currentHighestRole === 'manager' || currentHighestRole === 'owner') && inv.role !== currentHighestRole && inv.role !== 'manager' && inv.role !== 'owner') {
+          return res.status(403).json({ message: 'Managers can only accept manager or owner role invitations.' });
+        }
       }
     }
 

@@ -54,15 +54,15 @@ export default function InviteJoin() {
     // Check role restrictions
     const currentUserRole = localStorage.getItem('companyRole');
     
-    // Managers cannot accept employee role invitations
-    if (currentUserRole === 'manager' && invitation?.role === 'employee') {
-      setError('Managers cannot accept employee role invitations. Only manager or owner roles are allowed.');
+    // Only employees can accept employee role invitations
+    if (currentUserRole === 'employee' && invitation?.role !== 'employee') {
+      setError('Employees can only accept employee role invitations.');
       return;
     }
 
-    // Employees cannot accept manager or owner role invitations
-    if (currentUserRole === 'employee' && (invitation?.role === 'manager' || invitation?.role === 'owner')) {
-      setError('Employees cannot accept manager or owner role invitations. Only employee roles are allowed.');
+    // Only managers/owners can accept manager/owner role invitations
+    if ((currentUserRole === 'manager' || currentUserRole === 'owner') && invitation?.role === 'employee') {
+      setError('Managers can only accept manager or owner role invitations.');
       return;
     }
 
@@ -86,8 +86,16 @@ export default function InviteJoin() {
         }
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to accept invitation');
+      const errorMessage = err.response?.data?.message || 'Failed to accept invitation';
+      setError(errorMessage);
       setJoining(false);
+      
+      // If user not found or other critical error, redirect to login after delay
+      if (errorMessage.includes('User not found') || err.response?.status === 404) {
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      }
     }
   };
 
