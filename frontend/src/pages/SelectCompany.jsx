@@ -11,21 +11,22 @@ const SelectCompany = () => {
   const companies = location.state?.companies || [];
   const defaultCompanyId = location.state?.defaultCompany;
 
-  // Check if user is SuperAdmin
+  // SuperAdmins should never reach this page - they bypass company selection
+  // This check is just a safety net. Routing should prevent this in App.jsx
   React.useEffect(() => {
     const userProfile = localStorage.getItem('userProfile');
     if (userProfile) {
       try {
         const profile = JSON.parse(userProfile);
         if (profile.isSuperAdmin === true) {
-          console.log('SuperAdmin detected in SelectCompany, redirecting to admin dashboard');
-          navigate('/dashboard/super-admin');
+          console.log('SuperAdmin should not be on SelectCompany page - routing to admin dashboard');
+          navigate('/dashboard/super-admin', { replace: true });
         }
       } catch (err) {
         console.error('Error parsing user profile', err);
       }
     }
-  }, [navigate]);
+  }, []);
 
   const handleSelectCompany = async (companyId) => {
     try {

@@ -23,44 +23,62 @@ const SuperAdminDashboard = () => {
   });
 
   useEffect(() => {
-    fetchAllAnalytics();
-  }, [fetchAllAnalytics]);
+    const fetchAllAnalytics = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching SuperAdmin analytics...');
+        
+        const results = await Promise.allSettled([
+          api.get('/api/super-admin/analytics'),
+          api.get('/api/super-admin/analytics/companies'),
+          api.get('/api/super-admin/analytics/users'),
+          api.get('/api/super-admin/pricing-plans'),
+        ]);
 
-  const fetchAllAnalytics = useCallback(async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching SuperAdmin analytics...');
-      
-      const [analData, compData, userData, pricingData] = await Promise.all([
-        api.get('/api/super-admin/analytics'),
-        api.get('/api/super-admin/analytics/companies'),
-        api.get('/api/super-admin/analytics/users'),
-        api.get('/api/super-admin/pricing-plans'),
-      ]);
+        // Handle results individually
+        if (results[0].status === 'fulfilled') {
+          console.log('Analytics data:', results[0].value.data);
+          setAnalytics(results[0].value.data);
+        } else {
+          console.error('Analytics failed:', results[0].reason);
+          setAnalytics(null);
+        }
 
-      console.log('Analytics data:', analData.data);
-      console.log('Companies data:', compData.data);
-      console.log('Users data:', userData.data);
-      console.log('Pricing data:', pricingData.data);
+        if (results[1].status === 'fulfilled') {
+          console.log('Companies data:', results[1].value.data);
+          setCompaniesAnalytics(results[1].value.data);
+        } else {
+          console.error('Companies failed:', results[1].reason);
+          setCompaniesAnalytics([]);
+        }
 
-      setAnalytics(analData.data);
-      setCompaniesAnalytics(compData.data);
-      setUserAnalytics(userData.data);
-      setPricingPlans(pricingData.data);
-    } catch (err) {
-      console.error('Failed to fetch analytics:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
-      
-      // Show error message to user
-      if (err.response?.status === 403) {
-        alert('Access denied. Please ensure you are logged in as a Super Admin. You may need to log out and log back in.');
-      } else {
-        alert('Failed to load analytics data. Please check console for details.');
+        if (results[2].status === 'fulfilled') {
+          console.log('Users data:', results[2].value.data);
+          setUserAnalytics(results[2].value.data);
+        } else {
+          console.error('Users failed:', results[2].reason);
+          setUserAnalytics(null);
+        }
+
+        if (results[3].status === 'fulfilled') {
+          console.log('Pricing data:', results[3].value.data);
+          setPricingPlans(results[3].value.data);
+        } else {
+          console.error('Pricing failed:', results[3].reason);
+          setPricingPlans([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch analytics:', err);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        console.error('Error message:', err.message);
+        console.error('Full error:', err);
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchAllAnalytics();
   }, []);
 
   const handleAddPlan = async (e) => {
@@ -98,14 +116,19 @@ const SuperAdminDashboard = () => {
       <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl">
         <h1 className="text-4xl font-bold">Super Admin Dashboard</h1>
         <p className="text-purple-100 mt-2 text-lg">Platform-wide analytics and management</p>
-        <div className="mt-4 flex items-center gap-4 text-sm">
+        <div className="mt-4 flex items-center gap-4 text-sm flex-wrap">
           <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span>System Online</span>
+            <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : analytics ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+            <span>{loading ? 'Loading...' : analytics ? 'System Online' : 'Partial Data'}</span>
           </div>
           <div className="bg-white/20 px-4 py-2 rounded-full">
             Last Updated: {new Date().toLocaleString()}
           </div>
+          {!analytics && !loading && (
+            <div className="bg-yellow-500/20 px-4 py-2 rounded-full text-yellow-100">
+              ⚠️ Some data unavailable
+            </div>
+          )}
         </div>
       </div>
 

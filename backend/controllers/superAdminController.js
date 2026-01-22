@@ -12,25 +12,40 @@ const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
 
 // Check if user is super admin
 export const isSuperAdmin = async (userId) => {
-  const user = await User.findById(userId);
-  if (!user) return false;
+  try {
+    const user = await User.findById(userId);
+    if (!user) return false;
 
-  // A user is super admin if explicitly flagged OR matches the fixed email
-  const isAdminEmail = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
-  const effective = user.isSuperAdmin === true || isAdminEmail;
+    // A user is super admin if explicitly flagged OR matches the fixed email
+    const isAdminEmail = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+    const effective = user.isSuperAdmin === true || isAdminEmail;
 
-  // Keep DB flag in sync so subsequent checks are fast
-  if (user.isSuperAdmin !== effective) {
-    user.isSuperAdmin = effective;
-    await user.save();
+    // Keep DB flag in sync so subsequent checks are fast - but only if it needs updating
+    if (user.isSuperAdmin !== effective) {
+      user.isSuperAdmin = effective;
+      try {
+        await user.save();
+      } catch (saveError) {
+        console.error('Error saving user isSuperAdmin flag:', saveError);
+        // Continue anyway - the check still works even if we can't persist it
+      }
+    }
+
+    return effective;
+  } catch (error) {
+    console.error('Error in isSuperAdmin:', error);
+    return false;
   }
-
-  return effective;
 };
 
 // Get super admin dashboard analytics
 export const getSuperAdminAnalytics = async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      console.error('ERROR: req.user is undefined in getSuperAdminAnalytics');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     if (!await isSuperAdmin(req.user._id)) {
       return res.status(403).json({ message: 'Only super admins can access this' });
     }
@@ -106,6 +121,7 @@ export const getSuperAdminAnalytics = async (req, res) => {
       },
     });
   } catch (e) {
+    console.error('Full error in getSuperAdminAnalytics:', e);
     res.status(500).json({ message: e.message });
   }
 };
@@ -113,6 +129,11 @@ export const getSuperAdminAnalytics = async (req, res) => {
 // Get all companies analytics
 export const getAllCompaniesAnalytics = async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      console.error('ERROR: req.user is undefined in getAllCompaniesAnalytics');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     if (!await isSuperAdmin(req.user._id)) {
       return res.status(403).json({ message: 'Only super admins can access this' });
     }
@@ -207,18 +228,22 @@ export const updatePricingPlans = async (req, res) => {
 // Get pricing plans
 export const getPricingPlans = async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      console.error('ERROR: req.user is undefined in getPricingPlans');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     if (!await isSuperAdmin(req.user._id)) {
       return res.status(403).json({ message: 'Only super admins can access this' });
     }
 
-    let superAdminRecord = await SuperAdmin.findOne({ user: req.user._id });
-    if (!superAdminRecord) {
-      superAdminRecord = new SuperAdmin({ user: req.user._id, pricingPlans: [] });
-      await superAdminRecord.save();
-    }
-
-    res.json(superAdminRecord.pricingPlans);
+    const superAdminRecord = await SuperAdmin.findOne({ user: req.user._id });
+    
+    // Return empty array if no pricing plans exist yet
+    const pricingPlans = superAdminRecord?.pricingPlans || [];
+    res.json(pricingPlans);
   } catch (e) {
+    console.error('Error in getPricingPlans:', e);
     res.status(500).json({ message: e.message });
   }
 };
@@ -333,6 +358,11 @@ export const getActivityLog = async (req, res) => {
 // Get user analytics
 export const getUserAnalytics = async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      console.error('ERROR: req.user is undefined in getUserAnalytics');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     if (!await isSuperAdmin(req.user._id)) {
       return res.status(403).json({ message: 'Only super admins can access this' });
     }
@@ -342,7 +372,6 @@ export const getUserAnalytics = async (req, res) => {
     const usersWithCompanies = await User.countDocuments({ companies: { $exists: true, $ne: [] } });
 
     const companyMemberships = await Company.aggregate([
-      { $unwind: '$members' },
       {
         $group: {
           _id: null,

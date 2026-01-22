@@ -9,8 +9,6 @@ export default function CompanyCreate() {
   const [description, setDescription] = useState('');
   const [website, setWebsite] = useState('');
   const [industry, setIndustry] = useState('');
-  const [departments, setDepartments] = useState(['Tech', 'Marketing', 'HR']);
-  const [newDept, setNewDept] = useState('');
   const [status, setStatus] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [createdCompanyId, setCreatedCompanyId] = useState('');
@@ -23,17 +21,6 @@ export default function CompanyCreate() {
     }
   }, [navigate]);
 
-  const addDepartment = () => {
-    if (newDept.trim() && !departments.includes(newDept.trim())) {
-      setDepartments([...departments, newDept.trim()]);
-      setNewDept('');
-    }
-  };
-
-  const removeDepartment = (dept) => {
-    setDepartments(departments.filter(d => d !== dept));
-  };
-
   const submit = async (e) => {
     e.preventDefault();
     setStatus('Creating your digital HQ...');
@@ -43,8 +30,7 @@ export default function CompanyCreate() {
         name, 
         description, 
         website,
-        industry,
-        departments
+        industry
       });
       setStatus(`✓ Company "${data.name}" created successfully! Redirecting to dashboard...`);
       setIsSuccess(true);
@@ -153,51 +139,6 @@ export default function CompanyCreate() {
                 value={description} 
                 onChange={(e) => setDescription(e.target.value)}
               />
-            </div>
-          </div>
-
-          {/* Departments */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3 pb-4 border-b-2 border-slate-100">
-              <IoPeopleOutline className="w-7 h-7 text-emerald-600" />
-              Departmental Structure
-            </h2>
-            <p className="text-sm text-slate-600">Define departments for automatic team categorization</p>
-
-            <div className="flex gap-2">
-              <input 
-                className="grow border-2 border-slate-300 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                placeholder="Add department (e.g., Sales, Design)" 
-                value={newDept} 
-                onChange={(e) => setNewDept(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDepartment())}
-              />
-              <button 
-                type="button"
-                onClick={addDepartment}
-                className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2"
-              >
-                <IoAddCircleOutline className="w-5 h-5" />
-                Add
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              {departments.map((dept) => (
-                <div 
-                  key={dept} 
-                  className="bg-blue-50 border-2 border-blue-200 px-4 py-2 rounded-xl flex items-center gap-2 group hover:bg-blue-100 transition-all"
-                >
-                  <span className="font-semibold text-blue-700">{dept}</span>
-                  <button 
-                    type="button"
-                    onClick={() => removeDepartment(dept)}
-                    className="text-blue-400 hover:text-red-600 transition-colors"
-                  >
-                    <IoCloseCircleOutline className="w-5 h-5" />
-                  </button>
-                </div>
-              ))}
             </div>
           </div>
 

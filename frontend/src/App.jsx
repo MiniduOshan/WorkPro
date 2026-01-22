@@ -122,6 +122,22 @@ function App() {
             return;
         }
         
+        // SuperAdmins bypass company selection - they view global analytics
+        const userProfile = localStorage.getItem('userProfile');
+        let isSuperAdmin = false;
+        if (userProfile) {
+            try {
+                const profile = JSON.parse(userProfile);
+                isSuperAdmin = profile.isSuperAdmin === true;
+            } catch (err) {
+                console.error('Error parsing user profile', err);
+            }
+        }
+        
+        if (isSuperAdmin) {
+            return; // SuperAdmins don't need company selection
+        }
+        
         // Must have company selected (except for create-company route)
         if (!companyId && !location.pathname.includes('create-company') && !location.pathname.includes('select-company')) {
             navigate('/select-company', { replace: true });

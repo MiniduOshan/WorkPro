@@ -51,6 +51,21 @@ export default function InviteJoin() {
       return;
     }
 
+    // Check role restrictions
+    const currentUserRole = localStorage.getItem('companyRole');
+    
+    // Managers cannot accept employee role invitations
+    if (currentUserRole === 'manager' && invitation?.role === 'employee') {
+      setError('Managers cannot accept employee role invitations. Only manager or owner roles are allowed.');
+      return;
+    }
+
+    // Employees cannot accept manager or owner role invitations
+    if (currentUserRole === 'employee' && (invitation?.role === 'manager' || invitation?.role === 'owner')) {
+      setError('Employees cannot accept manager or owner role invitations. Only employee roles are allowed.');
+      return;
+    }
+
     setJoining(true);
     setError('');
     try {
@@ -202,7 +217,7 @@ export default function InviteJoin() {
               </div>
             </div>
 
-            {/* Error Message */
+            {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
                 <IoAlertCircleOutline className="text-2xl text-red-500 flex-shrink-0 mt-0.5" />

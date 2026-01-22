@@ -30,6 +30,25 @@ export const createCompany = async (req, res) => {
   const { name, description, website, mission, vision, industry, departments } = req.body;
   if (!name) return res.status(400).json({ message: 'Name is required' });
   try {
+    // Check if user belongs to any company with an employee role
+    // New users (with no companies) can create companies
+    // Managers and owners can always create companies
+    // Only employees who joined via invitation cannot create new companies
+    const userCompanies = await Company.find({ 'members.user': req.user._id });
+    
+    // Check if user is an employee (not manager/owner) in any company
+    const isEmployeeOnly = userCompanies.some(company => {
+      const member = company.members.find(m => 
+        (m.user?._id || m.user).toString() === req.user._id.toString()
+      );
+      return member?.role === 'employee';
+    });
+
+    // Prevent employees from creating companies
+    if (isEmployeeOnly) {
+      return res.status(403).json({ message: 'Employees cannot create new companies. Only managers and new accounts can create companies.' });
+    }
+
     const existing = await Company.findOne({ name });
     if (existing) return res.status(400).json({ message: 'Company name already taken' });
     const company = await Company.create({
@@ -138,6 +157,44 @@ export const acceptInvitation = async (req, res) => {
     const company = await Company.findById(inv.company);
     if (!company) return res.status(404).json({ message: 'Company not found' });
 
+    // Check if user is already a manager/owner or trying to accept manager/owner role as employee
+    const user = await User.findById(req.user._id);
+    if (user) {
+      // Check user's current role in any existing company
+      const existingCompanies = await Company.find({ 'members.user': req.user._id });
+      let currentHighestRole = 'employee'; // Default to employee
+      
+      existingCompanies.forEach(comp => {
+        const member = comp.members.find(m => 
+          (m.user?._id || m.user).toString() === user._id.toString()
+        );
+        if (member?.role === 'owner') {
+          currentHighestRole = 'owner';
+        } else if (member?.role === 'manager' && currentHighestRole !== 'owner') {
+          currentHighestRole = 'manager';
+        }
+      });
+
+      // Managers cannot accept employee role invitations
+      if (currentHighestRole === 'manager' && inv.role === 'employee') {
+        return res.status(403).json({ message: 'Managers cannot accept employee role invitations. Only manager or owner roles are allowed.' });
+      }
+
+      // Employees in THIS company cannot accept manager/owner roles
+      // BUT employees can accept manager/owner roles in OTHER companies (role promotion to manager)
+      const memberInThisCompany = company.members.find(m => 
+        (m.user?._id || m.user).toString() === user._id.toString()
+      );
+      
+      if (currentHighestRole === 'employee' && !memberInThisCompany && (inv.role === 'manager' || inv.role === 'owner')) {
+        // This is a different company, allow promotion from employee to manager/owner
+        // Only block if they're already an employee in THIS company trying to get elevated role
+      } else if (currentHighestRole === 'employee' && memberInThisCompany && memberInThisCompany.role === 'employee' && (inv.role === 'manager' || inv.role === 'owner')) {
+        // Employee in the same company cannot be promoted to manager
+        return res.status(403).json({ message: 'Employees cannot accept manager or owner role invitations in the same company. Only employee roles are allowed.' });
+      }
+    }
+
     const already = company.members.find((m) => m.user.toString() === req.user._id.toString());
     if (!already) {
       company.members.push({ 
@@ -147,7 +204,6 @@ export const acceptInvitation = async (req, res) => {
     }
 
     // Update user's companies array
-    const user = await User.findById(req.user._id);
     if (user && !user.companies.includes(company._id)) {
       user.companies.push(company._id);
       if (!user.defaultCompany) {

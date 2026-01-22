@@ -23,19 +23,16 @@ import superAdminRoutes from './routes/superAdminRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
-
 // Load environment variables
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Connect to MongoDB
 connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -114,8 +111,11 @@ app.use((req, res, next) => {
 
 // Fallback Error Handling Middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Something broke!', error: err.message });
+    console.error('ERROR CAUGHT BY GLOBAL HANDLER:');
+    console.error('Message:', err.message);
+    console.error('Stack:', err.stack);
+    console.error('Full error object:', err);
+    res.status(500).json({ message: err.message || 'Something broke!' });
 });
 
 app.listen(PORT, () => {

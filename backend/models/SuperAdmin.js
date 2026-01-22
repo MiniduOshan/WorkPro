@@ -80,9 +80,8 @@ const SuperAdminSchema = new mongoose.Schema(
 );
 
 // Update timestamp before saving
-SuperAdminSchema.pre('save', function (next) {
+SuperAdminSchema.pre('save', function () {
   this.lastUpdated = Date.now();
-  next();
 });
 
 const SuperAdmin = mongoose.model('SuperAdmin', SuperAdminSchema);

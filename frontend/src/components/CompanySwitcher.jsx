@@ -111,25 +111,21 @@ const CompanySwitcher = ({ currentCompanyId, onCompanySwitch }) => {
             ))}
           </div>
 
-          {/* Create New Company Button */}
-          <div className="p-3 border-t border-gray-100">
-            <button
-              onClick={() => {
-                setShowDropdown(false);
-                // Navigate based on current dashboard
-                const isManager = currentRole === 'manager' || currentRole === 'owner';
-                if (isManager) {
+          {/* Create New Company Button - Only for Managers/Owners */}
+          {(currentRole === 'manager' || currentRole === 'owner') && (
+            <div className="p-3 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
                   navigate('/dashboard/manager/create-company');
-                } else {
-                  navigate('/dashboard/create-company');
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium text-sm shadow-sm"
-            >
-              <IoAddCircleOutline className="w-5 h-5" />
-              <span>Create New Company</span>
-            </button>
-          </div>
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-medium text-sm shadow-sm"
+              >
+                <IoAddCircleOutline className="w-5 h-5" />
+                <span>Create New Company</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
