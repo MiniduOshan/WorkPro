@@ -130,6 +130,17 @@ export default function Departments() {
     } catch (err) { alert('Failed to remove member'); }
   };
 
+  const deleteDepartment = async () => {
+    if (!window.confirm('Delete this department? This cannot be undone.')) return;
+    try {
+      await api.delete(`/api/departments/${viewDept._id}`);
+      setViewDept(null);
+      fetchDepartments(companyId);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete department');
+    }
+  };
+
   if (loading) return <div className="p-20 text-center font-black text-slate-300 animate-pulse">LOADING DEPARTMENTS...</div>;
 
   return (
@@ -190,9 +201,20 @@ export default function Departments() {
                 <h2 className="text-3xl font-bold text-slate-900 leading-tight">{viewDept.name}</h2>
                 <p className="text-slate-500 mt-2">{viewDept.description}</p>
               </div>
-              <button onClick={() => setViewDept(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={28}/>
-              </button>
+              <div className="flex items-center gap-2">
+                {['owner', 'manager'].includes(companyRole) && (
+                  <button
+                    onClick={deleteDepartment}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    title="Delete department"
+                  >
+                    <IoTrashOutline size={22}/>
+                  </button>
+                )}
+                <button onClick={() => setViewDept(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                  <IoCloseOutline size={28}/>
+                </button>
+              </div>
             </div>
 
             {/* Quick Stats Grid */}

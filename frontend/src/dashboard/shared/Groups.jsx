@@ -83,6 +83,17 @@ export default function Groups() {
     }
   };
 
+  const deleteGroup = async () => {
+    if (!window.confirm('Delete this group? This cannot be undone.')) return;
+    try {
+      await api.delete(`/api/groups/${viewGroup._id}`);
+      setViewGroup(null);
+      fetchGroups();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete group');
+    }
+  };
+
   if (loading) return <div className="p-20 text-center font-black text-slate-300 animate-pulse">LOADING WORKSPACE...</div>;
 
   return (
@@ -143,9 +154,20 @@ export default function Groups() {
                 <h2 className="text-3xl font-bold text-slate-900 leading-tight">{viewGroup.name}</h2>
                 <p className="text-slate-500 mt-2">{viewGroup.description}</p>
               </div>
-              <button onClick={() => setViewGroup(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={28}/>
-              </button>
+              <div className="flex items-center gap-2">
+                {['owner', 'manager'].includes(companyRole) && (
+                  <button
+                    onClick={deleteGroup}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                    title="Delete group"
+                  >
+                    <IoTrashOutline size={22}/>
+                  </button>
+                )}
+                <button onClick={() => setViewGroup(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
+                  <IoCloseOutline size={28}/>
+                </button>
+              </div>
             </div>
 
             {/* Quick Stats Grid */}
