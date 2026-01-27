@@ -106,14 +106,4 @@ npm install
 npm run dev
 ```
 
-
-
-## 🧑‍💻 Frontend Pages
-
-- Company Creation: `/company/create`
-- Invitation Acceptance: `/invite/join?token=...`
-- Dashboard Tasks: `/dashboard/tasks`
-- Dashboard Channels: `/dashboard/channels`
-
----
 This repository now targets company project management workflows while keeping the original MERN foundation.
