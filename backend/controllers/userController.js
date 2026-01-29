@@ -2,9 +2,12 @@ import User from '../models/User.js';
 import generateToken from '../config/generateToken.js';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '../config/email.js';
+import { OAuth2Client } from 'google-auth-library';
 
 // Fixed super admin email - cannot be changed through website
 const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
+
+const googleOAuthClient = new OAuth2Client();
 
 // Helper function to structure user response (used for both signup and login success)
 const getUserResponse = (user) => {
@@ -417,12 +420,85 @@ const resetPassword = async (req, res) => {
     }
 };
 
-// @desc    Google OAuth callback
-// @route   GET /api/users/auth/google
+// @desc    Google OAuth (ID token verification)
+// @route   POST /api/users/auth/google
 // @access  Public
 const googleAuth = async (req, res) => {
-    // This will be implemented with Google OAuth strategy
-    res.status(501).json({ message: 'Google authentication not yet implemented' });
+    const credential = req.body?.credential || req.body?.idToken || req.query?.credential;
+    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || req.body?.clientId || req.query?.clientId;
+
+    if (!credential) {
+        return res.status(400).json({ message: 'Google credential is required.' });
+    }
+
+    if (!clientId) {
+        return res.status(500).json({ message: 'Google client ID is not configured on the server.' });
+    }
+
+    try {
+        const ticket = await googleOAuthClient.verifyIdToken({
+            idToken: credential,
+            audience: clientId,
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+            return res.status(400).json({ message: 'Invalid Google token payload.' });
+        }
+
+        const email = payload.email.toLowerCase();
+        const firstName = payload.given_name || payload.name?.split(' ')[0] || 'User';
+        const lastName = payload.family_name || payload.name?.split(' ').slice(1).join(' ') || 'Account';
+        const googleId = payload.sub;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            const isSuperAdmin = email === SUPER_ADMIN_EMAIL.toLowerCase();
+            const randomPassword = crypto.randomBytes(32).toString('hex');
+
+            user = await User.create({
+                firstName,
+                lastName,
+                email,
+                password: randomPassword,
+                isSuperAdmin,
+                googleId,
+            });
+        } else {
+            const shouldBeSuperAdmin = user.isSuperAdmin === true || email === SUPER_ADMIN_EMAIL.toLowerCase();
+            let shouldSave = false;
+
+            if (user.isSuperAdmin !== shouldBeSuperAdmin) {
+                user.isSuperAdmin = shouldBeSuperAdmin;
+                shouldSave = true;
+            }
+
+            if (!user.googleId && googleId) {
+                user.googleId = googleId;
+                shouldSave = true;
+            }
+
+            if (!user.firstName && firstName) {
+                user.firstName = firstName;
+                shouldSave = true;
+            }
+
+            if (!user.lastName && lastName) {
+                user.lastName = lastName;
+                shouldSave = true;
+            }
+
+            if (shouldSave) {
+                await user.save();
+            }
+        }
+
+        res.json(getUserResponse(user));
+    } catch (error) {
+        console.error('[GOOGLE AUTH ERROR]:', error);
+        res.status(401).json({ message: 'Google authentication failed.' });
+    }
 };
 
 export default {

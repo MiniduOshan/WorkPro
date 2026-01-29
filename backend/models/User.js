@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
     mobileNumber: { type: String, default: '' },
     profilePic: { type: String, default: '/images/default_avatar.png' },
     location: { type: String, default: '' },
+    googleId: { type: String, default: '' },
     companies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Company' }], // Array of company IDs user belongs to
     defaultCompany: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }, // Last selected or default company
     isSuperAdmin: { type: Boolean, default: false }, // For super admin access to analytics

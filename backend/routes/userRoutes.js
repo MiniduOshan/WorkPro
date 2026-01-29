@@ -20,7 +20,7 @@ router.post('/signup', userController.registerUser);
 router.post('/login', userController.authUser); 
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
-router.get('/auth/google', userController.googleAuth);
+router.post('/auth/google', userController.googleAuth);
 
 // FIX: Added public route for user lookup by email (used by invitation modal)
 router.get('/lookup', userController.getUserByEmail); // Assumes controller is updated

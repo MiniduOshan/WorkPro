@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   IoMailOutline, 
@@ -10,15 +10,6 @@ import {
   IoCloseOutline
 } from 'react-icons/io5';
 import api from '../api/axios';
-
-const GoogleGlyph = ({ className = 'w-6 h-6' }) => (
-  <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path fill="#4285F4" d="M23.49 12.27c0-.78-.07-1.53-.2-2.25H12v4.26h6.48c-.28 1.45-1.12 2.68-2.39 3.51v2.91h3.86c2.26-2.09 3.54-5.17 3.54-8.43z" />
-    <path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.9l-3.86-2.91c-1.08.72-2.47 1.14-4.08 1.14-3.14 0-5.8-2.12-6.75-4.97H1.26v3.11C3.24 21.33 7.31 24 12 24z" />
-    <path fill="#FBBC05" d="M5.25 14.36c-.24-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.71H1.26A11.99 11.99 0 0 0 0 12.09c0 1.95.46 3.79 1.26 5.38l4-3.11z" />
-    <path fill="#EA4335" d="M12 4.77c1.76 0 3.33.61 4.57 1.82l3.43-3.43C17.96 1.12 15.24 0 12 0 7.31 0 3.24 2.67 1.26 6.71l4 3.11C6.2 6.89 8.86 4.77 12 4.77z" />
-  </svg>
-);
 
 const AuthInput = ({ name, placeholder, type = 'text', icon: Icon, formData, handleChange }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +42,8 @@ const AuthInput = ({ name, placeholder, type = 'text', icon: Icon, formData, han
 const Auth = ({ type }) => {
   const isLogin = type === 'login';
   const navigate = useNavigate();
+  const googleButtonRef = useRef(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -85,8 +78,138 @@ const Auth = ({ type }) => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    window.location.href = `${api.defaults.baseURL || 'http://localhost:5000'}/api/users/auth/google`;
+  const handleGoogleCredential = async (response) => {
+    if (!response?.credential) {
+      setError('Google authentication failed. Please try again.');
+      return;
+    }
+
+    try {
+      const { data } = await api.post('/api/users/auth/google', {
+        credential: response.credential,
+      });
+
+      await handleAuthSuccess(data, { treatAsLogin: true });
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Google authentication failed. Please try again.';
+      setError(errorMessage);
+    }
+  };
+
+  const initializeGoogleButton = () => {
+    if (!googleButtonRef.current || !window.google?.accounts?.id || !googleClientId) {
+      return;
+    }
+
+    googleButtonRef.current.innerHTML = '';
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleGoogleCredential,
+    });
+    window.google.accounts.id.renderButton(googleButtonRef.current, {
+      theme: 'outline',
+      size: 'large',
+      width: '100%',
+      text: isLogin ? 'signin_with' : 'signup_with',
+      shape: 'rectangular',
+    });
+  };
+
+  useEffect(() => {
+    if (!googleClientId) return;
+
+    if (window.google?.accounts?.id) {
+      initializeGoogleButton();
+      return;
+    }
+
+    const existingScript = document.getElementById('google-identity');
+    if (existingScript) {
+      existingScript.addEventListener('load', initializeGoogleButton);
+      return () => existingScript.removeEventListener('load', initializeGoogleButton);
+    }
+
+    const script = document.createElement('script');
+    script.id = 'google-identity';
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initializeGoogleButton;
+    document.body.appendChild(script);
+
+    return () => {
+      script.onload = null;
+    };
+  }, [googleClientId, isLogin]);
+
+  const handleAuthSuccess = async (data, { treatAsLogin = isLogin } = {}) => {
+    localStorage.setItem('token', data.token);
+    if (data.user) {
+      localStorage.setItem('userProfile', JSON.stringify(data.user));
+      localStorage.setItem('userId', data.user._id);
+    }
+
+    const userEmail = data.user?.email?.toLowerCase() || '';
+    const isSuperAdmin = userEmail === 'admin.workpro@gmail.com';
+
+    if (isSuperAdmin) {
+      try {
+        const { data: companiesData } = await api.get('/api/companies/my-companies', {
+          headers: { Authorization: `Bearer ${data.token}` }
+        });
+
+        if (companiesData.companies && companiesData.companies.length > 0) {
+          const defaultCompany = companiesData.defaultCompany || companiesData.companies[0];
+          localStorage.setItem('companyId', defaultCompany._id);
+          localStorage.setItem('companyRole', defaultCompany.role);
+        }
+      } catch (err) {
+        // Ignore - SuperAdmin proceeds without company
+      }
+      navigate('/dashboard/super-admin');
+      return;
+    }
+
+    const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
+    if (redirectAfterLogin) {
+      localStorage.removeItem('redirectAfterLogin');
+      navigate(redirectAfterLogin);
+      return;
+    }
+
+    if (treatAsLogin) {
+      try {
+        const { data: companiesData } = await api.get('/api/companies/my-companies', {
+          headers: { Authorization: `Bearer ${data.token}` }
+        });
+
+        if (companiesData.companies && companiesData.companies.length > 1) {
+          navigate('/select-company', {
+            state: {
+              companies: companiesData.companies,
+              defaultCompany: companiesData.defaultCompany
+            }
+          });
+        } else if (companiesData.companies && companiesData.companies.length === 1) {
+          const company = companiesData.companies[0];
+          localStorage.setItem('companyId', company._id);
+          localStorage.setItem('companyRole', company.role);
+
+          if (company.role === 'employee') {
+            navigate('/dashboard');
+          } else {
+            navigate('/dashboard/manager');
+          }
+        } else {
+          navigate('/company/create');
+        }
+      } catch (err) {
+        console.error('Company fetch failed:', err);
+        navigate('/company/create');
+      }
+    } else {
+      navigate('/company/create');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -102,74 +225,7 @@ const Auth = ({ type }) => {
 
     try {
       const { data } = await api.post(endpoint, formData);
-
-      localStorage.setItem('token', data.token);
-      if (data.user) {
-        localStorage.setItem('userProfile', JSON.stringify(data.user));
-        localStorage.setItem('userId', data.user._id);
-      }
-
-      const userEmail = data.user?.email?.toLowerCase() || '';
-      const isSuperAdmin = userEmail === 'admin.workpro@gmail.com';
-      
-      if (isSuperAdmin) {
-        try {
-          const { data: companiesData } = await api.get('/api/companies/my-companies', {
-            headers: { Authorization: `Bearer ${data.token}` }
-          });
-          
-          if (companiesData.companies && companiesData.companies.length > 0) {
-            const defaultCompany = companiesData.defaultCompany || companiesData.companies[0];
-            localStorage.setItem('companyId', defaultCompany._id);
-            localStorage.setItem('companyRole', defaultCompany.role);
-          }
-        } catch (err) {
-          // Ignore - SuperAdmin proceeds without company
-        }
-        navigate('/dashboard/super-admin');
-        return;
-      }
-
-      const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
-      if (redirectAfterLogin) {
-        localStorage.removeItem('redirectAfterLogin');
-        navigate(redirectAfterLogin);
-        return;
-      }
-
-      if (isLogin) {
-        try {
-          const { data: companiesData } = await api.get('/api/companies/my-companies', {
-            headers: { Authorization: `Bearer ${data.token}` }
-          });
-
-          if (companiesData.companies && companiesData.companies.length > 1) {
-            navigate('/select-company', { 
-              state: { 
-                companies: companiesData.companies, 
-                defaultCompany: companiesData.defaultCompany 
-              } 
-            });
-          } else if (companiesData.companies && companiesData.companies.length === 1) {
-            const company = companiesData.companies[0];
-            localStorage.setItem('companyId', company._id);
-            localStorage.setItem('companyRole', company.role);
-            
-            if (company.role === 'employee') {
-              navigate('/dashboard');
-            } else {
-              navigate('/dashboard/manager');
-            }
-          } else {
-            navigate('/company/create');
-          }
-        } catch (err) {
-          console.error('Company fetch failed:', err);
-          navigate('/company/create');
-        }
-      } else {
-        navigate('/company/create');
-      }
+      await handleAuthSuccess(data);
 
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Authentication failed. Please try again.';
@@ -276,14 +332,15 @@ const Auth = ({ type }) => {
             <div className="grow border-t border-gray-200"></div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 py-3 mb-4 border-2 border-gray-300 text-gray-700 text-lg font-semibold rounded-lg hover:bg-gray-50 transition-all"
-          >
-            <GoogleGlyph className="w-6 h-6" />
-            {isLogin ? 'Sign in with Google' : 'Sign up with Google'}
-          </button>
+          {googleClientId ? (
+            <div className="w-full mb-4">
+              <div ref={googleButtonRef} className="w-full flex justify-center" />
+            </div>
+          ) : (
+            <div className="w-full mb-4 p-3 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg">
+              Google sign-in is not configured.
+            </div>
+          )}
 
           <Link 
             to={isLogin ? '/signup' : '/login'} 
