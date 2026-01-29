@@ -16,7 +16,7 @@ import {
   IoNotificationsOutline
 } from 'react-icons/io5';
 
-const SuperAdminSidebar = () => {
+const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = () => {} }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ firstName: 'Super', lastName: 'Admin', email: '' });
@@ -94,6 +94,7 @@ const SuperAdminSidebar = () => {
   const SidebarLink = ({ name, icon: Icon, path, badge, isActive }) => (
     <Link
       to={path}
+      onClick={onNavigate}
       className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
         isActive
           ? 'active bg-purple-50 text-purple-600'
@@ -110,8 +111,10 @@ const SuperAdminSidebar = () => {
     </Link>
   );
 
+  const visibilityClass = variant === 'mobile' ? 'flex lg:hidden' : 'hidden lg:flex';
+
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden lg:flex">
+    <aside className={`w-64 bg-white border-r border-slate-200 flex-col ${visibilityClass} ${className}`}>
       {/* Header */}
       <div className="p-6 border-b border-slate-100 flex items-center gap-3">
         <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center text-white">
@@ -158,7 +161,10 @@ const SuperAdminSidebar = () => {
         {companyRole && (
           <div className="px-4">
             <button
-              onClick={handleBackToDashboard}
+              onClick={() => {
+                onNavigate();
+                handleBackToDashboard();
+              }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-blue-600 hover:bg-blue-50 border border-blue-200"
             >
               <IoArrowBackOutline className="w-5 h-5" />

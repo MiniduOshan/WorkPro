@@ -6,7 +6,8 @@ import {
     IoNotificationsOutline, 
     IoChevronDown,
     IoCloseCircleOutline,
-    IoPencilOutline 
+    IoPencilOutline,
+    IoMenuOutline
 } from 'react-icons/io5';
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios'; 
@@ -37,6 +38,7 @@ const ManagerDashboardLayout = () => {
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: 'user@example.com', profilePic: '' });
     const [companyId, setCompanyId] = useState(localStorage.getItem('companyId') || '');
 
@@ -92,18 +94,44 @@ const ManagerDashboardLayout = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-app-bg transition-colors duration-300 w-full"> 
+        <div className="flex min-h-screen bg-app-bg transition-colors duration-300 w-full overflow-hidden"> 
             <ManagerSidebar />
+
+            {/* Mobile Sidebar Drawer */}
+            {isMobileNavOpen && (
+                <div className="fixed inset-0 z-40 lg:hidden">
+                    <div
+                        className="absolute inset-0 bg-black/40"
+                        onClick={() => setIsMobileNavOpen(false)}
+                    />
+                    <div className="absolute inset-y-0 left-0 w-72 max-w-[80%] bg-white shadow-xl">
+                        <ManagerSidebar
+                            variant="mobile"
+                            className="h-full"
+                            onNavigate={() => setIsMobileNavOpen(false)}
+                        />
+                    </div>
+                </div>
+            )}
             
-            <div className="flex flex-col grow">
+            <div className="flex flex-col grow min-w-0">
                 {/* Top Header Bar */}
-                <header className="flex justify-between items-center bg-white p-4 border-b border-gray-200 shadow-sm sticky top-0 z-10">
-                    <div className="flex items-center gap-6">
-                        <h1 className="text-2xl font-bold text-gray-800">Manager Dashboard</h1>
-                        <CompanySwitcher currentCompanyId={companyId} />
+                <header className="flex flex-col gap-3 lg:flex-row lg:justify-between lg:items-center bg-white p-4 border-b border-gray-200 shadow-sm sticky top-0 z-10">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <button
+                            onClick={() => setIsMobileNavOpen(true)}
+                            className="lg:hidden p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
+                            aria-label="Open navigation"
+                        >
+                            <IoMenuOutline className="w-5 h-5 text-gray-700" />
+                        </button>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Manager Dashboard</h1>
+                        <div className="w-full sm:w-auto">
+                            <CompanySwitcher currentCompanyId={companyId} />
+                        </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4 relative">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 relative">
                         {/* Notifications */}
                         <NotificationCenter />
                         
@@ -134,7 +162,7 @@ const ManagerDashboardLayout = () => {
                 </header>
 
                 {/* Main Content Area */}
-                <main className="grow p-6 overflow-auto">
+                <main className="grow p-4 sm:p-6 overflow-auto">
                     <Outlet />
                 </main>
             </div>
