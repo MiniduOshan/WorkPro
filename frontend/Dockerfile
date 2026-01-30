@@ -2,16 +2,19 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# Set build arg for API URL (empty for Docker networking)
+# Set build args for Vite (empty defaults)
 ARG VITE_API_URL=
+ARG VITE_GOOGLE_CLIENT_ID=
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 COPY package*.json ./
 RUN npm install
 COPY . .
 
-# Show what VITE_API_URL is set to during build
-RUN echo "Building with VITE_API_URL=${VITE_API_URL}"
+# Show what Vite envs are set to during build
+RUN echo "Building with VITE_API_URL=${VITE_API_URL}" \
+	&& echo "Building with VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}"
 
 RUN npm run build
 
