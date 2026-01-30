@@ -361,13 +361,23 @@ const forgotPassword = async (req, res) => {
 
             res.json({ message: 'Password reset email sent successfully' });
         } catch (emailError) {
-            console.error('Email sending error:', emailError);
+            console.error('[SMTP ERROR DETAILS]:', {
+                error: emailError.message,
+                code: emailError.code,
+                command: emailError.command,
+                response: emailError.response,
+                responseCode: emailError.responseCode,
+                host: process.env.SMTP_HOST,
+                port: process.env.SMTP_PORT,
+                user: process.env.SMTP_USER,
+            });
             user.resetPasswordToken = undefined;
             user.resetPasswordExpire = undefined;
             await user.save();
             
             return res.status(500).json({ 
-                message: 'Email could not be sent. Please try again later.' 
+                message: 'Email could not be sent. Please try again later.',
+                error: emailError.message
             });
         }
     } catch (error) {
