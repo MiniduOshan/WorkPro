@@ -329,13 +329,26 @@ const deleteUserAccount = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
+    console.log('[FORGOT PASSWORD] Request received for email:', email);
+    console.log('[FORGOT PASSWORD] Environment check:', {
+        SMTP_HOST: process.env.SMTP_HOST,
+        SMTP_PORT: process.env.SMTP_PORT,
+        SMTP_USER: process.env.SMTP_USER,
+        SMTP_PASS: process.env.SMTP_PASS ? '***set***' : 'MISSING',
+        SMTP_FROM: process.env.SMTP_FROM,
+        FRONTEND_URL: process.env.FRONTEND_URL
+    });
+
     try {
         const user = await User.findOne({ email });
 
         if (!user) {
+            console.log('[FORGOT PASSWORD] User not found for email:', email);
             // Don't reveal if user exists or not for security
             return res.json({ message: 'If an account exists, a password reset link will be sent.' });
         }
+
+        console.log('[FORGOT PASSWORD] User found, generating reset token');
 
         // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
@@ -351,22 +364,26 @@ const forgotPassword = async (req, res) => {
 
         // Create reset URL
         const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+        console.log('[FORGOT PASSWORD] Reset URL created:', resetUrl);
 
         try {
+            console.log('[FORGOT PASSWORD] Attempting to send email to:', user.email);
             await sendPasswordResetEmail({
                 to: user.email,
                 resetLink: resetUrl,
                 firstName: user.firstName
             });
 
+            console.log('[FORGOT PASSWORD] Email sent successfully to:', user.email);
             res.json({ message: 'Password reset email sent successfully' });
         } catch (emailError) {
-            console.error('[SMTP ERROR DETAILS]:', {
+            console.error('[FORGOT PASSWORD - EMAIL ERROR]:', {
                 error: emailError.message,
                 code: emailError.code,
                 command: emailError.command,
                 response: emailError.response,
                 responseCode: emailError.responseCode,
+                stack: emailError.stack,
                 host: process.env.SMTP_HOST,
                 port: process.env.SMTP_PORT,
                 user: process.env.SMTP_USER,
