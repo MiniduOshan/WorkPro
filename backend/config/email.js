@@ -5,10 +5,17 @@ export const getTransporter = () => {
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
+  
   if (!host || !user || !pass) {
+    console.error('[SMTP ERROR] Missing config:', {
+      host: host ? 'set' : 'missing',
+      user: user ? 'set' : 'missing',
+      pass: pass ? 'set' : 'missing'
+    });
     throw new Error('SMTP configuration missing (SMTP_HOST, SMTP_USER, SMTP_PASS)');
   }
-  const secure = port === 465; // true for 465, false for other ports
+  
+  const secure = port === 465;
   return nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
 };
 

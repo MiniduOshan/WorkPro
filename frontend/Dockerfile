@@ -5,18 +5,22 @@ WORKDIR /app
 # Set build args for Vite (empty defaults)
 ARG VITE_API_URL=
 ARG VITE_GOOGLE_CLIENT_ID=
-ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 COPY package*.json ./
 RUN npm install
 COPY . .
 
-# Show what Vite envs are set to during build
-RUN echo "Building with VITE_API_URL=${VITE_API_URL}" \
-	&& echo "Building with VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}"
+# Create .env file BEFORE copying app files so Vite can read it
+RUN echo "VITE_API_URL=${VITE_API_URL}" > .env && \
+    echo "VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}" >> .env && \
+    cat .env
 
-RUN npm run build
+# Show what Vite envs are set to during build
+RUN echo "Building with VITE_API_URL=${VITE_API_URL}" && \
+    echo "Building with VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}"
+
+# Build with env vars from .env file
+RUN VITE_API_URL=${VITE_API_URL} VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID} npm run build
 
 # 2. Run with Nginx
 FROM nginx:alpine
