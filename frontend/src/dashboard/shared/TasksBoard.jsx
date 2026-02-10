@@ -367,13 +367,15 @@ export default function TasksBoard() {
                 </select>
               </div>
             )}
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
-            >
-              <IoAddOutline className="text-xl" />
-              <span>Create Task</span>
-            </button>
+            {companyRole !== 'employee' && (
+              <button 
+                onClick={() => setShowAddModal(true)}
+                className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
+              >
+                <IoAddOutline className="text-xl" />
+                <span>Create Task</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -498,7 +500,7 @@ export default function TasksBoard() {
       </div>
 
       {/* Add Task Modal */}
-      {showAddModal && (
+      {showAddModal && companyRole !== 'employee' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Create New Task</h2>
