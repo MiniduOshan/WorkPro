@@ -225,20 +225,7 @@ const DocumentLibrary = () => {
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <IoFilterOutline className="text-slate-400 hidden md:block" />
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="flex-1 md:w-48 px-4 py-3 bg-slate-50 border-none rounded-xl text-sm font-medium text-slate-600"
-            style={{ '--focus-color': theme.focusBorderPrimary }}
-            onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
-            onBlur={(e) => e.target.style.boxShadow = 'none'}
-          >
-            <option value="all">All Categories</option>
-            <option value="contract">Contracts</option>
-            <option value="report">Reports</option>
-            <option value="image">Images</option>
-            <option value="spreadsheet">Sheets</option>
-          </select>
+          
         </div>
       </div>
 

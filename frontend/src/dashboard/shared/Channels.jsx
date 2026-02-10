@@ -25,6 +25,7 @@ export default function Channels() {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [companyMembers, setCompanyMembers] = useState([]);
   const [companyRole, setCompanyRole] = useState('');
+  const canCreateChannel = companyRole === 'manager' || companyRole === 'owner';
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -255,13 +256,15 @@ export default function Channels() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Group Works</h1>
             <p className="text-slate-600">Collaborate with your team in real-time</p>
           </div>
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
-          >
-            <IoAddOutline className="text-xl" />
-            <span>New Channel</span>
-          </button>
+          {canCreateChannel && (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
+            >
+              <IoAddOutline className="text-xl" />
+              <span>New Channel</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -291,12 +294,16 @@ export default function Channels() {
               <div className="text-center py-8">
                 <IoChatbubblesOutline className="mx-auto text-4xl text-slate-300 mb-2" />
                 <p className="text-sm text-slate-500">No channels yet</p>
-                <button 
-                  onClick={() => setShowAddModal(true)}
-                  className={`mt-4 text-sm text-${theme.primary} font-semibold hover:underline`}
-                >
-                  Create your first channel
-                </button>
+                {canCreateChannel ? (
+                  <button 
+                    onClick={() => setShowAddModal(true)}
+                    className={`mt-4 text-sm text-${theme.primary} font-semibold hover:underline`}
+                  >
+                    Create your first channel
+                  </button>
+                ) : (
+                  <p className="mt-4 text-sm text-slate-400">Ask a manager to create a channel.</p>
+                )}
               </div>
             ) : (
               <div className="space-y-1">
@@ -492,7 +499,7 @@ export default function Channels() {
       </div>
 
       {/* Create Channel Modal */}
-      {showAddModal && (
+      {canCreateChannel && showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Create Channel</h2>
