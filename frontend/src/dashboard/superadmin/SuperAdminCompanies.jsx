@@ -151,18 +151,14 @@ const SuperAdminCompanies = () => {
                   <p className="text-xs text-gray-500 mt-1">Tasks</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-green-600">{company.teamCount}</p>
-                  <p className="text-xs text-gray-500 mt-1">Teams</p>
+                  <p className="text-2xl font-bold text-green-600">{company.departmentCount}</p>
+                  <p className="text-xs text-gray-500 mt-1">Departments</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <span className="text-gray-600">Departments: </span>
-                  <span className="font-semibold text-gray-900">{company.departmentCount}</span>
-                </div>
                 <div className="flex items-center gap-2">
                   <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1">
                     <IoEyeOutline className="w-4 h-4" />

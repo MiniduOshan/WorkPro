@@ -4,6 +4,7 @@ import {
   IoBusinessOutline,
   IoPeopleOutline,
   IoCheckmarkCircle,
+  IoWalletOutline,
   IoClose,
   IoAddOutline,
 } from 'react-icons/io5';
@@ -168,14 +169,14 @@ const SuperAdminDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
+          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium">Total Teams</p>
-                <p className="text-4xl font-bold mt-2">{overview.totalTeams || 0}</p>
-                <p className="text-xs text-purple-100 mt-1">Teams formed</p>
+                <p className="text-indigo-100 text-sm font-medium">Pricing Plans</p>
+                <p className="text-4xl font-bold mt-2">{pricingPlans.length}</p>
+                <p className="text-xs text-indigo-100 mt-1">Active plans</p>
               </div>
-              <IoBusinessOutline className="w-12 h-12 text-purple-200 opacity-80" />
+              <IoWalletOutline className="w-12 h-12 text-indigo-200 opacity-80" />
             </div>
           </div>
 

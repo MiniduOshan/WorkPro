@@ -6,11 +6,13 @@ import {
   IoCheckmarkCircle,
   IoTrendingUpOutline,
   IoStatsChartOutline,
+  IoWalletOutline,
 } from 'react-icons/io5';
 import api from '../../api/axios';
 
 const SuperAdminAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
+  const [pricingPlans, setPricingPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token');
 
@@ -23,8 +25,11 @@ const SuperAdminAnalytics = () => {
       setLoading(true);
       const response = await api.get('/api/super-admin/analytics');
       setAnalytics(response.data);
+      const pricingResponse = await api.get('/api/super-admin/pricing-plans');
+      setPricingPlans(pricingResponse.data || []);
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
+      setPricingPlans([]);
     } finally {
       setLoading(false);
     }
@@ -86,17 +91,6 @@ const SuperAdminAnalytics = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">Total Teams</p>
-                <p className="text-4xl font-bold mt-2">{overview.totalTeams}</p>
-                <p className="text-orange-100 text-xs mt-2">Collaborative teams</p>
-              </div>
-              <IoPeopleOutline className="w-12 h-12 opacity-30" />
-            </div>
-          </div>
-
           <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
@@ -116,6 +110,17 @@ const SuperAdminAnalytics = () => {
                 <p className="text-indigo-100 text-xs mt-2">Broadcast messages</p>
               </div>
               <IoTrendingUpOutline className="w-12 h-12 opacity-30" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-teal-100 text-sm font-medium">Pricing Plans</p>
+                <p className="text-4xl font-bold mt-2">{pricingPlans.length}</p>
+                <p className="text-teal-100 text-xs mt-2">Active plans</p>
+              </div>
+              <IoWalletOutline className="w-12 h-12 opacity-30" />
             </div>
           </div>
         </div>
