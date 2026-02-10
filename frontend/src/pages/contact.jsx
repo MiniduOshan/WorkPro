@@ -12,6 +12,7 @@ import {
 const Contact = () => {
     const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
     const [status, setStatus] = useState('');
+    const recipientEmail = 'drkstar2003@gmail.com';
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,11 +21,21 @@ const Contact = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         setStatus('Sending...');
-        setTimeout(() => {
-            setStatus('Message Sent Successfully!');
-            setFormData({ name: '', email: '', subject: '', message: '' });
-            setTimeout(() => setStatus(''), 4000);
-        }, 1500);
+
+        const subject = formData.subject || 'Contact Request';
+        const body = [
+            `Name: ${formData.name}`,
+            `Email: ${formData.email}`,
+            '',
+            formData.message,
+        ].join('\n');
+
+        const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+
+        setStatus('Message Sent Successfully!');
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setStatus(''), 4000);
     };
 
     return (

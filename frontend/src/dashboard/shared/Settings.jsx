@@ -5,7 +5,6 @@ import {
   IoSettingsOutline,
   IoBusinessOutline,
   IoNotificationsOutline,
-  IoLockClosedOutline,
   IoColorPaletteOutline,
   IoSaveOutline,
   IoPersonOutline,
@@ -34,11 +33,6 @@ export default function Settings() {
     taskReminders: true,
     projectUpdates: true,
     teamMessages: true
-  });
-  const [privacySettings, setPrivacySettings] = useState({
-    profileVisibility: 'team',
-    showEmail: true,
-    showPhone: false
   });
   const [loading, setLoading] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
@@ -74,6 +68,10 @@ export default function Settings() {
   const handleSaveCompanySettings = async (e) => {
     e.preventDefault();
     const companyId = localStorage.getItem('companyId');
+    if (!companyId) {
+      alert('No company selected. Please select a company and try again.');
+      return;
+    }
     setLoading(true);
     try {
       await api.put(`/api/companies/${companyId}`, companySettings);
@@ -99,18 +97,6 @@ export default function Settings() {
     }
   };
 
-  const handleSavePrivacySettings = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // await api.put('/api/users/privacy-settings', privacySettings);
-      alert('Privacy settings saved successfully!');
-    } catch (err) {
-      console.error('Failed to save settings:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteAccount = async () => {
     try {
@@ -155,7 +141,6 @@ export default function Settings() {
   const tabs = [
     ...(isManager ? [{ id: 'company', label: 'Company', icon: IoBusinessOutline }] : []),
     { id: 'notifications', label: 'Notifications', icon: IoNotificationsOutline },
-    { id: 'privacy', label: 'Privacy', icon: IoLockClosedOutline },
     { id: 'danger', label: 'Danger Zone', icon: IoWarningOutline }
   ];
 
@@ -306,69 +291,6 @@ export default function Settings() {
                 >
                   <IoSaveOutline className="text-xl" />
                   {loading ? 'Saving...' : 'Save Preferences'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Privacy Settings */}
-          {activeTab === 'privacy' && (
-            <div className="bg-white rounded-2xl border-2 border-slate-200 p-8">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Privacy Settings</h2>
-              <form onSubmit={handleSavePrivacySettings} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Profile Visibility
-                  </label>
-                  <select
-                    value={privacySettings.profileVisibility}
-                    onChange={(e) => setPrivacySettings({ ...privacySettings, profileVisibility: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white"
-                  >
-                    <option value="public">Public - Anyone can see</option>
-                    <option value="team">Team Only</option>
-                    <option value="private">Private</option>
-                  </select>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                    <div>
-                      <p className="font-semibold text-slate-800">Show Email Address</p>
-                      <p className="text-sm text-slate-600">Let team members see your email</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={privacySettings.showEmail}
-                        onChange={(e) => setPrivacySettings({ ...privacySettings, showEmail: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                        <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${theme.primaryRing} rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${theme.primary}`}></div>
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                    <div>
-                      <p className="font-semibold text-slate-800">Show Phone Number</p>
-                      <p className="text-sm text-slate-600">Let team members see your phone</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={privacySettings.showPhone}
-                        onChange={(e) => setPrivacySettings({ ...privacySettings, showPhone: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${theme.primaryRing} rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${theme.primary}`}></div>
-                    </label>
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full ${theme.bgPrimary} text-white px-6 py-3 rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2 disabled:opacity-50`}
-                >
-                  <IoSaveOutline className="text-xl" />
-                  {loading ? 'Saving...' : 'Save Privacy Settings'}
                 </button>
               </form>
             </div>

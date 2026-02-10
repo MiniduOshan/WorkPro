@@ -111,6 +111,36 @@ export const getCompany = async (req, res) => {
   }
 };
 
+// Update company details (owner/manager only)
+export const updateCompany = async (req, res) => {
+  try {
+    const company = req.company || await Company.findById(req.params.companyId);
+    if (!company) return res.status(404).json({ message: 'Company not found' });
+
+    const allowedFields = ['name', 'description', 'website', 'mission', 'vision', 'industry', 'departments'];
+    const updates = {};
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    if (updates.name && updates.name !== company.name) {
+      const existing = await Company.findOne({ name: updates.name });
+      if (existing && existing._id.toString() !== company._id.toString()) {
+        return res.status(400).json({ message: 'Company name already taken' });
+      }
+    }
+
+    Object.assign(company, updates);
+    const saved = await company.save();
+    res.json(saved);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 // Create invitation for email with role
 export const createInvitation = async (req, res) => {
   const { role, maxUses: requestedMaxUses } = req.body;

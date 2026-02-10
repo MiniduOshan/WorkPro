@@ -8,7 +8,8 @@ import {
     IoStatsChartOutline,
     IoLayersOutline,
     IoFlashOutline,
-    IoPeopleCircleOutline
+    IoPeopleCircleOutline,
+    IoCheckmarkOutline
 } from 'react-icons/io5';
 import api from '../api/axios';
 
@@ -21,6 +22,7 @@ const LandingPage = () => {
         tasksCompleted: '100K+',
         uptime: '99.9%'
     });
+    const [pricingPlans, setPricingPlans] = useState([]);
     const [content, setContent] = useState({
         hero: {
             badge: 'Trusted by Companies',
@@ -59,6 +61,7 @@ const LandingPage = () => {
         // Fetch public stats and platform content
         fetchPublicStats();
         fetchPlatformContent();
+        fetchPricingPlans();
     }, []);
 
     const fetchPublicStats = async () => {
@@ -82,6 +85,16 @@ const LandingPage = () => {
             setContent(response.data);
         } catch (err) {
             console.error('Failed to fetch platform content:', err);
+        }
+    };
+
+    const fetchPricingPlans = async () => {
+        try {
+            const response = await api.get('/api/super-admin/public/pricing-plans');
+            setPricingPlans(response.data || []);
+        } catch (err) {
+            console.error('Failed to fetch pricing plans:', err);
+            setPricingPlans([]);
         }
     };
 
@@ -277,6 +290,28 @@ const LandingPage = () => {
                     <StatItem value={stats.tasksCompleted} label={content.stats.tasksLabel} />
                 </div>
             </section>
+
+            {/* 5. Pricing Section */}
+            {pricingPlans.length > 0 && (
+                <section className="py-32 bg-gradient-to-b from-white to-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6">
+                                Simple, Transparent Pricing
+                            </h2>
+                            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                                Choose the perfect plan for your team. Scale up or down anytime.
+                            </p>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {pricingPlans.map((plan, idx) => (
+                                <PricingCard key={idx} plan={plan} navigate={navigate} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
         </div>
     );
 };
@@ -298,5 +333,47 @@ const StatItem = ({ value, label }) => (
         <div className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">{label}</div>
     </div>
 );
+
+// Pricing Card Component
+const PricingCard = ({ plan, navigate }) => {
+    const handleGetStarted = () => {
+        // Store selected plan in localStorage
+        localStorage.setItem('selectedPlan', JSON.stringify({
+            name: plan.name,
+            price: plan.price,
+            features: plan.features || []
+        }));
+        // Redirect to payment page
+        navigate('/payment');
+    };
+
+    return (
+        <div className="rounded-2xl border border-slate-200 p-8 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 bg-white">
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">{plan.name}</h3>
+            <div className="mb-8">
+                <span className="text-5xl font-black text-blue-600">${plan.price}</span>
+                <span className="text-slate-600 ml-2">/month</span>
+            </div>
+            <div className="space-y-4 mb-8">
+                {plan.features && plan.features.length > 0 ? (
+                    plan.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-3">
+                            <IoCheckmarkOutline className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-slate-700">{feature}</span>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-slate-500 text-sm">No features specified</p>
+                )}
+            </div>
+            <button 
+                onClick={handleGetStarted}
+                className="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors"
+            >
+                Get Started
+            </button>
+        </div>
+    );
+};
 
 export default LandingPage;

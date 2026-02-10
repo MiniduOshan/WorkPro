@@ -553,9 +553,7 @@ export default function ManagerDashboard() {
             <div className="mb-10 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white flex justify-between items-center shadow-xl">
                <div>
                   <h2 className="text-3xl font-bold mb-2">{companyData?.name || 'My Company'} HQ</h2>
-                  <p className="flex items-center gap-2">join.workpro.io/{companyData?.name?.toLowerCase().replace(/\s+/g, '-') || 'company'}-2024</p>
                </div>
-               <button onClick={copyInviteLink} className="bg-white/20 p-2 rounded-lg hover:bg-white/30"><IoCopyOutline /></button>
             </div>
 
             {/* Main Grid: Summary on left, Calendar on right */}

@@ -8,6 +8,7 @@ import Contact from './pages/contact.jsx';
 
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth.jsx';
+import Payment from './pages/Payment.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 
 import EmployeeDashboardLayout from './dashboard/employee/EmployeeDashboardLayout.jsx';
@@ -173,6 +174,9 @@ function App() {
                 
                 {/* Signup Page: Now independent, outside the PublicLayout */}
                 <Route path="/signup" element={<Auth type="signup" />} />
+                
+                {/* Payment Page: Independent */}
+                <Route path="/payment" element={<Payment />} />
                 
                 {/* Reset Password Page: Independent */}
                 <Route path="/reset-password" element={<ResetPassword />} />

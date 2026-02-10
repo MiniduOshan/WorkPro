@@ -144,7 +144,7 @@ const ManagerDashboardLayout = () => {
                                 {profile.firstName} {profile.lastName}
                             </span>
 
-                            <div className="w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center text-blue-500 font-bold text-sm">
                                 {profile.firstName?.[0]?.toUpperCase() || 'U'}
                             </div>
                             <IoChevronDown className="w-4 h-4 ml-2 text-gray-500" />

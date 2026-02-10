@@ -313,9 +313,9 @@ export default function Invite() {
               <h3 className="font-semibold text-amber-900 mb-3">💡 Pro Tips</h3>
               <ul className="space-y-2 text-sm text-amber-800">
                 <li>• Links expire after 7 days</li>
-                <li>• Can be used only once</li>
+                <li>• Manager accounts can only accept manager invites</li>
                 <li>• Managers can invite other members</li>
-                <li>• Members can join departments after accepting</li>
+                <li>• Employee accounts can only accept employee invites</li>
               </ul>
             </div>
           </div>

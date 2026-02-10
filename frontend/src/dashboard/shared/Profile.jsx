@@ -187,7 +187,7 @@ const Profile = () => {
                     <div className="relative w-24 h-24 mr-6 flex-shrink-0">
                         {/* Avatar Image or Initial Placeholder */}
                         {/* Avatar initial placeholder color updated to ACCENT_PURPLE for brand consistency */}
-                        <div className={`w-full h-full bg-${ACCENT_PURPLE} rounded-full flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-2 border-white shadow-md`}>
+                        <div className={`w-full h-full bg-${ACCENT_PURPLE} rounded-full flex items-center justify-center text-3xl font-bold text-black overflow-hidden border-2 border-white shadow-md`}>
                             {profileData.profilePic && profileData.profilePic !== '/images/default_avatar.png' ? (
                                 <img 
                                     src={profileData.profilePic} 

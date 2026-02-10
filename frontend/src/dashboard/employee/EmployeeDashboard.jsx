@@ -69,7 +69,7 @@ const EmployeeDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <StatCard icon="fa-leaf" color="emerald" label="Current Streak" value="5 Days" />
+          <StatCard icon="fa-leaf" color="emerald" label="Your Role" value="Employee" />
           <StatCard icon="fa-check-circle" color="teal" label="Completed" value={`${summary.tasks.byStatus?.done || 0} Tasks`} />
           <StatCard icon="fa-briefcase" color="green" label="Workload" value={`${tasks.length} Assigned`} />
         </div>
@@ -204,14 +204,14 @@ const AnnouncementItem = ({ announcement }) => (
   </div>
 );
 
+/* --- for future indicators --- */
 const PerformanceWidget = () => (
-  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+  <div>
     <h4 className="font-bold text-slate-800 text-sm mb-5 flex items-center gap-2">
-      <i className="fa-solid fa-seedling text-green-600"></i> My Growth
+ 
     </h4>
     <div className="space-y-5">
-      <ProgressBar label="Task Accuracy" percent="94%" color="bg-green-600" />
-      <ProgressBar label="Response Time" percent="82%" color="bg-green-600" />
+      
     </div>
   </div>
 );

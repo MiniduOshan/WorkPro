@@ -161,8 +161,7 @@ const SuperAdminCompanies = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <button className="text-purple-600 hover:text-purple-700 font-medium text-sm flex items-center gap-1">
-                    <IoEyeOutline className="w-4 h-4" />
-                    View Details
+                      {/* Add view option */}        
                   </button>
                   <button
                     onClick={() => handleDeleteClick(company)}
