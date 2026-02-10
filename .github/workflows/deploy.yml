@@ -31,33 +31,34 @@ jobs:
           git clone https://github.com/MiniduOshan/WorkPro.git $PROJECT_DIR
           cd $PROJECT_DIR
 
-          # Create a Docker network so frontend and backend can see each other
           echo "Setting up Docker network..."
           docker network create $NETWORK_NAME || true
 
-          # Using <<'EOF' (with quotes) ensures special characters in MONGO_URI 
-          # are not misinterpreted by the Linux shell.
+          echo "Stopping old containers if they exist..."
+          docker rm -f workpro-frontend workpro-backend workpro-nginx || true
+
           echo "Creating backend .env file..."
           cat <<'EOF' > $PROJECT_DIR/backend/.env
-          PORT=5000
-          MONGO_URI=${{ secrets.MONGO_URI }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
-          EOF
-
-          echo "Creating frontend .env.production..."
-          cat <<'EOF' > $PROJECT_DIR/frontend/.env.production
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
-          EOF
+PORT=5000
+MONGO_URI=${{ secrets.MONGO_URI }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+SMTP_HOST=${{ secrets.SMTP_HOST }}
+SMTP_PORT=${{ secrets.SMTP_PORT }}
+SMTP_USER=${{ secrets.SMTP_USER }}
+SMTP_PASS=${{ secrets.SMTP_PASS }}
+SMTP_FROM=${{ secrets.SMTP_FROM }}
+EOF
 
           echo "Building Docker images..."
-          docker build -t workpro-frontend ./frontend
           docker build -t workpro-backend ./backend
+          docker build \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }} \
+            -t workpro-frontend ./frontend
 
-          echo "Cleaning up old containers..."
-          docker rm -f workpro-frontend workpro-backend || true
-
-          # Start Backend on the network
           echo "Starting Backend..."
           docker run -d \
             --name workpro-backend \
@@ -66,7 +67,6 @@ jobs:
             -p 5000:5000 \
             workpro-backend
 
-          # Start Frontend on the same network
           echo "Starting Frontend..."
           docker run -d \
             --name workpro-frontend \
