@@ -242,9 +242,7 @@ const Payment = () => {
                 </button>
 
                 {/* Test Card Info */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                  <p>Payment Gateway in maintenance.</p>
-                </div>
+               
               </form>
             ) : (
               <div className="text-center py-8">
