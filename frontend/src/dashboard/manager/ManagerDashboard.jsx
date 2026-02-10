@@ -274,7 +274,7 @@ export default function ManagerDashboard() {
   const companyRole = localStorage.getItem('companyRole') || 'employee';
   const [stats, setStats] = useState({
     completedProjects: 124,
-    avgCompletionTime: '3.4 Days',
+    avgCompletionTime: 'Manager',
     teamEngagement: '92%',
     overdueTasks: 4
   });
@@ -598,7 +598,7 @@ export default function ManagerDashboard() {
                   <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-slate-500 text-[10px] font-semibold uppercase">Avg Completion</p>
+                        <p className="text-slate-500 text-[10px] font-semibold uppercase">Your Role</p>
                         <h3 className="text-xl font-bold text-slate-800 mt-1">{stats.avgCompletionTime}</h3>
                       </div>
                       <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">

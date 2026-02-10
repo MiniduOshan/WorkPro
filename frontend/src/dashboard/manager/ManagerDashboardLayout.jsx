@@ -15,7 +15,7 @@ import api from '../../api/axios';
 const ProfileDropdown = ({ profile, onLogout, onClose, onGoToProfile }) => (
     <div className="absolute right-0 top-14 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 p-4">
         <div className="flex items-center pb-3 border-b border-gray-100">
-            <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3">
+            <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-black text-lg font-bold mr-3">
                 {profile.firstName?.[0]?.toUpperCase() || 'U'}
             </div>
             <div>
