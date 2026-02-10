@@ -113,7 +113,7 @@ export const getCompany = async (req, res) => {
 
 // Create invitation for email with role
 export const createInvitation = async (req, res) => {
-  const { role } = req.body;
+  const { role, maxUses: requestedMaxUses } = req.body;
   const companyId = req.params.companyId;
   if (!role) return res.status(400).json({ message: 'role is required' });
   if (!['manager', 'employee'].includes(role)) return res.status(400).json({ message: 'Invalid role' });
@@ -126,13 +126,17 @@ export const createInvitation = async (req, res) => {
 
     const token = crypto.randomBytes(24).toString('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+    const parsedMaxUses = Number(requestedMaxUses);
+    const maxUses = Number.isFinite(parsedMaxUses) ? Math.max(50, parsedMaxUses) : 50;
     const invitation = await Invitation.create({ 
       company: companyId, 
       inviter: req.user._id, 
       email: '', // email is optional; invites are link-based
       role, 
       token, 
-      expiresAt 
+      expiresAt,
+      maxUses,
+      usesCount: 0,
     });
 
     // Build a link that matches the frontend route (/invite/join) to avoid 404s when users click the copied link
@@ -153,6 +157,9 @@ export const acceptInvitation = async (req, res) => {
     if (!inv) return res.status(404).json({ message: 'Invitation not found' });
     if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
     if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
+    const maxUses = inv.maxUses ?? 1;
+    const usesCount = inv.usesCount ?? 0;
+    if (usesCount >= maxUses) return res.status(400).json({ message: 'Invitation usage limit reached' });
 
     const company = await Company.findById(inv.company);
     if (!company) return res.status(404).json({ message: 'Company not found' });
@@ -211,7 +218,10 @@ export const acceptInvitation = async (req, res) => {
     }
 
     await company.save();
-    inv.status = 'accepted';
+    inv.usesCount = usesCount + 1;
+    if (inv.usesCount >= maxUses) {
+      inv.status = 'accepted';
+    }
     inv.acceptedAt = new Date();
     inv.acceptedBy = req.user._id;
     await inv.save();
@@ -232,6 +242,9 @@ export const getInvitationDetails = async (req, res) => {
     if (!inv) return res.status(404).json({ message: 'Invitation not found' });
     if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
     if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
+    const maxUses = inv.maxUses ?? 1;
+    const usesCount = inv.usesCount ?? 0;
+    if (usesCount >= maxUses) return res.status(400).json({ message: 'Invitation usage limit reached' });
     
     // Return invitation without department field
     const { department, ...invWithoutDept } = inv.toObject();
@@ -306,6 +319,9 @@ export const acceptInvitationPublic = async (req, res) => {
     if (!inv) return res.status(404).json({ message: 'Invitation not found' });
     if (inv.status !== 'pending') return res.status(400).json({ message: 'Invitation not valid' });
     if (inv.expiresAt < new Date()) return res.status(400).json({ message: 'Invitation expired' });
+    const maxUses = inv.maxUses ?? 1;
+    const usesCount = inv.usesCount ?? 0;
+    if (usesCount >= maxUses) return res.status(400).json({ message: 'Invitation usage limit reached' });
 
     const company = await Company.findById(inv.company);
     if (!company) return res.status(404).json({ message: 'Company not found' });
@@ -330,7 +346,10 @@ export const acceptInvitationPublic = async (req, res) => {
     }
 
     await company.save();
-    inv.status = 'accepted';
+    inv.usesCount = usesCount + 1;
+    if (inv.usesCount >= maxUses) {
+      inv.status = 'accepted';
+    }
     inv.acceptedAt = new Date();
     inv.acceptedBy = userId;
     await inv.save();

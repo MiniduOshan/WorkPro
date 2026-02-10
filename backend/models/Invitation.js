@@ -10,6 +10,8 @@ const InvitationSchema = new mongoose.Schema(
     token: { type: String, required: true, unique: true }, // Unique invitation token for URL
     invitationLink: { type: String }, // Full invitation URL, auto-generated
     status: { type: String, enum: ['pending', 'accepted', 'revoked', 'expired'], default: 'pending' },
+    maxUses: { type: Number, default: 50 },
+    usesCount: { type: Number, default: 0 },
     expiresAt: { type: Date, required: true },
     acceptedAt: { type: Date },
     acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who accepted the invitation

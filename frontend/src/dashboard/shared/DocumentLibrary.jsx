@@ -335,8 +335,9 @@ const DocumentCard = ({ doc, theme, onDownload, onDelete, formatFileSize }) => (
 
 const FileIcon = ({ type, theme }) => {
   const t = type?.toLowerCase();
+  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg'];
   if (t?.includes('pdf')) return <IoDocumentTextOutline className="text-rose-500" />;
-  if (t?.includes('jpg') || t?.includes('png')) return <IoImageOutline className="text-amber-500" />;
+  if (imageExts.some((ext) => t?.includes(ext))) return <IoImageOutline className="text-amber-500" />;
   if (t?.includes('xls') || t?.includes('csv')) return <IoFileTrayFullOutline style={{ color: theme.bgPrimary }} />;
   return <IoDocumentOutline className="text-slate-400" />;
 };
@@ -354,6 +355,7 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
           <input 
             type="file" 
             className="absolute inset-0 opacity-0 cursor-pointer" 
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
             onChange={(e) => {
               const file = e.target.files[0];
               setSelectedFile(file);

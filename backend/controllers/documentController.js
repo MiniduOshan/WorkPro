@@ -24,15 +24,37 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const ext = path.extname(file.originalname).toLowerCase();
+  const isImage = file.mimetype?.startsWith('image/');
+  const allowedDocExtensions = new Set([
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.ppt',
+    '.pptx',
+    '.txt',
+    '.csv',
+  ]);
+  const allowedDocMimes = new Set([
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+    'text/csv',
+  ]);
+  const isAllowedDoc = allowedDocExtensions.has(ext) || allowedDocMimes.has(file.mimetype);
 
-  if (mimetype && extname) {
+  if (isImage || isAllowedDoc) {
     return cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only images, PDFs, and Office documents are allowed.'));
   }
+
+  cb(new Error('Invalid file type. Only images and common document types are allowed.'));
 };
 
 export const upload = multer({

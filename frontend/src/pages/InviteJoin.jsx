@@ -274,7 +274,7 @@ export default function InviteJoin() {
 
         {/* Footer Info */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>This invitation link is unique and can only be used once</p>
+          <p>This invitation link can be used by up to 50 people</p>
         </div>
       </div>
     </div>
