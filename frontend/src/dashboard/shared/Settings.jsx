@@ -106,7 +106,11 @@ export default function Settings() {
       // await api.put('/api/users/privacy-settings', privacySettings);
       alert('Privacy settings saved successfully!');
     } catch (err) {
-    
+      console.error('Failed to save settings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDeleteAccount = async () => {
     try {
@@ -145,10 +149,6 @@ export default function Settings() {
       setDeleting(false);
       setConfirmationText('');
       setShowDeleteCompanyModal(false);
-    }
-  };  console.error('Failed to save settings:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
