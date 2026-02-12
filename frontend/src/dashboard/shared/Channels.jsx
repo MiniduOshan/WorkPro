@@ -540,10 +540,10 @@ export default function Channels() {
       {/* Manage Members Modal */}
       {showMembersModal && selected && (selected.members?.[0]?._id === userProfile?._id || selected.members?.[0] === userProfile?._id || companyRole === 'owner') && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
+          <div className="channel-members-modal bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-slate-800">Manage Channel Members</h2>
-              <button onClick={() => setShowMembersModal(false)} className="p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
+              <button onClick={() => setShowMembersModal(false)} className="channel-modal-close-btn p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
             </div>
             
             {/* Join Requests */}
@@ -555,7 +555,7 @@ export default function Channels() {
                     const userId = req.user?._id || req.user;
                     const member = companyMembers.find(m => m.user._id === userId);
                     return (
-                      <div key={userId} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div key={userId} className="channel-join-request flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                         <span className="font-semibold">
                           {member ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
                         </span>
@@ -587,14 +587,14 @@ export default function Channels() {
                 {selected.members?.map((memberId) => {
                   const member = companyMembers.find(m => m.user._id === memberId || m.user._id === memberId._id);
                   return (
-                    <div key={memberId._id || memberId} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div key={memberId._id || memberId} className="channel-current-member flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <span className="font-semibold">
                         {member ? `${member.user.firstName} ${member.user.lastName}` : 'Unknown User'}
                       </span>
                       {userProfile?._id !== (memberId._id || memberId) && (
                         <button
                           onClick={() => removeMember(memberId._id || memberId)}
-                          className="px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-semibold"
+                          className="channel-remove-btn px-3 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-semibold"
                         >
                           Remove
                         </button>
@@ -614,7 +614,7 @@ export default function Channels() {
                     (memberId._id || memberId) === m.user._id
                   )
                 ).map((member) => (
-                  <div key={member.user._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div key={member.user._id} className="channel-add-member flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                     <span className="font-semibold">
                       {member.user.firstName} {member.user.lastName}
                     </span>
@@ -632,7 +632,7 @@ export default function Channels() {
             <div className="mt-6">
               <button
                 onClick={() => setShowMembersModal(false)}
-                className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                className="channel-modal-close-bottom w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
               >
                 Close
               </button>

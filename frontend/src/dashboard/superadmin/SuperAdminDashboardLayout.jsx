@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import SuperAdminSidebar from '../../components/SuperAdminSidebar';
 import NotificationCenter from '../../components/NotificationCenter';
-import { IoChevronDownOutline, IoMenuOutline } from 'react-icons/io5';
+import { IoChevronDownOutline, IoMenuOutline, IoMoonOutline, IoSunnyOutline } from 'react-icons/io5';
 
 const SuperAdminDashboardLayout = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('dashboardTheme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('dashboardTheme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   const getInitials = () => {
     const firstName = userProfile.firstName || 'S';
@@ -16,7 +25,7 @@ const SuperAdminDashboardLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 overflow-hidden">
+    <div className={`dashboard-theme ${isDarkMode ? 'dark' : ''} flex min-h-screen bg-app-bg overflow-hidden`}>
       <SuperAdminSidebar />
 
       {/* Mobile Sidebar Drawer */}
@@ -54,6 +63,21 @@ const SuperAdminDashboardLayout = () => {
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-4">
+            <button
+              onClick={() => setIsDarkMode((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition"
+              aria-label="Toggle dark mode"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? (
+                <IoSunnyOutline className="w-4 h-4 text-amber-500" />
+              ) : (
+                <IoMoonOutline className="w-4 h-4 text-slate-600" />
+              )}
+              <span className="text-sm font-medium text-slate-700 hidden sm:inline">
+                {isDarkMode ? 'Light' : 'Dark'}
+              </span>
+            </button>
             {/* Notification Center */}
             <NotificationCenter />
 
@@ -74,9 +98,7 @@ const SuperAdminDashboardLayout = () => {
 
               {showProfileDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-2">
-                  <a href="/dashboard/super-admin/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    Settings
-                  </a>
+                  
                   <button
                     onClick={() => {
                       localStorage.clear();

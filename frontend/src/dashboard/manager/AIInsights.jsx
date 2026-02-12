@@ -46,11 +46,11 @@ const AIInsights = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
             <IoSparklesOutline className="w-8 h-8 text-purple-600" />
             AI Executive Summary
           </h1>
-          <p className="text-gray-600 mt-2">Your daily pulse powered by AI</p>
+          <p className="text-slate-600 mt-2">Your daily pulse powered by AI</p>
         </div>
         <button
           onClick={generateSummary}
@@ -63,16 +63,16 @@ const AIInsights = () => {
       </div>
 
       {/* Main AI Summary Card */}
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl shadow-xl border-2 border-purple-200 p-8">
+      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl shadow-xl border-2 border-purple-200 p-8 ai-summary-card">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <IoSparklesOutline className="w-6 h-6 text-white animate-pulse" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Daily Intelligence Report</h2>
+              <h2 className="text-2xl font-bold text-slate-800">Daily Intelligence Report</h2>
               {lastGenerated && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-500">
                   Generated {lastGenerated.toLocaleTimeString()}
                 </span>
               )}
@@ -86,12 +86,12 @@ const AIInsights = () => {
               </div>
             ) : summary ? (
               <div className="prose prose-lg max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                <p className="text-slate-700 leading-relaxed whitespace-pre-line ai-summary-text">
                   {summary}
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500">No data available for summary generation.</p>
+              <p className="text-slate-500">No data available for summary generation.</p>
             )}
           </div>
         </div>
@@ -100,10 +100,10 @@ const AIInsights = () => {
       {/* Key Metrics */}
       {rawData && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 font-medium">Tasks Completed</p>
+                <p className="text-sm text-slate-600 font-medium">Tasks Completed</p>
                 <p className="text-3xl font-bold text-green-600 mt-2">{rawData.tasksCompleted}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -116,23 +116,23 @@ const AIInsights = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 font-medium">Active Tasks</p>
+                <p className="text-sm text-slate-600 font-medium">Active Tasks</p>
                 <p className="text-3xl font-bold text-blue-600 mt-2">{rawData.activeTasks}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <IoStatsChartOutline className="w-6 h-6 text-blue-600" />
               </div>
             </div>
-            <div className="mt-3 text-xs text-gray-500">In progress now</div>
+            <div className="mt-3 text-xs text-slate-500">In progress now</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 font-medium">Overdue Tasks</p>
+                <p className="text-sm text-slate-600 font-medium">Overdue Tasks</p>
                 <p className="text-3xl font-bold text-red-600 mt-2">{rawData.overdueTasks}</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -142,31 +142,31 @@ const AIInsights = () => {
             <div className="mt-3 text-xs text-red-600">Needs attention</div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 font-medium">Announcements</p>
+                <p className="text-sm text-slate-600 font-medium">Announcements</p>
                 <p className="text-3xl font-bold text-purple-600 mt-2">{rawData.announcements}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <IoSparklesOutline className="w-6 h-6 text-purple-600" />
               </div>
             </div>
-            <div className="mt-3 text-xs text-gray-500">Last 24 hours</div>
+            <div className="mt-3 text-xs text-slate-500">Last 24 hours</div>
           </div>
         </div>
       )}
 
       {/* How It Works */}
-      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">How AI Insights Work</h3>
-        <div className="space-y-3 text-sm text-gray-600">
+      <div className="bg-white rounded-xl shadow-md border border-slate-200 p-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">How AI Insights Work</h3>
+        <div className="space-y-3 text-sm text-slate-600">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <span className="text-purple-600 font-bold text-xs">1</span>
             </div>
             <p>
-              <strong className="text-gray-900">Data Aggregation:</strong> We collect tasks completed, announcements, and channel activity from the last 24 hours.
+              <strong className="text-slate-800">Data Aggregation:</strong> We collect tasks completed, announcements, and channel activity from the last 24 hours.
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -174,7 +174,7 @@ const AIInsights = () => {
               <span className="text-blue-600 font-bold text-xs">2</span>
             </div>
             <p>
-              <strong className="text-gray-900">AI Analysis:</strong> Our AI processes the data to identify trends, achievements, and areas needing attention.
+              <strong className="text-slate-800">AI Analysis:</strong> Our AI processes the data to identify trends, achievements, and areas needing attention.
             </p>
           </div>
           <div className="flex items-start gap-3">
@@ -182,19 +182,19 @@ const AIInsights = () => {
               <span className="text-green-600 font-bold text-xs">3</span>
             </div>
             <p>
-              <strong className="text-gray-900">Executive Summary:</strong> Get a concise, actionable report that helps you make informed decisions quickly.
+              <strong className="text-slate-800">Executive Summary:</strong> Get a concise, actionable report that helps you make informed decisions quickly.
             </p>
           </div>
         </div>
       </div>
 
       {/* Pro Tip */}
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 p-4 rounded-lg ai-pro-tip">
         <div className="flex items-start gap-3">
           <IoSparklesOutline className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-gray-900 mb-1">Pro Tip</p>
-            <p className="text-sm text-gray-700">
+            <p className="font-semibold text-slate-800 mb-1">Pro Tip</p>
+            <p className="text-sm text-slate-700">
               Check your AI insights every morning to stay on top of your team's progress and identify potential bottlenecks early.
             </p>
           </div>

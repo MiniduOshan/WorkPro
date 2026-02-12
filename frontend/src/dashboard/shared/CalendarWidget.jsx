@@ -88,25 +88,25 @@ export default function CalendarWidget() {
   const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="calendar-widget-container bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 bg-linear-to-r from-blue-50 to-indigo-50 border-b border-slate-100 flex items-center justify-between">
+      <div className="calendar-header px-5 py-4 bg-linear-to-r from-blue-50 to-indigo-50 border-b border-slate-100 flex items-center justify-between">
         <div>
-          <h3 className="font-bold text-lg text-slate-800">{monthName} {year}</h3>
-          <p className="text-slate-500 text-xs">Task Calendar</p>
+          <h3 className="calendar-month-year font-bold text-lg text-slate-800">{monthName} {year}</h3>
+          <p className="calendar-subtitle text-slate-500 text-xs">Task Calendar</p>
         </div>
         <div className="flex items-center gap-2">
           <button 
             onClick={prevMonth} 
-            className="p-2 hover:bg-white rounded-lg border border-slate-200 transition-colors"
+            className="calendar-nav-btn p-2 hover:bg-white rounded-lg border border-slate-200 transition-colors"
           >
-            <IoChevronBackOutline className="text-slate-600" />
+            <IoChevronBackOutline className="calendar-nav-icon text-slate-600" />
           </button>
           <button 
             onClick={nextMonth}
-            className="p-2 hover:bg-white rounded-lg border border-slate-200 transition-colors"
+            className="calendar-nav-btn p-2 hover:bg-white rounded-lg border border-slate-200 transition-colors"
           >
-            <IoChevronForwardOutline className="text-slate-600" />
+            <IoChevronForwardOutline className="calendar-nav-icon text-slate-600" />
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function CalendarWidget() {
             {/* Day headers */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <div key={d} className="text-center text-[11px] font-bold text-slate-500 py-2">
+                <div key={d} className="calendar-day-header text-center text-[11px] font-bold text-slate-500 py-2">
                   {d}
                 </div>
               ))}
@@ -137,17 +137,17 @@ export default function CalendarWidget() {
                 return (
                   <div
                     key={idx}
-                    className={`min-h-20 p-2 rounded-lg border-2 transition-all ${
+                    className={`calendar-day-cell min-h-20 p-2 rounded-lg border-2 transition-all ${
                       day
                         ? isToday
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'is-today border-blue-500 bg-blue-50'
                           : 'border-slate-200 hover:border-blue-300 bg-white hover:bg-blue-50'
-                        : 'border-transparent bg-slate-50'
+                        : 'is-empty border-transparent bg-slate-50'
                     }`}
                   >
                     {day && (
                       <>
-                        <div className={`text-xs font-bold mb-1 ${isToday ? 'text-blue-600' : 'text-slate-600'}`}>
+                        <div className={`calendar-day-number text-xs font-bold mb-1 ${isToday ? 'text-blue-600' : 'text-slate-600'}`}>
                           {day}
                         </div>
                         <div className="space-y-1">
@@ -173,7 +173,7 @@ export default function CalendarWidget() {
                             </div>
                           ))}
                           {dayTasks.length > 2 && (
-                            <div className="text-[9px] text-slate-500 px-1.5">
+                            <div className="calendar-more-tasks text-[9px] text-slate-500 px-1.5">
                               +{dayTasks.length - 2} more
                             </div>
                           )}

@@ -25,7 +25,6 @@ import SuperAdminCompanies from './dashboard/superadmin/SuperAdminCompanies.jsx'
 import SuperAdminUsers from './dashboard/superadmin/SuperAdminUsers.jsx';
 import SuperAdminPricing from './dashboard/superadmin/SuperAdminPricing.jsx';
 import SuperAdminRevenue from './dashboard/superadmin/SuperAdminRevenue.jsx';
-import SuperAdminSettings from './dashboard/superadmin/SuperAdminSettings.jsx';
 import SuperAdminNotifications from './dashboard/superadmin/SuperAdminNotifications.jsx';
 import PlatformContent from './dashboard/superadmin/PlatformContent.jsx';
 import Profile from './dashboard/shared/Profile.jsx';
@@ -50,21 +49,32 @@ const isAuthenticated = () => {
     return localStorage.getItem('token') !== null;
 };
 
-const ProtectedRoute = ({ children, requireCompany = false, allowedRoles }) => {
+const ProtectedRoute = ({ children, requireCompany = false, allowedRoles, requireSuperAdmin = false }) => {
     if (!isAuthenticated()) {
         return <Navigate to="/login" />;
     }
     
     const userProfile = localStorage.getItem('userProfile');
+    let isSuperAdmin = false;
     if (userProfile) {
         try {
             const profile = JSON.parse(userProfile);
-            if (profile.isSuperAdmin) {
-                return children;
-            }
+            isSuperAdmin = profile.isSuperAdmin === true;
         } catch (err) {
             console.error('Error parsing user profile', err);
         }
+    }
+
+    if (requireSuperAdmin && !isSuperAdmin) {
+        const role = localStorage.getItem('companyRole');
+        if (role === 'manager' || role === 'owner') {
+            return <Navigate to="/dashboard/manager" replace />;
+        }
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    if (isSuperAdmin) {
+        return children;
     }
     
     if (requireCompany && !localStorage.getItem('companyId')) {
@@ -138,7 +148,16 @@ function App() {
                 console.error('Error parsing user profile', err);
             }
         }
-        
+
+        if (location.pathname.startsWith('/dashboard/super-admin') && !isSuperAdmin) {
+            if (role === 'manager' || role === 'owner') {
+                navigate('/dashboard/manager', { replace: true });
+                return;
+            }
+            navigate('/dashboard', { replace: true });
+            return;
+        }
+
         if (isSuperAdmin) {
             return; // SuperAdmins don't need company selection
         }
@@ -270,7 +289,7 @@ function App() {
                 <Route
                     path="/dashboard/super-admin"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute requireSuperAdmin={true}>
                             <SuperAdminDashboardLayout />
                         </ProtectedRoute>
                     }
@@ -282,7 +301,6 @@ function App() {
                     <Route path="pricing" element={<SuperAdminPricing />} />
                     <Route path="revenue" element={<SuperAdminRevenue />} />
                     <Route path="platform-content" element={<PlatformContent />} />
-                    <Route path="settings" element={<SuperAdminSettings />} />
                     <Route path="notifications" element={<SuperAdminNotifications />} />
                 </Route>
 

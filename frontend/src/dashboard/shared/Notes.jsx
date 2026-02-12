@@ -61,7 +61,7 @@ export default function Notes() {
   };
 
   return (
-    <div className="grow flex flex-col h-full bg-[#f8fafc] overflow-hidden">
+    <div className="grow flex flex-col h-full bg-slate-50 overflow-hidden">
       <div className="bg-white border-b border-slate-200 px-8 py-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -80,7 +80,7 @@ export default function Notes() {
           
           {/* Creator Section */}
           <div className="lg:col-span-4 lg:sticky lg:top-0 h-fit">
-            <div className="bg-white rounded-3xl border border-slate-300 p-6 shadow-sm">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
               {/* Increased visibility on header */}
               <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest mb-6 flex items-center gap-2">
                 <IoCreateOutline className="text-lg" />
@@ -93,7 +93,7 @@ export default function Notes() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   /* Darker placeholder for visibility */
-                  className="w-full px-4 py-2 text-lg font-bold text-slate-900 placeholder:text-slate-400 border-none focus:ring-0 focus:outline-none bg-transparent"
+                  className="w-full px-4 py-2 text-lg font-bold text-slate-800 placeholder:text-slate-400 border-none focus:ring-0 focus:outline-none bg-transparent"
                 />
                 <textarea
                   placeholder="Take a note..."
@@ -128,7 +128,7 @@ export default function Notes() {
                 <p className="font-bold">Fetching notes...</p>
               </div>
             ) : notes.length === 0 ? (
-              <div className="bg-white rounded-3xl border-2 border-dashed border-slate-300 p-20 text-center">
+              <div className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-20 text-center">
                 <p className="text-slate-600 font-bold text-lg">Your library is empty.</p>
                 <p className="text-slate-500 font-medium">Start writing on the left.</p>
               </div>
@@ -163,13 +163,13 @@ const NoteCard = ({ note, onUpdate, onDelete }) => {
   };
 
   return (
-    <div className="inline-block w-full bg-white rounded-2xl border border-slate-300 shadow-sm hover:border-emerald-500 transition-colors group">
+    <div className="inline-block w-full bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-green-300 transition-colors group">
       <div className="p-6">
         {isEditing ? (
           <div className="space-y-2">
             <input 
               autoFocus
-              className="w-full font-bold text-slate-900 border-none focus:ring-0 p-0 text-base bg-transparent"
+              className="w-full font-bold text-slate-800 border-none focus:ring-0 p-0 text-base bg-transparent"
               value={val.title}
               onChange={e => setVal({...val, title: e.target.value})}
               onBlur={handleBlur}
@@ -184,7 +184,7 @@ const NoteCard = ({ note, onUpdate, onDelete }) => {
           </div>
         ) : (
           <div onClick={() => setIsEditing(true)} className="cursor-pointer">
-            {note.title && <h3 className="font-bold text-slate-900 mb-2 leading-tight">{note.title}</h3>}
+            {note.title && <h3 className="font-bold text-slate-800 mb-2 leading-tight">{note.title}</h3>}
             <p className="text-slate-700 text-sm font-medium leading-relaxed whitespace-pre-wrap">{note.content}</p>
           </div>
         )}

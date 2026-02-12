@@ -102,7 +102,7 @@ const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () 
   return (
     <aside className={`w-64 bg-white border-r border-slate-200 flex-col ${visibilityClass} ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+      <div className="p-6 border-b border-slate-200 flex items-center gap-3">
         <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center text-white">
           <IoBriefcaseOutline className="text-sm" />
         </div>
@@ -173,7 +173,7 @@ const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () 
       </nav>
 
       {/* User Profile Footer */}
-      <div className="p-4 border-t border-slate-100 bg-slate-50">
+      <div className="p-4 border-t border-slate-200 bg-slate-50">
         <div className="flex items-center gap-3 px-2">
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-200">
             {getInitials()}

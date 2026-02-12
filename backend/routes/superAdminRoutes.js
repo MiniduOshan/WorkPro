@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, requireSuperAdmin } from '../middleware/authMiddleware.js';
 import {
   getSuperAdminAnalytics,
   getAllCompaniesAnalytics,
@@ -29,30 +29,35 @@ router.get('/public/pricing-plans', getPublicPricingPlans);
 router.get('/public/stats', getPublicStats);
 router.get('/public/platform-content', getPublicPlatformContent);
 
-// Analytics endpoints
-router.get('/analytics', protect, getSuperAdminAnalytics);
-router.get('/analytics/companies', protect, getAllCompaniesAnalytics);
-router.get('/analytics/company/:companyId/tasks', protect, getCompanyTaskAnalytics);
-router.get('/analytics/users', protect, getUserAnalytics);
-
-// Pricing plan management
-router.get('/pricing-plans', protect, getPricingPlans);
-router.put('/pricing-plans', protect, updatePricingPlans);
-
-// Platform content management
-router.get('/platform-content', protect, getPlatformContent);
-router.put('/platform-content', protect, updatePlatformContent);
-
-// Notifications / Maintenance Messages
-router.post('/notifications', protect, createNotification);
-router.get('/notifications/all', protect, getAllNotifications);
+// User notifications (any authenticated user)
 router.get('/notifications', protect, getUserNotifications);
-router.put('/notifications/:notificationId', protect, updateNotification);
-router.delete('/notifications/:notificationId', protect, deleteNotification);
 router.post('/notifications/:notificationId/read', protect, markNotificationAsRead);
 
+// Protected super admin routes
+router.use(protect, requireSuperAdmin);
+
+// Analytics endpoints
+router.get('/analytics', getSuperAdminAnalytics);
+router.get('/analytics/companies', getAllCompaniesAnalytics);
+router.get('/analytics/company/:companyId/tasks', getCompanyTaskAnalytics);
+router.get('/analytics/users', getUserAnalytics);
+
+// Pricing plan management
+router.get('/pricing-plans', getPricingPlans);
+router.put('/pricing-plans', updatePricingPlans);
+
+// Platform content management
+router.get('/platform-content', getPlatformContent);
+router.put('/platform-content', updatePlatformContent);
+
+// Notifications / Maintenance Messages
+router.post('/notifications', createNotification);
+router.get('/notifications/all', getAllNotifications);
+router.put('/notifications/:notificationId', updateNotification);
+router.delete('/notifications/:notificationId', deleteNotification);
+
 // Activity tracking
-router.post('/activity', protect, logActivity);
-router.get('/activity', protect, getActivityLog);
+router.post('/activity', logActivity);
+router.get('/activity', getActivityLog);
 
 export default router;

@@ -53,7 +53,7 @@ const EmployeeDashboard = () => {
   if (!companyId && !loading) return <EmptyStateView />;
 
   return (
-    <div className="flex flex-col h-full bg-[#f8faf9] font-sans">
+    <div className="flex flex-col h-full bg-slate-50 font-sans">
       <div className="grow overflow-y-auto p-6 lg:p-10">
         
         {/* Header Section */}
@@ -103,7 +103,7 @@ const EmployeeDashboard = () => {
 
             {/* News/Updates Section */}
             <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-slate-100 flex items-center gap-2 bg-[#fcfdfc]">
+              <div className="p-5 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
                 <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
                   <i className="fa-solid fa-bullhorn text-green-600 text-sm"></i>
                 </div>
@@ -141,7 +141,7 @@ const StatCard = ({ icon, color, label, value }) => {
     green: 'bg-green-50 text-green-600',
   };
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white p-6 rounded-2xl border border-slate-200 flex items-center gap-5 shadow-sm hover:shadow-md transition-shadow">
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${themes[color]}`}>
         <i className={`fa-solid ${icon}`}></i>
       </div>
@@ -177,7 +177,7 @@ const TaskCardCompact = ({ task, navigate }) => {
       <h4 className="font-bold text-slate-800 mb-1 group-hover:text-green-600 transition-colors leading-snug">{task.title}</h4>
       <p className="text-xs text-slate-500 line-clamp-2 mb-6 h-8 leading-relaxed">{task.description || 'No description provided.'}</p>
       
-      <div className="flex justify-between items-center mt-auto border-t border-slate-50 pt-4">
+      <div className="flex justify-between items-center mt-auto border-t border-slate-100 pt-4">
         <span className="text-[10px] font-bold text-slate-400">
           <i className="fa-regular fa-clock mr-1"></i> 
           {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Set Date'}

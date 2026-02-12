@@ -8,7 +8,9 @@ import {
     IoCloseCircleOutline,
     IoPencilOutline,
     IoMenuOutline,
-    IoCloseOutline
+    IoCloseOutline,
+    IoMoonOutline,
+    IoSunnyOutline
 } from 'react-icons/io5';
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios'; 
@@ -42,6 +44,10 @@ const EmployeeDashboardLayout = () => {
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: 'user@example.com', profilePic: '' });
     const [companyId, setCompanyId] = useState(localStorage.getItem('companyId') || '');
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('dashboardTheme') === 'dark';
+    });
 
     useEffect(() => {
         if (showNotifications) {
@@ -54,6 +60,11 @@ const EmployeeDashboardLayout = () => {
             setShowNotifications(false);
         }
     }, [showProfile]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        localStorage.setItem('dashboardTheme', isDarkMode ? 'dark' : 'light');
+    }, [isDarkMode]);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -93,8 +104,12 @@ const EmployeeDashboardLayout = () => {
         navigate('/dashboard/profile');
     };
 
+    const handleToggleTheme = () => {
+        setIsDarkMode((prev) => !prev);
+    };
+
     return (
-        <div className="flex min-h-screen bg-app-bg transition-colors duration-300 w-full overflow-hidden"> 
+        <div className={`dashboard-theme ${isDarkMode ? 'dark' : ''} flex min-h-screen bg-app-bg transition-colors duration-300 w-full overflow-hidden`}> 
             <EmployeeSidebar />
 
             {/* Mobile Sidebar Drawer */}
@@ -132,6 +147,21 @@ const EmployeeDashboardLayout = () => {
                     </div>
                     
                     <div className="flex items-center justify-between sm:justify-end gap-3 relative">
+                        <button
+                            onClick={handleToggleTheme}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition"
+                            aria-label="Toggle dark mode"
+                            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                        >
+                            {isDarkMode ? (
+                                <IoSunnyOutline className="w-4 h-4 text-amber-500" />
+                            ) : (
+                                <IoMoonOutline className="w-4 h-4 text-slate-600" />
+                            )}
+                            <span className="text-sm font-medium text-slate-700 hidden sm:inline">
+                                {isDarkMode ? 'Light' : 'Dark'}
+                            </span>
+                        </button>
                         {/* Notifications */}
                         <NotificationCenter />
                         

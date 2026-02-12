@@ -110,7 +110,7 @@ export default function Invite() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -119,8 +119,8 @@ export default function Invite() {
               <IoPeopleOutline className="text-3xl text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">Invite Team Members</h1>
-              <p className="text-gray-600">Grow your team on WorkPro</p>
+              <h1 className="text-3xl font-bold text-slate-800">Invite Team Members</h1>
+              <p className="text-slate-600">Grow your team on WorkPro</p>
             </div>
           </div>
         </div>
@@ -130,12 +130,12 @@ export default function Invite() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-8">
               {company && (
-                <div className="mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+                <div className="mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200 invite-info-box">
                   <div className="flex items-center gap-3">
                     <IoBusinessOutline className="text-2xl text-indigo-600" />
                     <div>
                       <div className="text-sm text-indigo-600 font-medium">Inviting to</div>
-                      <div className="text-lg font-semibold text-gray-800">{company.name}</div>
+                      <div className="text-lg font-semibold text-slate-800">{company.name}</div>
                     </div>
                   </div>
                 </div>
@@ -144,7 +144,7 @@ export default function Invite() {
               <form onSubmit={send} className="space-y-6">
                 {/* Role Selection */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     <IoBriefcaseOutline className="inline mr-2 text-xl" />
                     Role
                   </label>
@@ -155,7 +155,7 @@ export default function Invite() {
                       className={`px-6 py-4 rounded-xl border-2 transition-all font-medium text-left ${
                         role === 'employee'
                           ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 hover:border-indigo-300 text-gray-700'
+                          : 'border-slate-200 hover:border-indigo-300 text-slate-700'
                       }`}
                     >
                       <div className="font-semibold">Employee</div>
@@ -167,7 +167,7 @@ export default function Invite() {
                       className={`px-6 py-4 rounded-xl border-2 transition-all font-medium text-left ${
                         role === 'manager'
                           ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 hover:border-indigo-300 text-gray-700'
+                          : 'border-slate-200 hover:border-indigo-300 text-slate-700'
                       }`}
                     >
                       <div className="font-semibold">Manager</div>
@@ -180,7 +180,7 @@ export default function Invite() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full px-6 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -216,12 +216,12 @@ export default function Invite() {
 
               {/* Generated Link */}
               {link && (
-                <div className="mt-6 p-6 bg-linear-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
+                <div className="mt-6 p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200 invite-link-box">
                   <div className="flex items-center gap-2 mb-3">
                     <IoLinkOutline className="text-2xl text-indigo-600" />
-                    <h3 className="font-semibold text-gray-800">Invitation Link Ready!</h3>
+                    <h3 className="font-semibold text-slate-800">Invitation Link Ready!</h3>
                   </div>
-                  <div className="bg-white p-4 rounded-lg border border-indigo-200 mb-4">
+                  <div className="bg-white p-4 rounded-lg border border-indigo-200 mb-4 invite-code-box">
                     <code className="text-sm text-indigo-600 break-all">{link}</code>
                   </div>
                   <div className="flex gap-3">
@@ -259,15 +259,15 @@ export default function Invite() {
           <div className="space-y-6">
             {/* How It Works */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-800 mb-4">How It Works</h3>
+              <h3 className="font-semibold text-slate-800 mb-4">How It Works</h3>
               <div className="space-y-4">
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-semibold">
                     1
                   </div>
                   <div>
-                    <div className="font-medium text-gray-800">Create Invite</div>
-                    <div className="text-sm text-gray-600">Pick a role and generate a link</div>
+                    <div className="font-medium text-slate-800">Create Invite</div>
+                    <div className="text-sm text-slate-600">Pick a role and generate a link</div>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -275,8 +275,8 @@ export default function Invite() {
                     2
                   </div>
                   <div>
-                    <div className="font-medium text-gray-800">Share Link</div>
-                    <div className="text-sm text-gray-600">Copy and send via email or chat</div>
+                    <div className="font-medium text-slate-800">Share Link</div>
+                    <div className="text-sm text-slate-600">Copy and send via email or chat</div>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -284,8 +284,8 @@ export default function Invite() {
                     3
                   </div>
                   <div>
-                    <div className="font-medium text-gray-800">Auto-Sync</div>
-                    <div className="text-sm text-gray-600">They join instantly with one click</div>
+                    <div className="font-medium text-slate-800">Auto-Sync</div>
+                    <div className="text-sm text-slate-600">They join instantly with one click</div>
                   </div>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function Invite() {
 
             {/* Quick Stats */}
             {company && (
-              <div className="bg-linear-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
                 <h3 className="font-semibold mb-4">Team Overview</h3>
                 <div className="space-y-3">
                   <div>
@@ -309,9 +309,9 @@ export default function Invite() {
             )}
 
             {/* Tips */}
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 pro-tips-box">
               <h3 className="font-semibold text-amber-900 mb-3">💡 Pro Tips</h3>
-              <ul className="space-y-2 text-sm text-amber-800">
+              <ul className="space-y-2 text-sm text-amber-800 pro-tips-list">
                 <li>• Links expire after 7 days</li>
                 <li>• Manager accounts can only accept manager invites</li>
                 <li>• Managers can invite other members</li>

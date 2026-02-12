@@ -169,7 +169,7 @@ const DocumentLibrary = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-8 bg-[#f8faf9] min-h-screen">
+    <div className="p-6 lg:p-10 space-y-8 bg-slate-50 min-h-screen">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -285,14 +285,14 @@ const StatCard = ({ label, value, icon, theme }) => (
 );
 
 const DocumentCard = ({ doc, theme, onDownload, onDelete, formatFileSize }) => (
-  <div className="bg-white p-5 rounded-2xl border border-slate-200 transition-all group flex flex-col shadow-sm hover:shadow-md" style={{ borderColor: 'rgb(226, 232, 240)' }}>
+  <div className="bg-white p-5 rounded-2xl border border-slate-200 transition-all group flex flex-col shadow-sm hover:shadow-md">
     <div className="flex justify-between items-start mb-4">
-      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+      <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
         <FileIcon type={doc.fileType} theme={theme} />
       </div>
       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button onClick={onDownload} className="p-2 rounded-lg transition-colors" style={{ color: theme.textPrimary, backgroundColor: theme.bgLight }}>
-          <IoDownloadOutline />
+        <button onClick={onDownload} className="p-2 rounded-lg transition-colors hover:bg-slate-100">
+          <IoDownloadOutline className="text-slate-600" />
         </button>
         <button onClick={onDelete} className="p-2 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors">
           <IoTrashOutline />
@@ -313,9 +313,9 @@ const DocumentCard = ({ doc, theme, onDownload, onDelete, formatFileSize }) => (
       </span>
     </div>
 
-    <div className="mt-auto pt-4 border-t border-slate-50 flex justify-between items-center text-[10px] font-medium text-slate-400">
-      <span>{doc.uploadedBy?.firstName} • {new Date(doc.createdAt).toLocaleDateString()}</span>
-      <span className="text-slate-500 font-bold">{formatFileSize(doc.fileSize)}</span>
+    <div className="mt-auto pt-4 border-t border-slate-100 flex justify-between items-center text-[10px] font-medium text-slate-400">
+      <span className="text-slate-500">{doc.uploadedBy?.firstName} • {new Date(doc.createdAt).toLocaleDateString()}</span>
+      <span className="text-slate-600 font-bold">{formatFileSize(doc.fileSize)}</span>
     </div>
   </div>
 );
@@ -332,13 +332,15 @@ const FileIcon = ({ type, theme }) => {
 const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFile, setSelectedFile, formatFileSize, theme, uploadError }) => (
   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
         <h2 className="text-xl font-bold text-slate-800">Upload Document</h2>
-        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><IoClose size={20}/></button>
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600">
+          <IoClose size={20}/>
+        </button>
       </div>
 
       <form onSubmit={onUpload} className="p-8 space-y-5">
-        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center transition-colors bg-slate-50 group cursor-pointer relative" style={{ borderColor: 'rgb(226, 232, 240)' }}>
+        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center transition-colors bg-slate-50 group cursor-pointer relative">
           <input 
             type="file" 
             className="absolute inset-0 opacity-0 cursor-pointer" 
@@ -349,7 +351,7 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
               if (file) setUploadData(prev => ({ ...prev, name: file.name }));
             }}
           />
-          <IoCloudUploadOutline className="w-10 h-10 mx-auto mb-3 transition-colors" style={{ color: 'rgb(148, 163, 184)' }} />
+          <IoCloudUploadOutline className="w-10 h-10 mx-auto mb-3 text-slate-400" />
           {selectedFile ? (
             <p className="text-sm font-bold" style={{ color: theme.bgPrimary }}>{selectedFile.name}</p>
           ) : (
@@ -362,10 +364,7 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
             <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">Display Name</label>
             <input
               type="text"
-              className="w-full px-4 py-3 bg-slate-100 border-none rounded-xl text-sm"
-              style={{ '--focus-color': theme.focusBorderPrimary }}
-              onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
-              onBlur={(e) => e.target.style.boxShadow = 'none'}
+              className="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm text-slate-800 focus:border-blue-500 focus:outline-none"
               value={uploadData.name}
               onChange={(e) => setUploadData({ ...uploadData, name: e.target.value })}
             />
@@ -373,10 +372,7 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
           <div>
             <label className="text-[11px] font-bold text-slate-400 uppercase mb-2 block">Category</label>
             <select
-              className="w-full px-4 py-3 bg-slate-100 border-none rounded-xl text-sm"
-              style={{ '--focus-color': theme.focusBorderPrimary }}
-              onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
-              onBlur={(e) => e.target.style.boxShadow = 'none'}
+              className="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm text-slate-800 focus:border-blue-500 focus:outline-none"
               value={uploadData.category}
               onChange={(e) => setUploadData({ ...uploadData, category: e.target.value })}
             >
@@ -390,10 +386,7 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
             <input
               type="text"
               placeholder="Q1, Draft..."
-              className="w-full px-4 py-3 bg-slate-100 border-none rounded-xl text-sm"
-              style={{ '--focus-color': theme.focusBorderPrimary }}
-              onFocus={(e) => e.target.style.boxShadow = `0 0 0 2px rgba(0,0,0,0.05), 0 0 0 3px ${theme.focusBorderPrimary}`}
-              onBlur={(e) => e.target.style.boxShadow = 'none'}
+              className="w-full px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm text-slate-800 focus:border-blue-500 focus:outline-none"
               value={uploadData.tags}
               onChange={(e) => setUploadData({ ...uploadData, tags: e.target.value })}
             />

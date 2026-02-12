@@ -393,7 +393,7 @@ export default function TasksBoard() {
               return (
                 <div key={column.id} className="flex flex-col min-h-0">
                   {/* Column Header */}
-                  <div className={`bg-${column.color}-50 border-2 border-${column.color}-200 rounded-2xl p-4 mb-4 flex items-center justify-between`}>
+                  <div className={`kanban-column-header kanban-column-${column.id} bg-${column.color}-50 border-2 border-${column.color}-200 rounded-2xl p-4 mb-4 flex items-center justify-between`}>
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 bg-${column.color}-100 rounded-xl flex items-center justify-center`}>
                         <Icon className={`text-xl text-${column.color}-600`} />
@@ -411,7 +411,7 @@ export default function TasksBoard() {
                       <div
                         key={task._id}
                         onClick={() => openViewModal(task)}
-                        className={`bg-white rounded-xl border-l-4 ${getStatusColor(task.status)} border-r border-t border-b border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer group`}
+                        className={`kanban-task-card bg-white rounded-xl border-l-4 ${getStatusColor(task.status)} border-r border-t border-b border-slate-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer group`}
                         draggable
                       >
                         {/* Task Content */}
@@ -459,7 +459,7 @@ export default function TasksBoard() {
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="flex flex-wrap gap-1 pt-3 border-t border-slate-100">
+                        <div className="flex flex-wrap gap-1 pt-3 border-t border-slate-100 task-quick-actions">
                           {/* Status change buttons - show to managers or assignee employees */}
                           {(['owner', 'manager'].includes(companyRole) || 
                             (companyRole === 'employee' && userProfile && task.assignee?._id === userProfile._id)) && 
@@ -467,7 +467,7 @@ export default function TasksBoard() {
                             <button
                               key={col.id}
                               onClick={(e) => { e.stopPropagation(); updateStatus(task._id, col.id); }}
-                              className={`text-xs px-2 py-1 rounded-lg bg-${col.color}-50 text-${col.color}-700 hover:bg-${col.color}-100 transition font-medium`}
+                              className={`status-change-btn status-change-${col.id} text-xs px-2 py-1 rounded-lg bg-${col.color}-50 text-${col.color}-700 hover:bg-${col.color}-100 transition font-medium`}
                               title={`Move to ${col.label}`}
                             >
                               {col.label}
@@ -486,7 +486,7 @@ export default function TasksBoard() {
                       </div>
                     ))}
                     {tasks.filter(t => t.status === column.id).length === 0 && (
-                      <div className="text-center py-8 text-slate-400">
+                      <div className="text-center py-8 text-slate-400 kanban-empty-state">
                         <Icon className="mx-auto text-4xl mb-2 opacity-50" />
                         <p className="text-sm">No tasks</p>
                       </div>

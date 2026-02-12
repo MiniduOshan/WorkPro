@@ -113,7 +113,7 @@ const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = (
   return (
     <aside className={`w-64 bg-white border-r border-slate-200 flex-col ${visibilityClass} ${className}`}>
       {/* Header */}
-      <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+      <div className="p-6 border-b border-slate-200 flex items-center gap-3">
         <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center text-white">
           <IoShieldCheckmarkOutline className="text-sm" />
         </div>
@@ -156,7 +156,7 @@ const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = (
       </nav>
 
       {/* Profile Section */}
-      <div className="mt-auto border-t border-slate-100 p-4">
+      <div className="mt-auto border-t border-slate-200 p-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold text-sm">
             {getInitials()}

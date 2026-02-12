@@ -28,3 +28,15 @@ export const protect = async (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
+
+export const requireSuperAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+
+  if (req.user.isSuperAdmin !== true) {
+    return res.status(403).json({ message: 'Only super admins can access this' });
+  }
+
+  next();
+};

@@ -34,3 +34,443 @@ h1, h2, h3 { font-family: 'Poppins', ui-sans-serif, system-ui; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Dashboard dark mode overrides (scoped to dashboard layouts only) */
+.dashboard-theme.dark {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Background Colors */
+.dashboard-theme.dark .bg-app-bg { background-color: #0f172a !important; }
+.dashboard-theme.dark .bg-white { background-color: #1e293b !important; }
+.dashboard-theme.dark .bg-slate-50 { background-color: #0f172a !important; }
+.dashboard-theme.dark .bg-slate-100 { background-color: #1e293b !important; }
+.dashboard-theme.dark .bg-gray-50 { background-color: #1e293b !important; }
+.dashboard-theme.dark .bg-gray-100 { background-color: #334155 !important; }
+.dashboard-theme.dark .bg-slate-200 { background-color: #334155 !important; }
+
+/* Text Colors */
+.dashboard-theme.dark .text-slate-800,
+.dashboard-theme.dark .text-gray-800 { color: #e2e8f0 !important; }
+.dashboard-theme.dark .text-slate-700,
+.dashboard-theme.dark .text-gray-700 { color: #cbd5e1 !important; }
+.dashboard-theme.dark .text-slate-600,
+.dashboard-theme.dark .text-gray-600 { color: #94a3b8 !important; }
+.dashboard-theme.dark .text-slate-500,
+.dashboard-theme.dark .text-gray-500 { color: #94a3b8 !important; }
+.dashboard-theme.dark .text-slate-400 { color: #64748b !important; }
+.dashboard-theme.dark .text-slate-300 { color: #cbd5e1 !important; }
+
+/* Border Colors */
+.dashboard-theme.dark .border-slate-200,
+.dashboard-theme.dark .border-gray-200 { border-color: #334155 !important; }
+.dashboard-theme.dark .border-slate-100,
+.dashboard-theme.dark .border-gray-100 { border-color: #334155 !important; }
+.dashboard-theme.dark .border-slate-300 { border-color: #475569 !important; }
+
+/* Hover States */
+.dashboard-theme.dark .hover\:bg-gray-50:hover { background-color: #334155 !important; }
+.dashboard-theme.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; }
+.dashboard-theme.dark .hover\:bg-slate-100:hover { background-color: #334155 !important; }
+.dashboard-theme.dark .hover\:bg-gray-100:hover { background-color: #475569 !important; }
+
+/* Sidebar in dark mode */
+.dashboard-theme.dark aside { background-color: #1e293b !important; border-color: #334155 !important; }
+
+/* Shadow adjustments */
+.dashboard-theme.dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important; }
+.dashboard-theme.dark .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.26) !important; }
+.dashboard-theme.dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.25) !important; }
+.dashboard-theme.dark .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.24) !important; }
+.dashboard-theme.dark .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
+
+/* Input fields */
+.dashboard-theme.dark input,
+.dashboard-theme.dark textarea,
+.dashboard-theme.dark select {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+.dashboard-theme.dark input::placeholder,
+.dashboard-theme.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+.dashboard-theme.dark input:focus,
+.dashboard-theme.dark textarea:focus,
+.dashboard-theme.dark select:focus {
+  background-color: #1e293b !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Scrollbar in dark mode */
+.dashboard-theme.dark ::-webkit-scrollbar-track { background: #1e293b; }
+.dashboard-theme.dark ::-webkit-scrollbar-thumb { background: #475569; }
+.dashboard-theme.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* Modal backdrops */
+.dashboard-theme.dark .bg-slate-900\/60 { background-color: rgba(15, 23, 42, 0.75) !important; }
+
+/* Dropdowns and popovers */
+.dashboard-theme.dark .shadow-2xl { 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; 
+}
+
+/* Profile dropdown - specific override */
+.dashboard-theme.dark .bg-gray-100 { background-color: #334155 !important; }
+
+/* Preserve primary colors (buttons, badges) */
+.dashboard-theme.dark .bg-green-50,
+.dashboard-theme.dark .bg-green-100,
+.dashboard-theme.dark .bg-green-600,
+.dashboard-theme.dark .bg-blue-50,
+.dashboard-theme.dark .bg-blue-100,
+.dashboard-theme.dark .bg-blue-600,
+.dashboard-theme.dark .bg-purple-50,
+.dashboard-theme.dark .bg-purple-100,
+.dashboard-theme.dark .bg-purple-600,
+.dashboard-theme.dark .bg-indigo-50,
+.dashboard-theme.dark .bg-indigo-100,
+.dashboard-theme.dark .bg-indigo-600,
+.dashboard-theme.dark .bg-red-500,
+.dashboard-theme.dark .bg-rose-50,
+.dashboard-theme.dark .bg-amber-500,
+.dashboard-theme.dark .bg-amber-50,
+.dashboard-theme.dark .bg-red-50,
+.dashboard-theme.dark .bg-orange-50,
+.dashboard-theme.dark .bg-yellow-50 {
+  /* Keep original colors for branding */
+}
+
+.dashboard-theme.dark .text-green-600,
+.dashboard-theme.dark .text-green-500,
+.dashboard-theme.dark .text-green-800,
+.dashboard-theme.dark .text-green-300,
+.dashboard-theme.dark .text-blue-600,
+.dashboard-theme.dark .text-blue-500,
+.dashboard-theme.dark .text-blue-100,
+.dashboard-theme.dark .text-purple-600,
+.dashboard-theme.dark .text-indigo-600,
+.dashboard-theme.dark .text-indigo-700,
+.dashboard-theme.dark .text-indigo-100,
+.dashboard-theme.dark .text-amber-500,
+.dashboard-theme.dark .text-amber-800,
+.dashboard-theme.dark .text-amber-900,
+.dashboard-theme.dark .text-rose-600,
+.dashboard-theme.dark .text-red-600,
+.dashboard-theme.dark .text-orange-600,
+.dashboard-theme.dark .text-yellow-600 {
+  /* Keep original colors for branding */
+}
+
+/* Dark mode hover effects for status colors */
+.dashboard-theme.dark .hover\:bg-green-50:hover,
+.dashboard-theme.dark .hover\:bg-red-50:hover,
+.dashboard-theme.dark .hover\:bg-green-300:hover,
+.dashboard-theme.dark .hover\:bg-indigo-50:hover,
+.dashboard-theme.dark .hover\:border-indigo-300:hover {
+  /* Keep original hover colors */
+}
+
+/* Progress bars and special elements */
+.dashboard-theme.dark .bg-slate-300 { background-color: #475569 !important; }
+
+/* Empty states and special UI */
+.dashboard-theme.dark .border-dashed { border-style: dashed !important; }
+
+/* Loading states */
+.dashboard-theme.dark .border-t-transparent { border-top-color: transparent !important; }
+.dashboard-theme.dark .border-green-600,
+.dashboard-theme.dark .border-blue-600 {
+  /* Keep border colors for loading spinners */
+}
+
+/* Specific overrides for cards and complex components */
+.dashboard-theme.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+.dashboard-theme.dark .border-indigo-200 { border-color: #6366f150 !important; }
+.dashboard-theme.dark .border-amber-200 { border-color: #f59e0b50 !important; }
+.dashboard-theme.dark .border-green-100 { border-color: #16a34a20 !important; }
+.dashboard-theme.dark .border-green-300 { border-color: #16a34a !important; }
+
+/* Gradient backgrounds - preserve for branding */
+.dashboard-theme.dark .bg-gradient-to-br,
+.dashboard-theme.dark .bg-gradient-to-r {
+  /* Keep gradient backgrounds as they are brand colors */
+}
+
+/* AI Insights specific loading states */
+.dashboard-theme.dark .from-purple-200,
+.dashboard-theme.dark .from-blue-200,
+.dashboard-theme.dark .from-indigo-200 {
+  /* Keep original loading animation colors */
+}
+
+/* Button hover states - preserve gradient backgrounds */
+.dashboard-theme.dark .hover\:from-indigo-700:hover,
+.dashboard-theme.dark .hover\:to-purple-700:hover,
+.dashboard-theme.dark .hover\:from-purple-700:hover,
+.dashboard-theme.dark .hover\:to-blue-700:hover,
+.dashboard-theme.dark .hover\:bg-indigo-700:hover {
+  /* Keep original hover gradient colors */
+}
+
+/* Specific overrides for Invite page info boxes */
+.dashboard-theme.dark .invite-info-box {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.dashboard-theme.dark .invite-link-box {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.dashboard-theme.dark .invite-code-box {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+}
+
+/* Pro Tips box in Invite page */
+.dashboard-theme.dark .pro-tips-box {
+  background-color: #422006 !important;
+  border-color: #78350f !important;
+}
+
+.dashboard-theme.dark .pro-tips-box h3,
+.dashboard-theme.dark .pro-tips-list {
+  color: #fbbf24 !important;
+}
+
+/* AI Insights specific styles */
+.dashboard-theme.dark .ai-summary-card {
+  background: linear-gradient(to bottom right, #1e293b, #1e293b, #1e293b) !important;
+  border-color: #475569 !important;
+}
+
+.dashboard-theme.dark .ai-summary-text {
+  color: #cbd5e1 !important;
+}
+
+.dashboard-theme.dark .ai-pro-tip {
+  background: linear-gradient(to right, #422006, #431407) !important;
+  border-color: #78350f !important;
+}
+
+.dashboard-theme.dark .ai-pro-tip p {
+  color: #fbbf24 !important;
+}
+
+/* AI Insights loading animation - keep gradient colors visible */
+.dashboard-theme.dark .from-purple-200 {
+  --tw-gradient-from: #e9d5ff !important;
+}
+
+.dashboard-theme.dark .from-blue-200 {
+  --tw-gradient-from: #bfdbfe !important;
+}
+
+.dashboard-theme.dark .from-indigo-200 {
+  --tw-gradient-from: #c7d2fe !important;
+}
+
+/* Kanban Board Column Headers */
+.dashboard-theme.dark .kanban-column-header {
+  border-width: 1px !important;
+}
+
+.dashboard-theme.dark .kanban-column-to-do {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.dashboard-theme.dark .kanban-column-in-progress {
+  background-color: #1e293b !important;
+  border-color: #3730a3 !important;
+}
+
+.dashboard-theme.dark .kanban-column-cancelled {
+  background-color: #1e293b !important;
+  border-color: #7f1d1d !important;
+}
+
+.dashboard-theme.dark .kanban-column-done {
+  background-color: #1e293b !important;
+  border-color: #14532d !important;
+}
+
+/* Kanban empty state */
+.dashboard-theme.dark .kanban-empty-state {
+  color: #64748b !important;
+}
+
+/* Task card quick actions border */
+.dashboard-theme.dark .task-quick-actions {
+  border-color: #334155 !important;
+}
+
+/* Kanban task cards */
+.dashboard-theme.dark .kanban-task-card {
+  background-color: #1e293b !important;
+  border-right-color: #334155 !important;
+  border-top-color: #334155 !important;
+  border-bottom-color: #334155 !important;
+}
+
+.dashboard-theme.dark .kanban-task-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Status change buttons */
+.dashboard-theme.dark .status-change-to-do {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #475569 !important;
+}
+
+.dashboard-theme.dark .status-change-to-do:hover {
+  background-color: #334155 !important;
+}
+
+.dashboard-theme.dark .status-change-in-progress {
+  background-color: #1e3a8a !important;
+  color: #93c5fd !important;
+  border: 1px solid #1e40af !important;
+}
+
+.dashboard-theme.dark .status-change-in-progress:hover {
+  background-color: #1e40af !important;
+}
+
+.dashboard-theme.dark .status-change-cancelled {
+  background-color: #7f1d1d !important;
+  color: #fca5a5 !important;
+  border: 1px solid #991b1b !important;
+}
+
+.dashboard-theme.dark .status-change-cancelled:hover {
+  background-color: #991b1b !important;
+}
+
+.dashboard-theme.dark .status-change-done {
+  background-color: #14532d !important;
+  color: #86efac !important;
+  border: 1px solid #166534 !important;
+}
+
+.dashboard-theme.dark .status-change-done:hover {
+  background-color: #166534 !important;
+}
+
+/* Channel Members Modal */
+.dashboard-theme.dark .channel-members-modal {
+  background-color: #1e293b !important;
+}
+
+.dashboard-theme.dark .channel-modal-close-btn:hover {
+  background-color: #334155 !important;
+}
+
+.dashboard-theme.dark .channel-join-request {
+  background-color: #422006 !important;
+  border-color: #78350f !important;
+}
+
+.dashboard-theme.dark .channel-current-member {
+  background-color: #1e3a8a !important;
+  border-color: #1e40af !important;
+}
+
+.dashboard-theme.dark .channel-add-member {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.dashboard-theme.dark .channel-remove-btn {
+  background-color: #7f1d1d !important;
+  color: #fca5a5 !important;
+}
+
+.dashboard-theme.dark .channel-remove-btn:hover {
+  background-color: #991b1b !important;
+}
+
+.dashboard-theme.dark .channel-modal-close-bottom {
+  background-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+.dashboard-theme.dark .channel-modal-close-bottom:hover {
+  background-color: #475569 !important;
+}
+
+/* Calendar Widget */
+.dashboard-theme.dark .calendar-widget-container {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dashboard-theme.dark .calendar-header {
+  background: linear-gradient(to right, #1e3a8a, #312e81) !important;
+  border-color: #334155 !important;
+}
+
+.dashboard-theme.dark .calendar-month-year {
+  color: #e2e8f0 !important;
+}
+
+.dashboard-theme.dark .calendar-subtitle {
+  color: #cbd5e1 !important;
+}
+
+.dashboard-theme.dark .calendar-nav-btn {
+  border-color: #334155 !important;
+}
+
+.dashboard-theme.dark .calendar-nav-btn:hover {
+  background-color: #334155 !important;
+}
+
+.dashboard-theme.dark .calendar-nav-icon {
+  color: #cbd5e1 !important;
+}
+
+.dashboard-theme.dark .calendar-day-header {
+  color: #94a3b8 !important;
+}
+
+.dashboard-theme.dark .calendar-day-cell.is-today {
+  background-color: #1e3a8a !important;
+  border-color: #3b82f6 !important;
+}
+
+.dashboard-theme.dark .calendar-day-cell:not(.is-empty):not(.is-today) {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dashboard-theme.dark .calendar-day-cell:not(.is-empty):not(.is-today):hover {
+  background-color: #1e3a8a !important;
+  border-color: #3b82f6 !important;
+}
+
+.dashboard-theme.dark .calendar-day-cell.is-empty {
+  background-color: #0f172a !important;
+}
+
+.dashboard-theme.dark .calendar-day-number {
+  color: #cbd5e1 !important;
+}
+
+.dashboard-theme.dark .calendar-day-cell.is-today .calendar-day-number {
+  color: #60a5fa !important;
+}
+
+.dashboard-theme.dark .calendar-more-tasks {
+  color: #94a3b8 !important;
+}
