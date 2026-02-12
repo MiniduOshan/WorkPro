@@ -60,6 +60,7 @@ function Header() {
                 {/* 2. Primary Navigation (Center/Right-aligned on desktop) */}
                 <nav className="hidden md:flex items-center space-x-7">
                     <Link to="/" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Home</Link>
+                    <Link to="/pricing" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Pricing</Link>
                     <Link to="/about" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">About</Link>
                     <Link to="/contact" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Contact</Link>
                     {isSuperAdmin && (
@@ -104,6 +105,9 @@ function Header() {
                     <nav className="flex flex-col gap-2 px-6 py-4">
                         <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
                             Home
+                        </Link>
+                        <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
+                            Pricing
                         </Link>
                         <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
                             About

@@ -7,13 +7,13 @@ import {
   IoStatsChartOutline,
   IoWalletOutline,
   IoShieldCheckmarkOutline,
-  IoSettingsOutline,
   IoLogOutOutline,
   IoBriefcaseOutline,
   IoArrowBackOutline,
   IoDocumentTextOutline,
   IoChatbubblesOutline,
-  IoNotificationsOutline
+  IoNotificationsOutline,
+  IoTrendingUpOutline
 } from 'react-icons/io5';
 
 const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = () => {} }) => {
@@ -81,14 +81,11 @@ const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = (
   const adminLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/super-admin' },
     { name: 'Analytics', icon: IoStatsChartOutline, path: '/dashboard/super-admin/analytics' },
-    { name: 'Companies', icon: IoBusinessOutline, path: '/dashboard/super-admin/companies' },
+    { name: 'Companies', icon: IoBusinessOutline,  path: '/dashboard/super-admin/companies' },
     { name: 'Pricing Plans', icon: IoWalletOutline, path: '/dashboard/super-admin/pricing' },
+    { name: 'Revenue', icon: IoTrendingUpOutline, path: '/dashboard/super-admin/revenue' },
     { name: 'Platform Content', icon: IoDocumentTextOutline, path: '/dashboard/super-admin/platform-content' },
     { name: 'Notifications', icon: IoNotificationsOutline, path: '/dashboard/super-admin/notifications' },
-  ];
-
-  const systemLinks = [
-    { name: 'Settings', icon: IoSettingsOutline, path: '/dashboard/super-admin/settings' },
   ];
 
   const SidebarLink = ({ name, icon: Icon, path, badge, isActive }) => (
@@ -132,22 +129,6 @@ const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = (
           </p>
           <div className="space-y-1">
             {adminLinks.map((link) => (
-              <SidebarLink
-                key={link.path}
-                {...link}
-                isActive={isLinkActive(link.path)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* System Section */}
-        <div className="px-4 mb-6">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">
-            System
-          </p>
-          <div className="space-y-1">
-            {systemLinks.map((link) => (
               <SidebarLink
                 key={link.path}
                 {...link}

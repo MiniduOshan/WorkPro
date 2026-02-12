@@ -43,6 +43,7 @@ const SuperAdminSchema = new mongoose.Schema(
     
     // Platform content settings for landing page
     platformContent: {
+      siteName: { type: String, default: 'WorkPro' },
       hero: {
         badge: { type: String, default: 'Trusted by Companies' },
         headline: { type: String, default: 'Everything you need to scale your company.' },
@@ -58,8 +59,11 @@ const SuperAdminSchema = new mongoose.Schema(
       stats: {
         uptime: { type: String, default: '99.9%' },
         uptimeLabel: { type: String, default: 'System Uptime' },
+        companiesValue: { type: String, default: '' },
         companiesLabel: { type: String, default: 'Global Companies' },
+        usersValue: { type: String, default: '' },
         usersLabel: { type: String, default: 'Active Users' },
+        tasksValue: { type: String, default: '' },
         tasksLabel: { type: String, default: 'Tasks Completed' },
       },
     },

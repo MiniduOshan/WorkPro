@@ -12,6 +12,7 @@ const SuperAdminPricing = () => {
   const [pricingPlans, setPricingPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [newPlan, setNewPlan] = useState({
     name: '',
     price: '',
@@ -57,18 +58,51 @@ const SuperAdminPricing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const planToSave = {
+        name: newPlan.name,
+        price: parseFloat(newPlan.price),
+        features: newPlan.features,
+      };
+
+      let updatedPlans;
+      if (editingIndex !== null) {
+        // Editing existing plan
+        updatedPlans = [...pricingPlans];
+        updatedPlans[editingIndex] = planToSave;
+      } else {
+        // Adding new plan
+        updatedPlans = [...pricingPlans, planToSave];
+      }
+
       await api.put(
         '/api/super-admin/pricing-plans',
-        { plans: [...pricingPlans, newPlan] }
+        { plans: updatedPlans }
       );
 
-      setPricingPlans([...pricingPlans, newPlan]);
+      setPricingPlans(updatedPlans);
       setNewPlan({ name: '', price: '', features: [] });
+      setEditingIndex(null);
       setShowModal(false);
     } catch (err) {
-      console.error('Failed to add pricing plan:', err);
-      alert('Failed to add pricing plan');
+      console.error('Failed to save pricing plan:', err);
+      alert('Failed to save pricing plan: ' + (err.response?.data?.message || err.message));
     }
+  };
+
+  const handleEditPlan = (index) => {
+    setEditingIndex(index);
+    setNewPlan({
+      name: pricingPlans[index].name,
+      price: pricingPlans[index].price.toString(),
+      features: [...pricingPlans[index].features],
+    });
+    setShowModal(true);
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingIndex(null);
+    setNewPlan({ name: '', price: '', features: [] });
+    setShowModal(true);
   };
 
   const handleDeletePlan = async (index) => {
@@ -106,7 +140,7 @@ const SuperAdminPricing = () => {
           <p className="text-gray-600 mt-2">Manage subscription tiers and features</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleOpenAddModal}
           className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
         >
           <IoAddOutline className="w-5 h-5" />
@@ -129,12 +163,21 @@ const SuperAdminPricing = () => {
                   <span className="text-gray-500 ml-2">/month</span>
                 </div>
               </div>
-              <button
-                onClick={() => handleDeletePlan(index)}
-                className="text-gray-400 hover:text-red-500 transition"
-              >
-                <IoTrashOutline className="w-5 h-5" />
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEditPlan(index)}
+                  className="text-gray-400 hover:text-blue-500 transition"
+                  title="Edit plan"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => handleDeletePlan(index)}
+                  className="text-gray-400 hover:text-red-500 transition"
+                >
+                  <IoTrashOutline className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="border-t border-gray-200 pt-6 mt-6">
@@ -160,7 +203,7 @@ const SuperAdminPricing = () => {
             <IoWalletOutline className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">No pricing plans configured yet.</p>
             <button
-              onClick={() => setShowModal(true)}
+              onClick={handleOpenAddModal}
               className="mt-4 text-purple-600 hover:text-purple-700 font-medium"
             >
               Create your first plan
@@ -174,9 +217,14 @@ const SuperAdminPricing = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Add Pricing Plan</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingIndex !== null ? 'Edit Pricing Plan' : 'Add Pricing Plan'}
+              </h2>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingIndex(null);
+                }}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <IoClose className="w-6 h-6" />
@@ -259,7 +307,11 @@ const SuperAdminPricing = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingIndex(null);
+                    setNewPlan({ name: '', price: '', features: [] });
+                  }}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
                 >
                   Cancel
@@ -268,7 +320,7 @@ const SuperAdminPricing = () => {
                   type="submit"
                   className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
                 >
-                  Add Plan
+                  {editingIndex !== null ? 'Update Plan' : 'Add Plan'}
                 </button>
               </div>
             </form>

@@ -7,8 +7,50 @@ import Department from '../models/Department.js';
 import Announcement from '../models/Announcement.js';
 import Notification from '../models/Notification.js';
 
-// Fixed super admin email - only this account has super admin access
-const SUPER_ADMIN_EMAIL = 'admin.workpro@gmail.com';
+const DEFAULT_PLATFORM_CONTENT = {
+  siteName: 'WorkPro',
+  hero: {
+    badge: 'Trusted by Companies',
+    headline: 'Everything you need to scale your company.',
+    subheadline: 'WorkPro is the unified operating system for your team. Track tasks, manage people, and drive growth from one intuitive platform.',
+  },
+  features: [
+    { title: 'Task Boards', description: 'Organize work visually with drag-and-drop Kanban boards that keep everyone in sync.', icon: 'IoLayersOutline' },
+    { title: 'Instant Sync', description: 'Real-time updates mean your team is always working on the most current version.', icon: 'IoFlashOutline' },
+    { title: 'Team Hub', description: 'Centralize communications and documents in a unified workspace for your whole company.', icon: 'IoPeopleCircleOutline' },
+    { title: 'Analytics', description: 'Get deep insights into team productivity and project progress with automated reports.', icon: 'IoStatsChartOutline' },
+  ],
+  stats: {
+    uptime: '99.9%',
+    uptimeLabel: 'System Uptime',
+    companiesValue: '',
+    companiesLabel: 'Global Companies',
+    usersValue: '',
+    usersLabel: 'Active Users',
+    tasksValue: '',
+    tasksLabel: 'Tasks Completed',
+  },
+};
+
+const mergePlatformContent = (content = {}) => ({
+  siteName: content.siteName ?? DEFAULT_PLATFORM_CONTENT.siteName,
+  hero: {
+    badge: content.hero?.badge ?? DEFAULT_PLATFORM_CONTENT.hero.badge,
+    headline: content.hero?.headline ?? DEFAULT_PLATFORM_CONTENT.hero.headline,
+    subheadline: content.hero?.subheadline ?? DEFAULT_PLATFORM_CONTENT.hero.subheadline,
+  },
+  features: Array.isArray(content.features) ? content.features : DEFAULT_PLATFORM_CONTENT.features,
+  stats: {
+    uptime: content.stats?.uptime ?? DEFAULT_PLATFORM_CONTENT.stats.uptime,
+    uptimeLabel: content.stats?.uptimeLabel ?? DEFAULT_PLATFORM_CONTENT.stats.uptimeLabel,
+    companiesValue: content.stats?.companiesValue ?? DEFAULT_PLATFORM_CONTENT.stats.companiesValue,
+    companiesLabel: content.stats?.companiesLabel ?? DEFAULT_PLATFORM_CONTENT.stats.companiesLabel,
+    usersValue: content.stats?.usersValue ?? DEFAULT_PLATFORM_CONTENT.stats.usersValue,
+    usersLabel: content.stats?.usersLabel ?? DEFAULT_PLATFORM_CONTENT.stats.usersLabel,
+    tasksValue: content.stats?.tasksValue ?? DEFAULT_PLATFORM_CONTENT.stats.tasksValue,
+    tasksLabel: content.stats?.tasksLabel ?? DEFAULT_PLATFORM_CONTENT.stats.tasksLabel,
+  },
+});
 
 // Check if user is super admin
 export const isSuperAdmin = async (userId) => {
@@ -16,9 +58,8 @@ export const isSuperAdmin = async (userId) => {
     const user = await User.findById(userId);
     if (!user) return false;
 
-    // A user is super admin if explicitly flagged OR matches the fixed email
-    const isAdminEmail = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
-    const effective = user.isSuperAdmin === true || isAdminEmail;
+    // A user is super admin only if explicitly flagged
+    const effective = user.isSuperAdmin === true;
 
     // Keep DB flag in sync so subsequent checks are fast - but only if it needs updating
     if (user.isSuperAdmin !== effective) {
@@ -395,7 +436,7 @@ export const getUserAnalytics = async (req, res) => {
 
 // Update platform content settings
 export const updatePlatformContent = async (req, res) => {
-  const { hero, features, stats } = req.body;
+  const { siteName, hero, features, stats } = req.body;
 
   try {
     if (!await isSuperAdmin(req.user._id)) {
@@ -407,9 +448,16 @@ export const updatePlatformContent = async (req, res) => {
       superAdminRecord = new SuperAdmin({ user: req.user._id });
     }
 
-    if (hero) superAdminRecord.platformContent.hero = hero;
-    if (features) superAdminRecord.platformContent.features = features;
-    if (stats) superAdminRecord.platformContent.stats = stats;
+    const current = superAdminRecord.platformContent || {};
+    const next = mergePlatformContent({
+      ...current,
+      siteName: siteName ?? current.siteName,
+      hero: hero ? { ...(current.hero || {}), ...hero } : current.hero,
+      features: Array.isArray(features) ? features : current.features,
+      stats: stats ? { ...(current.stats || {}), ...stats } : current.stats,
+    });
+
+    superAdminRecord.platformContent = next;
 
     await superAdminRecord.save();
 
@@ -432,7 +480,7 @@ export const getPlatformContent = async (req, res) => {
       await superAdminRecord.save();
     }
 
-    res.json(superAdminRecord.platformContent || {});
+    res.json(mergePlatformContent(superAdminRecord.platformContent));
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -441,33 +489,11 @@ export const getPlatformContent = async (req, res) => {
 // Get public platform content (no auth required)
 export const getPublicPlatformContent = async (req, res) => {
   try {
-    const superAdminRecord = await SuperAdmin.findOne().select('platformContent');
-    
-    if (!superAdminRecord || !superAdminRecord.platformContent) {
-      // Return default content
-      return res.json({
-        hero: {
-          badge: 'Trusted by Companies',
-          headline: 'Everything you need to scale your company.',
-          subheadline: 'WorkPro is the unified operating system for your team. Track tasks, manage people, and drive growth from one intuitive platform.',
-        },
-        features: [
-          { title: 'Task Boards', description: 'Organize work visually with drag-and-drop Kanban boards that keep everyone in sync.', icon: 'IoLayersOutline' },
-          { title: 'Instant Sync', description: 'Real-time updates mean your team is always working on the most current version.', icon: 'IoFlashOutline' },
-          { title: 'Team Hub', description: 'Centralize communications and documents in a unified workspace for your whole company.', icon: 'IoPeopleCircleOutline' },
-          { title: 'Analytics', description: 'Get deep insights into team productivity and project progress with automated reports.', icon: 'IoStatsChartOutline' }
-        ],
-        stats: {
-          uptime: '99.9%',
-          uptimeLabel: 'System Uptime',
-          companiesLabel: 'Global Companies',
-          usersLabel: 'Active Users',
-          tasksLabel: 'Tasks Completed',
-        },
-      });
-    }
+    const superAdminRecord = await SuperAdmin.findOne()
+      .select('platformContent updatedAt lastUpdated')
+      .sort({ updatedAt: -1, lastUpdated: -1 });
 
-    res.json(superAdminRecord.platformContent);
+    res.json(mergePlatformContent(superAdminRecord?.platformContent));
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

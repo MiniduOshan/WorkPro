@@ -40,9 +40,9 @@ function Footer() {
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Resources</h3>
                         <ul className="space-y-2 text-sm text-gray-400">
-                            <li><Link to="/contact" className="hover:text-blue-400">FAQ</Link></li>
+                            <li><Link to="/faq" className="hover:text-blue-400">FAQ</Link></li>
                             <li><Link to="/contact" className="hover:text-blue-400">Support</Link></li>
-                            <li><Link to="/contact" className="hover:text-blue-400">Terms of Service</Link></li>
+                            <li><Link to="/terms" className="hover:text-blue-400">Terms of Service</Link></li>
                         </ul>
                     </div>
                     {/* Column 3: Social */}

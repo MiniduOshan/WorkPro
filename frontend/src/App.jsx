@@ -5,6 +5,9 @@ import Header from './components/header.jsx';
 import Footer from './components/footer.jsx';
 import About from './pages/about.jsx';
 import Contact from './pages/contact.jsx';
+import Pricing from './pages/Pricing.jsx';
+import FAQ from './pages/FAQ.jsx';
+import TermsOfService from './pages/TermsOfService.jsx';
 
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth.jsx';
@@ -21,6 +24,7 @@ import SuperAdminAnalytics from './dashboard/superadmin/SuperAdminAnalytics.jsx'
 import SuperAdminCompanies from './dashboard/superadmin/SuperAdminCompanies.jsx';
 import SuperAdminUsers from './dashboard/superadmin/SuperAdminUsers.jsx';
 import SuperAdminPricing from './dashboard/superadmin/SuperAdminPricing.jsx';
+import SuperAdminRevenue from './dashboard/superadmin/SuperAdminRevenue.jsx';
 import SuperAdminSettings from './dashboard/superadmin/SuperAdminSettings.jsx';
 import SuperAdminNotifications from './dashboard/superadmin/SuperAdminNotifications.jsx';
 import PlatformContent from './dashboard/superadmin/PlatformContent.jsx';
@@ -186,8 +190,11 @@ function App() {
                 <Route element={<PublicLayout />}>
                     {/* These pages use the Header and Footer */}
                     <Route path="/" element={<LandingPage />} />
-                    <Route path="/about" element={<About />} /> 
+                    <Route path="/about" element={<About />} />
+                    <Route path="/pricing" element={<Pricing />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/invite/join" element={<InviteJoin />} />
                 </Route>
 
@@ -273,6 +280,7 @@ function App() {
                     <Route path="companies" element={<SuperAdminCompanies />} />
                     <Route path="users" element={<SuperAdminUsers />} />
                     <Route path="pricing" element={<SuperAdminPricing />} />
+                    <Route path="revenue" element={<SuperAdminRevenue />} />
                     <Route path="platform-content" element={<PlatformContent />} />
                     <Route path="settings" element={<SuperAdminSettings />} />
                     <Route path="notifications" element={<SuperAdminNotifications />} />
