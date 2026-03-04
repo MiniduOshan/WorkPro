@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   IoSettingsOutline,
   IoBusinessOutline,
-  IoNotificationsOutline,
   IoColorPaletteOutline,
   IoSaveOutline,
   IoPersonOutline,
   IoGlobeOutline,
+  IoMailOutline,
+  IoCallOutline,
   IoTrashOutline,
   IoWarningOutline,
   IoAlertCircleOutline
@@ -19,20 +20,18 @@ export default function Settings() {
   const theme = useThemeColors();
   const navigate = useNavigate();
   const isManager = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard/manager');
-  const [activeTab, setActiveTab] = useState(isManager ? 'company' : 'notifications');
+  const [activeTab, setActiveTab] = useState(isManager ? 'company' : 'profile');
   const [companyId, setCompanyId] = useState('');
   const [companyRole, setCompanyRole] = useState('');
   const [companySettings, setCompanySettings] = useState({
     name: '',
-    description: '',
-    website: '',
     industry: ''
   });
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    taskReminders: true,
-    projectUpdates: true,
-    teamMessages: true
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    mobileNumber: ''
   });
   const [loading, setLoading] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
@@ -55,13 +54,24 @@ export default function Settings() {
         const { data } = await api.get(`/api/companies/${companyId}`);
         setCompanySettings({
           name: data.name || '',
-          description: data.description || '',
-          website: data.website || '',
           industry: data.industry || ''
         });
       } catch (err) {
         console.error('Failed to fetch settings:', err);
       }
+    }
+
+    // Fetch user profile
+    try {
+      const { data } = await api.get('/api/users/profile');
+      setProfileData({
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        mobileNumber: data.mobileNumber || ''
+      });
+    } catch (err) {
+      console.error('Failed to fetch profile:', err);
     }
   };
 
@@ -84,14 +94,37 @@ export default function Settings() {
     }
   };
 
-  const handleSaveNotificationSettings = async (e) => {
+  const handleSaveProfileSettings = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // await api.put('/api/users/notification-settings', notificationSettings);
-      alert('Notification settings saved successfully!');
+      const dataToSave = {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        mobileNumber: profileData.mobileNumber
+      };
+
+      const { data: responseData } = await api.put('/api/users/profile', dataToSave);
+
+      if (responseData.token) {
+        localStorage.setItem('token', responseData.token);
+      }
+
+      // Update localStorage for header display
+      const updatedProfile = {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email
+      };
+      localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+
+      // Trigger profile update event
+      window.dispatchEvent(new Event('profileUpdated'));
+
+      alert('Profile settings saved successfully!');
     } catch (err) {
-      console.error('Failed to save settings:', err);
+      console.error('Failed to save profile settings:', err);
+      alert('Failed to save profile settings');
     } finally {
       setLoading(false);
     }
@@ -140,7 +173,7 @@ export default function Settings() {
 
   const tabs = [
     ...(isManager ? [{ id: 'company', label: 'Company', icon: IoBusinessOutline }] : []),
-    { id: 'notifications', label: 'Notifications', icon: IoNotificationsOutline },
+    { id: 'profile', label: 'Profile', icon: IoPersonOutline },
     { id: 'danger', label: 'Danger Zone', icon: IoWarningOutline }
   ];
 
@@ -169,11 +202,10 @@ export default function Settings() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${
-                    activeTab === tab.id
-                      ? `${theme.bgPrimary} text-white shadow-lg`
-                      : 'bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200'
-                  }`}
+                  className={`px-6 py-3 rounded-xl font-semibold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === tab.id
+                    ? `${theme.bgPrimary} text-white shadow-lg`
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200'
+                    }`}
                 >
                   <Icon className="text-xl" />
                   {tab.label}
@@ -199,31 +231,7 @@ export default function Settings() {
                     placeholder="Your Company Name"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={companySettings.description}
-                    onChange={(e) => setCompanySettings({ ...companySettings, description: e.target.value })}
-                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
-                    placeholder="Brief description of your company"
-                    rows="4"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Website
-                    </label>
-                    <input
-                      type="url"
-                      value={companySettings.website}
-                      onChange={(e) => setCompanySettings({ ...companySettings, website: e.target.value })}
-                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
-                      placeholder="https://example.com"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Industry
@@ -256,41 +264,93 @@ export default function Settings() {
             </div>
           )}
 
-          {/* Notification Settings */}
-          {activeTab === 'notifications' && (
+          {/* Profile Settings */}
+          {activeTab === 'profile' && (
             <div className="bg-white rounded-2xl border-2 border-slate-200 p-8">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Notification Preferences</h2>
-              <form onSubmit={handleSaveNotificationSettings} className="space-y-6">
-                <div className="space-y-4">
-                  {Object.entries(notificationSettings).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                      <div>
-                        <p className="font-semibold text-slate-800">
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          Receive updates about {key.toLowerCase()}
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={value}
-                          onChange={(e) => setNotificationSettings({ ...notificationSettings, [key]: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div className={`w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-${theme.primaryRing} rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-${theme.primary}`}></div>
-                      </label>
+              <h2 className="text-xl font-bold text-slate-800 mb-6">Profile Information</h2>
+              <form onSubmit={handleSaveProfileSettings} className="space-y-6">
+                <div className="flex flex-col md:flex-row gap-8 items-start mb-8 pb-8 border-b border-slate-100">
+                  <div className="relative group">
+                    <div className={`w-32 h-32 rounded-2xl overflow-hidden border-4 border-white shadow-xl ${theme.bgPrimary} flex items-center justify-center text-white text-4xl font-bold`}>
+                      {profileData.firstName?.[0] || 'U'}
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex-grow space-y-2 pt-2">
+                    <h3 className="text-2xl font-bold text-slate-800">{profileData.firstName} {profileData.lastName}</h3>
+                    <p className="text-slate-500 font-medium flex items-center gap-2">
+                      <IoMailOutline /> {profileData.email}
+                    </p>
+                    <p className="text-slate-500 font-medium flex items-center gap-2">
+                      <IoBusinessOutline /> {companyRole.charAt(0).toUpperCase() + companyRole.slice(1)}
+                    </p>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.firstName}
+                      onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                      placeholder="First Name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.lastName}
+                      onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                      placeholder="Last Name"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Email Address (Read-only)
+                    </label>
+                    <div className="relative">
+                      <IoMailOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        readOnly
+                        className="w-full pl-11 pr-4 py-3 border-2 border-slate-100 bg-slate-50 text-slate-500 rounded-xl cursor-not-allowed focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Mobile Number
+                    </label>
+                    <div className="relative">
+                      <IoCallOutline className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="tel"
+                        value={profileData.mobileNumber}
+                        onChange={(e) => setProfileData({ ...profileData, mobileNumber: e.target.value })}
+                        className={`w-full pl-11 pr-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                        placeholder="e.g., +1234567890"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
                   className={`w-full ${theme.bgPrimary} text-white px-6 py-3 rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2 disabled:opacity-50`}
                 >
                   <IoSaveOutline className="text-xl" />
-                  {loading ? 'Saving...' : 'Save Preferences'}
+                  {loading ? 'Saving...' : 'Save Profile Changes'}
                 </button>
               </form>
             </div>
@@ -386,7 +446,7 @@ export default function Settings() {
                 <p className="text-sm text-slate-600">This action cannot be undone</p>
               </div>
             </div>
-            
+
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
               <p className="text-sm text-red-700">
                 Are you sure you want to permanently delete your account? All your data will be lost.
@@ -426,7 +486,7 @@ export default function Settings() {
                 <p className="text-sm text-slate-600">This will delete everything</p>
               </div>
             </div>
-            
+
             <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl">
               <p className="text-sm text-red-700 font-semibold mb-2">
                 ⚠️ WARNING: This action is IRREVERSIBLE!

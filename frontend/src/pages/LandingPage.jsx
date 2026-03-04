@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-    IoShieldCheckmarkOutline, 
-    IoArrowForwardOutline, 
+import {
+    IoShieldCheckmarkOutline,
+    IoArrowForwardOutline,
     IoChevronForward,
     IoCheckmarkCircleOutline,
     IoStatsChartOutline,
@@ -131,7 +131,8 @@ const LandingPage = () => {
     return (
         <div className="bg-white text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
             {/* Custom Animations Style Block */}
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 @keyframes fadeInUp {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
@@ -170,10 +171,10 @@ const LandingPage = () => {
                 {/* Visual Background Elements */}
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[120px] -mr-64 -mt-64"></div>
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-100/30 rounded-full blur-[100px] -ml-32 -mb-32"></div>
-                
+
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-0">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        
+
                         {/* Left Column: Text Content */}
                         <div className="text-left opacity-0 animate-fade-up">
                             <div className="text-xs font-black uppercase tracking-[0.35em] text-slate-500 mb-3">
@@ -186,7 +187,7 @@ const LandingPage = () => {
                                 </span>
                                 {content.hero.badge} {content.stats.companiesValue || stats.companies}
                             </div>
-                            
+
                             <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-8">
                                 {content.hero.headline.split(' ').slice(0, 2).join(' ')} <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -200,13 +201,13 @@ const LandingPage = () => {
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-5">
-                                <button 
+                                <button
                                     onClick={() => navigate('/signup')}
                                     className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 shadow-2xl shadow-blue-200 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
                                 >
                                     Start Free Trial <IoArrowForwardOutline />
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => navigate('/login')}
                                     className="bg-white text-slate-700 px-10 py-4 rounded-2xl font-bold text-lg border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all"
                                 >
@@ -287,7 +288,7 @@ const LandingPage = () => {
                             <div className="absolute inset-0 flex items-center justify-center">
                                 {/* Large circle background */}
                                 <div className="absolute w-72 h-72 bg-gradient-to-tr from-blue-200 to-indigo-100 rounded-full blur-3xl opacity-40"></div>
-                                
+
                                 {/* Floating cards */}
                                 <div className="absolute top-10 -left-10 w-40 h-32 bg-white rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-slate-100 p-6 transform -rotate-6 hover:shadow-lg transition-all">
                                     <div className="w-10 h-10 bg-blue-100 rounded-lg mb-4"></div>
@@ -338,13 +339,13 @@ const LandingPage = () => {
                             Everything you need to manage your business without the complexity of traditional enterprise software.
                         </p>
                     </div>
-                    
+
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
                         {content.features.map((feature, idx) => (
-                            <FeatureCard 
+                            <FeatureCard
                                 key={idx}
-                                icon={getIconComponent(feature.icon)} 
-                                title={feature.title} 
+                                icon={getIconComponent(feature.icon)}
+                                title={feature.title}
                                 desc={feature.description}
                                 delay={idx % 2 === 0 ? "delay-1" : "delay-2"}
                             />
@@ -470,6 +471,9 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* 7.5 Pricing Preview Section */}
+
+
             {/* 8. CTA Section */}
             <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center opacity-0 animate-fade-up">
@@ -480,18 +484,13 @@ const LandingPage = () => {
                         Join thousands of teams using WorkPro to collaborate smarter, work faster, and deliver more.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <button 
+                        <button
                             onClick={() => navigate('/signup')}
                             className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-50 transition shadow-lg"
                         >
                             Start Free Trial
                         </button>
-                        <button 
-                            onClick={() => navigate('/pricing')}
-                            className="border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition"
-                        >
-                            View Pricing
-                        </button>
+
                     </div>
                 </div>
             </section>
@@ -526,5 +525,7 @@ const StatItem = ({ value, label }) => (
         <div className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">{label}</div>
     </div>
 );
+
+
 
 export default LandingPage;

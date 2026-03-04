@@ -4,6 +4,7 @@ import fs from 'fs';
 import Document from '../models/Document.js';
 import mongoose from 'mongoose';
 import Task from '../models/Task.js';
+import Company from '../models/Company.js';
 
 // Root uploads directory (absolute) to avoid cwd issues in container/VM setups
 const uploadsRoot = path.resolve(process.cwd(), 'uploads');
@@ -18,43 +19,43 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+    // Sanitize filename: remove path traversal, special characters, and lowercase everything
+    const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+    cb(null, uniqueSuffix + '-' + sanitizedOriginalName);
   },
 });
 
 // File filter
 const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
-  const isImage = file.mimetype?.startsWith('image/');
-  const allowedDocExtensions = new Set([
+  const mimetype = file.mimetype;
+
+  const allowedExtensions = new Set([
     '.pdf',
     '.doc',
     '.docx',
-    '.xls',
-    '.xlsx',
-    '.ppt',
-    '.pptx',
-    '.txt',
-    '.csv',
+    '.mp3',
+    '.mp4',
+    '.jpeg',
+    '.jpg',
+    '.png',
   ]);
-  const allowedDocMimes = new Set([
+
+  const allowedMimes = new Set([
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'text/plain',
-    'text/csv',
+    'audio/mpeg',
+    'video/mp4',
+    'image/jpeg',
+    'image/png',
   ]);
-  const isAllowedDoc = allowedDocExtensions.has(ext) || allowedDocMimes.has(file.mimetype);
 
-  if (isImage || isAllowedDoc) {
+  if (allowedExtensions.has(ext) && allowedMimes.has(mimetype)) {
     return cb(null, true);
   }
 
-  cb(new Error('Invalid file type. Only images and common document types are allowed.'));
+  cb(new Error('Invalid file type. Allowed: PDF, Word, MP3, MP4, JPEG, PNG, JPG.'));
 };
 
 export const upload = multer({
@@ -72,13 +73,13 @@ export const getDocuments = async (req, res) => {
     }
 
     const { search, category, sortBy = '-createdAt' } = req.query;
-    
+
     const query = { company: companyId, isArchived: false };
-    
+
     if (search) {
       query.$text = { $search: search };
     }
-    
+
     if (category && category !== 'all') {
       query.category = category;
     }
@@ -141,6 +142,11 @@ export const uploadDocument = async (req, res) => {
     const document = new Document(documentData);
 
     await document.save();
+
+    // Update company storage usage
+    await Company.findByIdAndUpdate(companyId, {
+      $inc: { 'usage.storageUsed': req.file.size }
+    });
 
     // If linked to a task, add document reference
     if (linkedType === 'task' && linkedId) {
@@ -246,6 +252,11 @@ export const deleteDocument = async (req, res) => {
 
     await document.deleteOne();
 
+    // Update company storage usage
+    await Company.findByIdAndUpdate(companyId, {
+      $inc: { 'usage.storageUsed': -document.fileSize }
+    });
+
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -278,7 +289,16 @@ export const getDocumentStats = async (req, res) => {
       },
     ]);
 
-    res.json(stats[0] || { totalDocuments: 0, totalSize: 0, totalAccess: 0 });
+    const finalStats = stats[0] || { totalDocuments: 0, totalSize: 0, totalAccess: 0 };
+
+    // Sync company storageUsed cache if it differs significantly or on every check for consistency
+    if (finalStats.totalSize !== undefined) {
+      await Company.findByIdAndUpdate(companyId, {
+        'usage.storageUsed': finalStats.totalSize
+      });
+    }
+
+    res.json(finalStats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

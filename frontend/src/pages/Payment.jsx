@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  IoArrowBackOutline, 
-  IoCardOutline, 
+import {
+  IoArrowBackOutline,
+  IoCardOutline,
   IoCalendarOutline,
   IoCheckmarkCircleOutline,
   IoCloseOutline
 } from 'react-icons/io5';
+import api from '../api/axios';
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const Payment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [paymentData, setPaymentData] = useState({
     cardName: '',
     cardNumber: '',
@@ -30,7 +31,7 @@ const Payment = () => {
       navigate('/');
       return;
     }
-    
+
     try {
       setSelectedPlan(JSON.parse(planData));
     } catch (err) {
@@ -41,7 +42,7 @@ const Payment = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Format card number with spaces
     if (name === 'cardNumber') {
       const formatted = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
@@ -55,7 +56,7 @@ const Payment = () => {
     } else {
       setPaymentData({ ...paymentData, [name]: value });
     }
-    
+
     if (error) setError('');
   };
 
@@ -79,25 +80,60 @@ const Payment = () => {
     return true;
   };
 
+
+
+  // ... inside component ...
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validatePayment()) {
       return;
     }
 
     setIsProcessing(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
+
+    try {
+      // 1. Simulate payment processing (strip/paypal handling would go here)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // 2. Call backend to create subscription
+      // We need the companyId. Assuming user's default company for now or we should have let them pick.
+      // For this flow, let's assume we are upgrading the user's default company.
+
+      // We need to fetch the user's default company first if not in context, 
+      // but for now let's try to get it from a potential context or just use the user's profile info if available?
+      // Actually, the best way is to fetch "my companies" and pick one, but for simplicity:
+      // Let's assume the user is upgrading their *current* context company.
+      // Since we don't have that easily here without a global store, let's fetch it.
+
+      const userRes = await api.get('/api/users/profile');
+      const user = userRes.data;
+      // We'll use a new endpoint or just list companies to find the default one
+      const companiesRes = await api.get('/api/companies');
+      const defaultCompany = companiesRes.data.find(c => c._id === user.defaultCompany) || companiesRes.data[0];
+
+      if (!defaultCompany) {
+        throw new Error("No company found to upgrade. Please create a company first.");
+      }
+
+      await api.post('/api/subscriptions/subscribe', {
+        companyId: defaultCompany._id,
+        planId: selectedPlan._id
+      });
+
       setPaymentSuccess(true);
-      
-      // Redirect to signup after 2 seconds
       setTimeout(() => {
-        navigate('/signup');
+        navigate('/dashboard/manager');
+        window.location.reload();
       }, 2000);
-    }, 2000);
+
+    } catch (err) {
+      console.error("Payment/Subscription Error:", err);
+      setError(err.response?.data?.message || err.message || "Payment failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (!selectedPlan) {
@@ -115,11 +151,11 @@ const Payment = () => {
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mb-8 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors"
         >
           <IoArrowBackOutline className="w-5 h-5" />
-          Back to Pricing
+          Back
         </button>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -139,8 +175,19 @@ const Payment = () => {
                 <IoCheckmarkCircleOutline className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-green-800">Payment Successful!</p>
-                  <p className="text-green-700 text-sm mt-1">Redirecting to signup...</p>
+                  <p className="text-green-700 text-sm mt-1">Redirecting to your dashboard...</p>
                 </div>
+              </div>
+            )}
+
+            {/* PayPal button if plan has a paypalPlanId configured */}
+            {selectedPlan.paypalPlanId && (
+              <div className="mb-6 bg-[#ffc439] p-4 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[#ffb700] transition-colors">
+                <span className="font-bold text-[#003087] italic">Pay</span>
+                <span className="font-bold text-[#009cde] italic">Pal</span>
+                <span className="ml-2 font-semibold text-gray-800 text-sm">
+                  (Integration Ready: {selectedPlan.paypalPlanId})
+                </span>
               </div>
             )}
 
@@ -232,23 +279,22 @@ const Payment = () => {
                 <button
                   type="submit"
                   disabled={isProcessing}
-                  className={`w-full py-3 px-6 font-bold rounded-xl transition-all ${
-                    isProcessing
-                      ? 'bg-gray-400 text-white cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'
-                  }`}
+                  className={`w-full py-3 px-6 font-bold rounded-xl transition-all ${isProcessing
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'
+                    }`}
                 >
                   {isProcessing ? 'Processing...' : `Pay $${selectedPlan.price}/month`}
                 </button>
 
                 {/* Test Card Info */}
-               
+
               </form>
             ) : (
               <div className="text-center py-8">
                 <IoCheckmarkCircleOutline className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Payment Successful!</h2>
-                <p className="text-gray-600">Redirecting to signup...</p>
+                <p className="text-gray-600">Redirecting to your dashboard...</p>
               </div>
             )}
           </div>
@@ -258,7 +304,7 @@ const Payment = () => {
             {/* Plan Details Card */}
             <div className="bg-white rounded-2xl shadow-lg p-8 sticky top-8">
               <h2 className="text-xl font-bold text-gray-800 mb-6">Order Summary</h2>
-              
+
               <div className="space-y-4 pb-6 border-b border-gray-200">
                 <div className="flex justify-between items-start">
                   <div>

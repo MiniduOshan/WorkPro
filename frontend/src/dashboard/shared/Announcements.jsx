@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
-  IoMegaphoneOutline, 
+import {
+  IoMegaphoneOutline,
   IoAddOutline,
   IoTimeOutline,
   IoPersonOutline,
@@ -147,7 +147,7 @@ export default function Announcements() {
             <p className="text-slate-600">Company-wide updates and news</p>
           </div>
           {canManageAnnouncements && (
-            <button 
+            <button
               onClick={() => setShowAddModal(true)}
               className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
             >
@@ -170,7 +170,7 @@ export default function Announcements() {
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No announcements yet</h3>
             <p className="text-slate-500 mb-6">Create your first announcement to keep your team informed</p>
             {canManageAnnouncements && (
-              <button 
+              <button
                 onClick={() => setShowAddModal(true)}
                 className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold inline-flex items-center gap-2 ${theme.bgPrimaryHover} transition`}
               >
@@ -243,7 +243,7 @@ export default function Announcements() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-slate-800">Create Announcement</h2>
-              <button 
+              <button
                 onClick={() => setShowAddModal(false)}
                 className="p-2 hover:bg-slate-100 rounded-lg transition"
               >
@@ -287,11 +287,10 @@ export default function Announcements() {
                       key={priority}
                       type="button"
                       onClick={() => setNewAnnouncement({ ...newAnnouncement, priority })}
-                      className={`px-4 py-3 rounded-xl border-2 transition-all font-semibold capitalize ${
-                        newAnnouncement.priority === priority
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-slate-200 hover:border-blue-300 text-slate-700'
-                      }`}
+                      className={`px-4 py-3 rounded-xl border-2 transition-all font-semibold capitalize ${newAnnouncement.priority === priority
+                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 hover:border-blue-300 text-slate-700'
+                        }`}
                     >
                       {priority}
                     </button>
@@ -318,21 +317,21 @@ export default function Announcements() {
         </div>
       )}
 
-          {/* View Announcement Modal */}
-          {viewItem && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-slate-800">{viewItem.title}</h2>
-                  <button onClick={() => setViewItem(null)} className="p-2 hover:bg-slate-100 rounded-lg transition">
-                    <IoCloseCircleOutline className="text-2xl text-slate-400" />
-                  </button>
-                </div>
-                <div className="text-sm text-slate-500 mb-4">By {viewItem.author} · {new Date(viewItem.createdAt).toLocaleString()}</div>
-                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{viewItem.content}</p>
-              </div>
+      {/* View Announcement Modal */}
+      {viewItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">{viewItem.title}</h2>
+              <button onClick={() => setViewItem(null)} className="p-2 hover:bg-slate-100 rounded-lg transition">
+                <IoCloseCircleOutline className="text-2xl text-slate-400" />
+              </button>
             </div>
-          )}
+            <div className="text-sm text-slate-500 mb-4">By {viewItem.author} · {new Date(viewItem.createdAt).toLocaleString()}</div>
+            <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{viewItem.content}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

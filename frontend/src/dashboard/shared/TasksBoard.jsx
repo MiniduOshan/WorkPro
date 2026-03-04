@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
-  IoAddOutline, 
-  IoCheckmarkCircleOutline,
-  IoTimeOutline,
-  IoAlertCircleOutline,
-  IoCheckmarkDoneOutline,
-  IoTrashOutline,
-  IoCreateOutline,
+import {
   IoPersonOutline,
   IoBusinessOutline,
   IoCalendarOutline,
   IoFunnelOutline,
-  IoPeopleOutline
+  IoPeopleOutline,
+  IoLockClosedOutline,
+  IoTimeOutline,
+  IoCreateOutline,
+  IoAlertCircleOutline,
+  IoCheckmarkDoneOutline,
+  IoTrashOutline,
+  IoAddOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
+import { toast } from '../../utils/toast';
 
 export default function TasksBoard() {
   const theme = useThemeColors();
@@ -32,12 +33,13 @@ export default function TasksBoard() {
   const [department, setDepartment] = useState('');
   const [group, setGroup] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [visibility, setVisibility] = useState('public');
   const [filterDepartment, setFilterDepartment] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [companyRole, setCompanyRole] = useState('');
-  
+
   // View/Edit Task Modal States
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewTask, setViewTask] = useState(null);
@@ -50,6 +52,7 @@ export default function TasksBoard() {
   const [editDepartment, setEditDepartment] = useState('');
   const [editGroup, setEditGroup] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
+  const [editVisibility, setEditVisibility] = useState('public');
 
   const sampleTasks = () => ([
     {
@@ -90,7 +93,7 @@ export default function TasksBoard() {
     const storedCompanyId = localStorage.getItem('companyId');
     const role = localStorage.getItem('companyRole');
     setCompanyRole(role || '');
-    
+
     const fetchUserProfile = async () => {
       try {
         const { data } = await api.get('/api/users/profile');
@@ -99,9 +102,9 @@ export default function TasksBoard() {
         console.error('Failed to fetch user profile:', err);
       }
     };
-    
+
     fetchUserProfile();
-    
+
     if (storedCompanyId) {
       setCompanyId(storedCompanyId);
     } else {
@@ -142,8 +145,8 @@ export default function TasksBoard() {
   useEffect(() => {
     if (department) {
       // Show employees/managers in the selected department, plus all managers/owners
-      const filtered = employees.filter(emp => 
-        emp.department === department || 
+      const filtered = employees.filter(emp =>
+        emp.department === department ||
         ['owner', 'manager'].includes(emp.role)
       );
       setFilteredEmployees(filtered);
@@ -188,7 +191,7 @@ export default function TasksBoard() {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     if (companyId) {
       loadEmployees();
       loadDepartments();
@@ -215,24 +218,35 @@ export default function TasksBoard() {
       return;
     }
     try {
-      const taskData = { 
-        title, 
-        description, 
-        companyId, 
+      const taskData = {
+        title,
+        description,
+        companyId,
         status,
         priority
       };
-      if (assignee) taskData.assignee = assignee;
+      if (companyRole === 'employee') {
+        // Force private for employees
+        taskData.visibility = 'private';
+        taskData.assignee = userProfile._id;
+      } else {
+        taskData.visibility = visibility;
+        if (assignee) taskData.assignee = assignee;
+      }
+
       if (department && department !== '') taskData.department = department;
       if (group && group !== '') taskData.group = group;
       if (dueDate) taskData.dueDate = dueDate;
-      
+
       await api.post('/api/tasks', taskData);
       resetForm();
       load();
     } catch (err) {
       console.error('Failed to create task:', err);
-      alert('Failed to create task: ' + (err.response?.data?.message || err.message));
+      // Only show toast if it's not a 403 (which is already handled globally by axios interceptor)
+      if (err.response?.status !== 403) {
+        toast.error('Failed to create task: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
@@ -245,6 +259,7 @@ export default function TasksBoard() {
     setDepartment('');
     setGroup('');
     setDueDate('');
+    setVisibility('public');
     setShowAddModal(false);
   };
 
@@ -285,10 +300,12 @@ export default function TasksBoard() {
     setEditAssignee(task.assignee?._id || task.assignee || '');
     setEditDepartment(task.department?._id || task.department || '');
     setEditGroup(task.group?._id || task.group || '');
+
     setEditDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
+    setEditVisibility(task.visibility || 'public');
     setShowViewModal(true);
   };
-  
+
   const closeViewModal = () => {
     setShowViewModal(false);
     setViewTask(null);
@@ -298,7 +315,7 @@ export default function TasksBoard() {
   const handleUpdateTask = async (e) => {
     e.preventDefault();
     if (!viewTask) return;
-    
+
     try {
       const payload = {
         title: editTitle,
@@ -307,20 +324,23 @@ export default function TasksBoard() {
         priority: editPriority,
         dueDate: editDueDate || undefined
       };
-      
+
       // Only managers/owners can change assignee and department
       if (['owner', 'manager'].includes(companyRole)) {
         if (editAssignee) payload.assignee = editAssignee;
         if (editDepartment && editDepartment !== '') payload.department = editDepartment;
         if (editGroup && editGroup !== '') payload.group = editGroup;
+        payload.visibility = editVisibility;
       }
-      
+
       await api.put(`/api/tasks/${viewTask._id}`, payload);
-      alert('Task updated successfully!');
+      toast.success('Task updated successfully!');
       load();
       closeViewModal();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update task');
+      if (err.response?.status !== 403) {
+        toast.error(err.response?.data?.message || 'Failed to update task');
+      }
     }
   };
 
@@ -367,15 +387,14 @@ export default function TasksBoard() {
                 </select>
               </div>
             )}
-            {companyRole !== 'employee' && (
-              <button 
-                onClick={() => setShowAddModal(true)}
-                className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
-              >
-                <IoAddOutline className="text-xl" />
-                <span>Create Task</span>
-              </button>
-            )}
+            {/* Allow everyone (including employees) to create tasks */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
+            >
+              <IoAddOutline className="text-xl" />
+              <span>Create Task</span>
+            </button>
           </div>
         </div>
       </div>
@@ -422,6 +441,11 @@ export default function TasksBoard() {
                           {task.description && (
                             <p className="text-sm text-slate-600 line-clamp-2">{task.description}</p>
                           )}
+                          {task.visibility === 'private' && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-slate-500">
+                              <IoLockClosedOutline /> Private
+                            </div>
+                          )}
                         </div>
 
                         {/* Task Meta */}
@@ -446,12 +470,11 @@ export default function TasksBoard() {
                           )}
                           {task.priority && (
                             <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                task.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${task.priority === 'urgent' ? 'bg-red-100 text-red-700' :
                                 task.priority === 'high' ? 'bg-orange-100 text-orange-700' :
-                                task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-green-100 text-green-700'
-                              }`}>
+                                  task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-green-100 text-green-700'
+                                }`}>
                                 {task.priority.toUpperCase()}
                               </span>
                             </div>
@@ -460,20 +483,21 @@ export default function TasksBoard() {
 
                         {/* Quick Actions */}
                         <div className="flex flex-wrap gap-1 pt-3 border-t border-slate-100 task-quick-actions">
-                          {/* Status change buttons - show to managers or assignee employees */}
-                          {(['owner', 'manager'].includes(companyRole) || 
-                            (companyRole === 'employee' && userProfile && task.assignee?._id === userProfile._id)) && 
-                           columns.map((col) => col.id !== task.status && (
-                            <button
-                              key={col.id}
-                              onClick={(e) => { e.stopPropagation(); updateStatus(task._id, col.id); }}
-                              className={`status-change-btn status-change-${col.id} text-xs px-2 py-1 rounded-lg bg-${col.color}-50 text-${col.color}-700 hover:bg-${col.color}-100 transition font-medium`}
-                              title={`Move to ${col.label}`}
-                            >
-                              {col.label}
-                            </button>
-                          ))}
-                          {['owner', 'manager'].includes(companyRole) && (
+                          {/* Status change buttons - show to managers, assignees, or creators */}
+                          {(['owner', 'manager'].includes(companyRole) ||
+                            (userProfile && (task.assignee?._id === userProfile._id || task.createdBy?._id === userProfile._id))) &&
+                            columns.map((col) => col.id !== task.status && (
+                              <button
+                                key={col.id}
+                                onClick={(e) => { e.stopPropagation(); updateStatus(task._id, col.id); }}
+                                className={`status-change-btn status-change-${col.id} text-xs px-2 py-1 rounded-lg bg-${col.color}-50 text-${col.color}-700 hover:bg-${col.color}-100 transition font-medium`}
+                                title={`Move to ${col.label}`}
+                              >
+                                {col.label}
+                              </button>
+                            ))}
+                          {/* Allow delete for managers OR creators */}
+                          {(['owner', 'manager'].includes(companyRole) || (userProfile && task.createdBy?._id === userProfile._id)) && (
                             <button
                               onClick={(e) => { e.stopPropagation(); deleteTask(task._id); }}
                               className="ml-auto text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
@@ -500,7 +524,7 @@ export default function TasksBoard() {
       </div>
 
       {/* Add Task Modal */}
-      {showAddModal && companyRole !== 'employee' && (
+      {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Create New Task</h2>
@@ -519,44 +543,50 @@ export default function TasksBoard() {
                     required
                   />
                 </div>
-                
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Department
-                  </label>
-                  <select
-                    value={department}
-                    onChange={(e) => {
-                      setDepartment(e.target.value);
-                      setAssignee(''); // Reset assignee when department changes
-                    }}
-                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                  >
-                    <option value="">All Departments</option>
-                    {departments.map((dept) => (
-                      <option key={dept._id} value={dept._id}>{dept.name}</option>
-                    ))}
-                  </select>
-                </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Group
-                  </label>
-                  <select
-                    value={group}
-                    onChange={(e) => setGroup(e.target.value)}
-                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                  >
-                    <option value="">No Group</option>
-                    {groups.map((grp) => (
-                      <option key={grp._id} value={grp._id}>{grp.name}</option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Select a group to track progress on group-related tasks
-                  </p>
-                </div>
+
+
+                {companyRole !== 'employee' && (
+                  <>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Department
+                      </label>
+                      <select
+                        value={department}
+                        onChange={(e) => {
+                          setDepartment(e.target.value);
+                          setAssignee(''); // Reset assignee when department changes
+                        }}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                      >
+                        <option value="">All Departments</option>
+                        {departments.map((dept) => (
+                          <option key={dept._id} value={dept._id}>{dept.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Group
+                      </label>
+                      <select
+                        value={group}
+                        onChange={(e) => setGroup(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                      >
+                        <option value="">No Group</option>
+                        {groups.map((grp) => (
+                          <option key={grp._id} value={grp._id}>{grp.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Select a group to track progress on group-related tasks
+                      </p>
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -630,6 +660,29 @@ export default function TasksBoard() {
                     className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  {companyRole !== 'employee' ? (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Visibility
+                      </label>
+                      <select
+                        value={visibility}
+                        onChange={(e) => setVisibility(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                      >
+                        <option value="public">Public (Visible to Company)</option>
+                        <option value="private">Private (Visible to you + assignee)</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2 text-sm text-slate-600">
+                      <IoLockClosedOutline className="text-lg" />
+                      <span>This task will be <strong>private</strong> (visible only to you).</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">
@@ -649,299 +702,313 @@ export default function TasksBoard() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+        </div >
+      )
+      }
 
       {/* View/Edit Task Modal */}
-      {showViewModal && viewTask && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8">
-            {/* Modal Header */}
-            <div className={`${theme.bgPrimary} text-white p-6 rounded-t-2xl flex items-center justify-between`}>
-              <div className="flex items-center gap-3">
-                <IoCreateOutline className="text-2xl" />
-                <h2 className="text-2xl font-bold">
-                  {isEditing ? 'Edit Task' : 'Task Details'}
-                </h2>
+      {
+        showViewModal && viewTask && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8">
+              {/* Modal Header */}
+              <div className={`${theme.bgPrimary} text-white p-6 rounded-t-2xl flex items-center justify-between`}>
+                <div className="flex items-center gap-3">
+                  <IoCreateOutline className="text-2xl" />
+                  <h2 className="text-2xl font-bold">
+                    {isEditing ? 'Edit Task' : 'Task Details'}
+                  </h2>
+                </div>
+                <button
+                  onClick={closeViewModal}
+                  className="p-2 hover:bg-white/20 rounded-lg transition text-2xl"
+                >
+                  ×
+                </button>
               </div>
-              <button
-                onClick={closeViewModal}
-                className="p-2 hover:bg-white/20 rounded-lg transition text-2xl"
-              >
-                ×
-              </button>
-            </div>
 
-            {/* Modal Body */}
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
-              {!isEditing ? (
-                // View Mode
-                <div className="space-y-6">
-                  {/* Title */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-600 mb-2">Title</label>
-                    <h3 className="text-2xl font-bold text-slate-800">{viewTask.title}</h3>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-600 mb-2">Description</label>
-                    <p className="text-slate-700 whitespace-pre-wrap">
-                      {viewTask.description || 'No description provided'}
-                    </p>
-                  </div>
-
-                  {/* Status & Priority */}
-                  <div className="grid grid-cols-2 gap-4">
+              {/* Modal Body */}
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                {!isEditing ? (
+                  // View Mode
+                  <div className="space-y-6">
+                    {/* Title */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-600 mb-2">Status</label>
-                      <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${
-                        viewTask.status === 'done' ? 'bg-green-100 text-green-700' :
-                        viewTask.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                        viewTask.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                        'bg-slate-100 text-slate-700'
-                      }`}>
-                        {viewTask.status.toUpperCase()}
-                      </span>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Title</label>
+                      <h3 className="text-2xl font-bold text-slate-800">{viewTask.title}</h3>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-600 mb-2">Priority</label>
-                      <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${
-                        viewTask.priority === 'urgent' ? 'bg-red-100 text-red-700' :
-                        viewTask.priority === 'high' ? 'bg-orange-100 text-orange-700' :
-                        viewTask.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
-                        {(viewTask.priority || 'medium').toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Assignee & Department */}
-                  <div className="grid grid-cols-2 gap-4">
+                    {/* Description */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-600 mb-2">Assigned To</label>
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <IoPersonOutline className="text-blue-500" />
-                        <span>
-                          {viewTask.assignee ? 
-                            `${viewTask.assignee.firstName} ${viewTask.assignee.lastName}` : 
-                            'Unassigned'
-                          }
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Description</label>
+                      <p className="text-slate-700 whitespace-pre-wrap">
+                        {viewTask.description || 'No description provided'}
+                      </p>
+                    </div>
+
+                    {/* Status & Priority */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-600 mb-2">Status</label>
+                        <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${viewTask.status === 'done' ? 'bg-green-100 text-green-700' :
+                          viewTask.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                            viewTask.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              'bg-slate-100 text-slate-700'
+                          }`}>
+                          {viewTask.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-600 mb-2">Priority</label>
+                        <span className={`inline-block px-4 py-2 rounded-lg font-semibold ${viewTask.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                          viewTask.priority === 'high' ? 'bg-orange-100 text-orange-700' :
+                            viewTask.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                          }`}>
+                          {(viewTask.priority || 'medium').toUpperCase()}
                         </span>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-600 mb-2">Department</label>
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <IoBusinessOutline className="text-purple-500" />
-                        <span>{viewTask.department?.name || 'No department'}</span>
+
+                    {/* Assignee & Department */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-600 mb-2">Assigned To</label>
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <IoPersonOutline className="text-blue-500" />
+                          <span>
+                            {viewTask.assignee ?
+                              `${viewTask.assignee.firstName} ${viewTask.assignee.lastName}` :
+                              'Unassigned'
+                            }
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-600 mb-2">Department</label>
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <IoBusinessOutline className="text-purple-500" />
+                          <span>{viewTask.department?.name || 'No department'}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Group */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-600 mb-2">Group</label>
-                    <div className="flex items-center gap-2 text-slate-700">
-                      <IoPeopleOutline className="text-indigo-500" />
-                      <span>{viewTask.group?.name || 'No group'}</span>
-                    </div>
-                  </div>
-
-                  {/* Due Date */}
-                  {viewTask.dueDate && (
+                    {/* Group */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-600 mb-2">Due Date</label>
+                      <label className="block text-sm font-semibold text-slate-600 mb-2">Group</label>
                       <div className="flex items-center gap-2 text-slate-700">
-                        <IoCalendarOutline className="text-orange-500" />
-                        <span>{new Date(viewTask.dueDate).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}</span>
+                        <IoPeopleOutline className="text-indigo-500" />
+                        <span>{viewTask.group?.name || 'No group'}</span>
                       </div>
                     </div>
-                  )}
 
-                  {/* Created By */}
-                  {viewTask.createdBy && (
+                    {/* Due Date */}
+                    {viewTask.dueDate && (
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-600 mb-2">Due Date</label>
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <IoCalendarOutline className="text-orange-500" />
+                          <span>{new Date(viewTask.dueDate).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Created By */}
+                    {viewTask.createdBy && (
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-600 mb-2">Created By</label>
+                        <p className="text-slate-700">
+                          {viewTask.createdBy.firstName} {viewTask.createdBy.lastName}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Edit Mode
+                  <form onSubmit={handleUpdateTask} className="space-y-4">
+                    {/* Title */}
                     <div>
-                      <label className="block text-sm font-semibold text-slate-600 mb-2">Created By</label>
-                      <p className="text-slate-700">
-                        {viewTask.createdBy.firstName} {viewTask.createdBy.lastName}
-                      </p>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Title *</label>
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                        required
+                      />
                     </div>
-                  )}
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                      <textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
+                        rows="4"
+                        placeholder="Describe the task..."
+                      />
+                    </div>
+
+                    {/* Status & Priority */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                        <select
+                          value={editStatus}
+                          onChange={(e) => setEditStatus(e.target.value)}
+                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                        >
+                          <option value="to-do">To Do</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="done">Done</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Priority</label>
+                        <select
+                          value={editPriority}
+                          onChange={(e) => setEditPriority(e.target.value)}
+                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Department & Assignee (Only for Managers/Owners) */}
+                    {['owner', 'manager'].includes(companyRole) && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Department</label>
+                          <select
+                            value={editDepartment}
+                            onChange={(e) => {
+                              setEditDepartment(e.target.value);
+                              setEditAssignee(''); // Reset assignee when department changes
+                            }}
+                            className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                          >
+                            <option value="">All Departments</option>
+                            {departments.map((dept) => (
+                              <option key={dept._id} value={dept._id}>{dept.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
+                          <select
+                            value={editAssignee}
+                            onChange={(e) => setEditAssignee(e.target.value)}
+                            className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                          >
+                            <option value="">Select Employee</option>
+                            {employees.filter(emp => {
+                              if (!editDepartment) return true;
+                              if (['owner', 'manager'].includes(emp.role)) return true;
+                              const selectedDept = departments.find(d => d._id === editDepartment);
+                              return emp.department === selectedDept?.name;
+                            }).map((emp) => (
+                              <option key={emp._id} value={emp._id}>{emp.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Group</label>
+                          <select
+                            value={editGroup}
+                            onChange={(e) => setEditGroup(e.target.value)}
+                            className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                          >
+                            <option value="">No Group</option>
+                            {groups.map((grp) => (
+                              <option key={grp._id} value={grp._id}>{grp.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Visibility</label>
+                          <select
+                            value={editVisibility}
+                            onChange={(e) => setEditVisibility(e.target.value)}
+                            className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
+                          >
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Due Date */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Due Date</label>
+                      <input
+                        type="date"
+                        value={editDueDate}
+                        onChange={(e) => setEditDueDate(e.target.value)}
+                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
+                      />
+                    </div>
+
+                    {/* Form Actions */}
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+
+              {/* Modal Footer - Action Buttons */}
+              {!isEditing && (
+                <div className="p-6 border-t border-slate-200 flex gap-3">
+                  {/* Edit button - show to managers or task assignee */}
+                  {(['owner', 'manager'].includes(companyRole) ||
+                    (companyRole === 'employee' && userProfile && viewTask.assignee?._id === userProfile._id)) && (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2`}
+                      >
+                        <IoCreateOutline /> Edit Task
+                      </button>
+                    )}
+                  <button
+                    onClick={closeViewModal}
+                    className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+                  >
+                    Close
+                  </button>
                 </div>
-              ) : (
-                // Edit Mode
-                <form onSubmit={handleUpdateTask} className="space-y-4">
-                  {/* Title */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Title *</label>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
-                      required
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
-                      rows="4"
-                      placeholder="Describe the task..."
-                    />
-                  </div>
-
-                  {/* Status & Priority */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-                      <select
-                        value={editStatus}
-                        onChange={(e) => setEditStatus(e.target.value)}
-                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                      >
-                        <option value="to-do">To Do</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="done">Done</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Priority</label>
-                      <select
-                        value={editPriority}
-                        onChange={(e) => setEditPriority(e.target.value)}
-                        className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Department & Assignee (Only for Managers/Owners) */}
-                  {['owner', 'manager'].includes(companyRole) && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">Department</label>
-                        <select
-                          value={editDepartment}
-                          onChange={(e) => {
-                            setEditDepartment(e.target.value);
-                            setEditAssignee(''); // Reset assignee when department changes
-                          }}
-                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                        >
-                          <option value="">All Departments</option>
-                          {departments.map((dept) => (
-                            <option key={dept._id} value={dept._id}>{dept.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">Assign To</label>
-                        <select
-                          value={editAssignee}
-                          onChange={(e) => setEditAssignee(e.target.value)}
-                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                        >
-                          <option value="">Select Employee</option>
-                          {employees.filter(emp => {
-                            if (!editDepartment) return true;
-                            if (['owner', 'manager'].includes(emp.role)) return true;
-                            const selectedDept = departments.find(d => d._id === editDepartment);
-                            return emp.department === selectedDept?.name;
-                          }).map((emp) => (
-                            <option key={emp._id} value={emp._id}>{emp.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-2">Group</label>
-                        <select
-                          value={editGroup}
-                          onChange={(e) => setEditGroup(e.target.value)}
-                          className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}
-                        >
-                          <option value="">No Group</option>
-                          {groups.map((grp) => (
-                            <option key={grp._id} value={grp._id}>{grp.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Due Date */}
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Due Date</label>
-                    <input
-                      type="date"
-                      value={editDueDate}
-                      onChange={(e) => setEditDueDate(e.target.value)}
-                      className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
-                    />
-                  </div>
-
-                  {/* Form Actions */}
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition`}
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
               )}
             </div>
-
-            {/* Modal Footer - Action Buttons */}
-            {!isEditing && (
-              <div className="p-6 border-t border-slate-200 flex gap-3">
-                {/* Edit button - show to managers or task assignee */}
-                {(['owner', 'manager'].includes(companyRole) || 
-                  (companyRole === 'employee' && userProfile && viewTask.assignee?._id === userProfile._id)) && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition flex items-center justify-center gap-2`}
-                  >
-                    <IoCreateOutline /> Edit Task
-                  </button>
-                )}
-                <button
-                  onClick={closeViewModal}
-                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
-                >
-                  Close
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+          </div >
+        )
+      }
 
       {/* Custom Scrollbar Styles */}
       <style>{`
@@ -960,6 +1027,6 @@ export default function TasksBoard() {
           background: #94a3b8;
         }
       `}</style>
-    </div>
+    </div >
   );
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
+import {
   IoAddOutline,
   IoChatbubblesOutline,
   IoSendOutline,
@@ -11,6 +11,7 @@ import {
   IoRadioButtonOnOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
+import { toast } from '../../utils/toast';
 
 export default function Channels() {
   const theme = useThemeColors();
@@ -49,7 +50,7 @@ export default function Channels() {
       const { data } = await api.get('/api/users/profile');
       setUserProfile(data);
     } catch (err) {
-      console.error('Failed to load user profile:', err);
+      // Quietly fail or use a subtle notification if needed
     }
   };
 
@@ -59,7 +60,7 @@ export default function Channels() {
       const { data } = await api.get(`/api/companies/${companyId}`);
       setCompanyMembers(data.members || []);
     } catch (err) {
-      console.error('Failed to load company members:', err);
+      // Quietly fail
     }
   };
 
@@ -71,7 +72,7 @@ export default function Channels() {
       setChannels(data);
       if (!selected && data[0]) setSelected(data[0]);
     } catch (err) {
-      console.error('Failed to load channels:', err);
+      // Handled
     } finally {
       setLoading(false);
     }
@@ -80,18 +81,18 @@ export default function Channels() {
   const loadMessages = async (ch) => {
     if (!companyId) return;
     const isMember = ch.members?.some(m => m === userProfile?._id || m._id === userProfile?._id);
-    
+
     if (!isMember) {
       // User is not a member - show join option
       setSelected({ ...ch, messages: [], isMember: false });
       return;
     }
-    
+
     try {
       const { data } = await api.get(`/api/channels/${ch._id}`);
       setSelected({ ...ch, messages: data.messages || [], isMember: true });
     } catch (err) {
-      console.error('Failed to load messages:', err);
+      // Quietly fail
     }
   };
 
@@ -111,11 +112,12 @@ export default function Channels() {
     if (!selected) return;
     try {
       await api.post(`/api/channels/${selected._id}/request-join`);
-      alert('Join request submitted! Wait for approval from channel members.');
+      toast.success('Join request submitted! Wait for approval.');
       loadChannels();
     } catch (err) {
-      console.error('Failed to request join:', err);
-      alert(err.response?.data?.message || 'Failed to request join');
+      if (err.response?.status !== 403) {
+        toast.error(err.response?.data?.message || 'Failed to request join');
+      }
     }
   };
 
@@ -123,8 +125,8 @@ export default function Channels() {
     if (!selected) return;
     try {
       await api.post(`/api/channels/${selected._id}/approve-join`, { userId });
-      alert('Join request approved!');
-      
+      toast.success('Join request approved!');
+
       // Immediately update the selected channel state
       setSelected(prev => ({
         ...prev,
@@ -134,13 +136,13 @@ export default function Channels() {
         }) || [],
         members: [...(prev.members || []), userId]
       }));
-      
+
       // Only refresh channel list, not messages (to avoid overwriting state)
       loadChannels();
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to approve request';
-      console.error('Failed to approve request:', err);
-      alert(errorMsg);
+      if (err.response?.status !== 403) {
+        toast.error(err.response?.data?.message || 'Failed to approve request');
+      }
     }
   };
 
@@ -148,8 +150,8 @@ export default function Channels() {
     if (!selected) return;
     try {
       await api.post(`/api/channels/${selected._id}/reject-join`, { userId });
-      alert('Join request rejected');
-      
+      toast.success('Join request rejected');
+
       // Immediately update the selected channel state
       setSelected(prev => ({
         ...prev,
@@ -158,13 +160,13 @@ export default function Channels() {
           return reqUserId !== userId;
         }) || []
       }));
-      
+
       // Only refresh channel list, not messages (to avoid overwriting state)
       loadChannels();
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to reject request';
-      console.error('Failed to reject request:', err);
-      alert(errorMsg);
+      if (err.response?.status !== 403) {
+        toast.error(err.response?.data?.message || 'Failed to reject request');
+      }
     }
   };
 
@@ -172,11 +174,11 @@ export default function Channels() {
     if (!selected) return;
     try {
       await api.post(`/api/channels/${selected._id}/add-member`, { userId });
-      alert('Member added!');
+      toast.success('Member added!');
       loadChannels();
       loadMessages(selected);
     } catch (err) {
-      console.error('Failed to add member:', err);
+      // Handled
     }
   };
 
@@ -185,11 +187,11 @@ export default function Channels() {
     if (!window.confirm('Remove this member from the channel?')) return;
     try {
       await api.post(`/api/channels/${selected._id}/remove-member`, { userId });
-      alert('Member removed');
+      toast.success('Member removed');
       loadChannels();
       loadMessages(selected);
     } catch (err) {
-      console.error('Failed to remove member:', err);
+      // Handled
     }
   };
 
@@ -204,15 +206,15 @@ export default function Channels() {
       setMessage('');
       loadMessages(selected);
     } catch (err) {
-      console.error('Failed to send message:', err);
+      // Handled
     }
   };
 
   const createChannel = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/channels', { 
-        name: newChannelName, 
+      await api.post('/api/channels', {
+        name: newChannelName,
         companyId,
         type: 'public'
       });
@@ -220,7 +222,7 @@ export default function Channels() {
       setShowAddModal(false);
       loadChannels();
     } catch (err) {
-      console.error('Failed to create channel:', err);
+      // Handled
     }
   };
 
@@ -231,8 +233,9 @@ export default function Channels() {
       if (selected?._id === channelId) setSelected(null);
       loadChannels();
     } catch (err) {
-      console.error('Failed to delete channel:', err);
-      alert('Failed to delete channel: ' + (err.response?.data?.message || err.message));
+      if (err.response?.status !== 403) {
+        toast.error('Failed to delete channel: ' + (err.response?.data?.message || err.message));
+      }
     }
   };
 
@@ -257,7 +260,7 @@ export default function Channels() {
             <p className="text-slate-600">Collaborate with your team in real-time</p>
           </div>
           {canCreateChannel && (
-            <button 
+            <button
               onClick={() => setShowAddModal(true)}
               className={`${theme.bgPrimary} text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 ${theme.bgPrimaryHover} transition shadow-lg hover:shadow-xl active:scale-95`}
             >
@@ -295,7 +298,7 @@ export default function Channels() {
                 <IoChatbubblesOutline className="mx-auto text-4xl text-slate-300 mb-2" />
                 <p className="text-sm text-slate-500">No channels yet</p>
                 {canCreateChannel ? (
-                  <button 
+                  <button
                     onClick={() => setShowAddModal(true)}
                     className={`mt-4 text-sm text-${theme.primary} font-semibold hover:underline`}
                   >
@@ -312,11 +315,10 @@ export default function Channels() {
                   <div key={channel._id} className="relative group">
                     <button
                       onClick={() => setSelected(channel)}
-                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${
-                        selected?._id === channel._id
-                          ? `bg-blue-100 text-blue-600 font-semibold`
-                          : 'text-slate-600 hover:bg-slate-50'
-                      }`}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 group ${selected?._id === channel._id
+                        ? `bg-blue-100 text-blue-600 font-semibold`
+                        : 'text-slate-600 hover:bg-slate-50'
+                        }`}
                     >
                       <IoRadioButtonOnOutline className="text-lg shrink-0" />
                       <span className="truncate grow">{channel.name}</span>
@@ -371,7 +373,7 @@ export default function Channels() {
                     </button>
                   )}
                   {selected.isMember && (
-                    <button 
+                    <button
                       onClick={() => deleteChannel(selected._id)}
                       className="p-2 hover:bg-red-50 rounded-lg transition text-red-600 hover:text-red-700"
                       title="Delete channel"
@@ -402,87 +404,85 @@ export default function Channels() {
               ) : (
                 <>
                   <div className="grow overflow-y-auto p-6 space-y-4 custom-scrollbar">{(selected.messages || []).length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <IoChatbubblesOutline className="mx-auto text-6xl text-slate-300 mb-3" />
-                      <h4 className="text-lg font-semibold text-slate-600 mb-1">No messages yet</h4>
-                      <p className="text-sm text-slate-500">Start the conversation!</p>
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <IoChatbubblesOutline className="mx-auto text-6xl text-slate-300 mb-3" />
+                        <h4 className="text-lg font-semibold text-slate-600 mb-1">No messages yet</h4>
+                        <p className="text-sm text-slate-500">Start the conversation!</p>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  (selected.messages || []).map((msg, i) => {
-                    const currentUser = localStorage.getItem('userId');
-                    const isOwnMessage = msg.user?._id === currentUser;
-                    
-                    return (
-                      <div
-                        key={i}
-                        className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''} animate-fadeIn`}
-                      >
-                        {/* Avatar */}
-                        <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white ${
-                          isOwnMessage 
+                  ) : (
+                    (selected.messages || []).map((msg, i) => {
+                      const currentUser = localStorage.getItem('userId');
+                      const isOwnMessage = msg.user?._id === currentUser;
+
+                      return (
+                        <div
+                          key={i}
+                          className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : ''} animate-fadeIn`}
+                        >
+                          {/* Avatar */}
+                          <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-bold text-white ${isOwnMessage
                             ? 'bg-linear-to-br from-green-500 to-green-600'
                             : 'bg-linear-to-br from-blue-500 to-purple-600'
-                        }`}>
-                          {msg.user?.profilePic ? (
-                            <img src={msg.user.profilePic} alt="" className="w-full h-full rounded-full object-cover" />
-                          ) : (
-                            getUserInitials(msg.user)
-                          )}
-                        </div>
+                            }`}>
+                            {msg.user?.profilePic ? (
+                              <img src={msg.user.profilePic} alt="" className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              getUserInitials(msg.user)
+                            )}
+                          </div>
 
-                        {/* Message Content */}
-                        <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-                          <div className={`rounded-2xl px-4 py-2.5 ${
-                            isOwnMessage
+                          {/* Message Content */}
+                          <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+                            <div className={`rounded-2xl px-4 py-2.5 ${isOwnMessage
                               ? 'bg-blue-600 text-white rounded-tr-none'
                               : 'bg-white text-slate-800 rounded-tl-none shadow-sm border border-slate-200'
-                          }`}>
-                            {!isOwnMessage && (
-                              <p className="text-xs font-semibold text-blue-600 mb-1">
-                                {msg.user?.firstName} {msg.user?.lastName}
-                              </p>
-                            )}
-                            <p className="text-sm leading-relaxed">{msg.text}</p>
+                              }`}>
+                              {!isOwnMessage && (
+                                <p className="text-xs font-semibold text-blue-600 mb-1">
+                                  {msg.user?.firstName} {msg.user?.lastName}
+                                </p>
+                              )}
+                              <p className="text-sm leading-relaxed">{msg.text}</p>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1 px-2">
+                              {formatTime(msg.createdAt)}
+                            </p>
                           </div>
-                          <p className="text-xs text-slate-400 mt-1 px-2">
-                            {formatTime(msg.createdAt)}
-                          </p>
                         </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                      );
+                    })
+                  )}
+                  </div>
 
-              {/* Message Input */}
-              <div className="bg-white border-t border-slate-200 p-4">
-                <form onSubmit={send} className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    className="p-2.5 hover:bg-slate-100 rounded-xl transition text-slate-500"
-                    title="Attach file"
-                  >
-                    <IoAttachOutline className="text-xl" />
-                  </button>
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder={`Message #${selected.name}`}
-                    className="grow px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!message.trim()}
-                    className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-                  >
-                    <IoSendOutline className="text-lg" />
-                    <span className="hidden sm:inline">Send</span>
-                  </button>
-                </form>
-              </div>
+                  {/* Message Input */}
+                  <div className="bg-white border-t border-slate-200 p-4">
+                    <form onSubmit={send} className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="p-2.5 hover:bg-slate-100 rounded-xl transition text-slate-500"
+                        title="Attach file"
+                      >
+                        <IoAttachOutline className="text-xl" />
+                      </button>
+                      <input
+                        type="text"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder={`Message #${selected.name}`}
+                        className="grow px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!message.trim()}
+                        className={`px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                      >
+                        <IoSendOutline className="text-lg" />
+                        <span className="hidden sm:inline">Send</span>
+                      </button>
+                    </form>
+                  </div>
                 </>
               )}
             </>
@@ -545,7 +545,7 @@ export default function Channels() {
               <h2 className="text-2xl font-bold text-slate-800">Manage Channel Members</h2>
               <button onClick={() => setShowMembersModal(false)} className="channel-modal-close-btn p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
             </div>
-            
+
             {/* Join Requests */}
             {selected.joinRequests?.length > 0 && (
               <div className="mb-6">
@@ -609,8 +609,8 @@ export default function Channels() {
             <div>
               <h3 className="text-lg font-semibold text-slate-700 mb-3">Add Members</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {companyMembers.filter(m => 
-                  !selected.members?.some(memberId => 
+                {companyMembers.filter(m =>
+                  !selected.members?.some(memberId =>
                     (memberId._id || memberId) === m.user._id
                   )
                 ).map((member) => (

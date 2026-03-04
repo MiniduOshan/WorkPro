@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
-  IoAddOutline, IoCloseOutline, IoPeopleOutline, 
-  IoLogOutOutline, IoEnterOutline, IoTrashOutline 
+import {
+  IoAddOutline, IoCloseOutline, IoPeopleOutline,
+  IoLogOutOutline, IoEnterOutline, IoTrashOutline
 } from 'react-icons/io5';
+import { useThemeColors } from '../../utils/themeHelper';
 
 export default function Groups() {
+  const theme = useThemeColors();
   const [groups, setGroups] = useState([]);
   const [viewGroup, setViewGroup] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,7 +15,7 @@ export default function Groups() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [creatingGroup, setCreatingGroup] = useState(false);
-  
+
   const companyRole = localStorage.getItem('companyRole');
   const currentUserId = localStorage.getItem('userId');
 
@@ -47,7 +49,7 @@ export default function Groups() {
   };
 
   const removeMember = async (userId) => {
-    if(!window.confirm("Kick this member from the group?")) return;
+    if (!window.confirm("Kick this member from the group?")) return;
     try {
       await api.post(`/api/groups/${viewGroup._id}/remove-member`, { userId });
       // Refresh the group details after removing member
@@ -62,7 +64,7 @@ export default function Groups() {
       alert("Group name is required");
       return;
     }
-    
+
     try {
       setCreatingGroup(true);
       const companyId = localStorage.getItem('companyId');
@@ -105,12 +107,12 @@ export default function Groups() {
             <h1 className="text-2xl font-bold text-slate-800 mb-1">Project Groups</h1>
             <p className="text-slate-600">Coordinate your team and track collective progress</p>
           </div>
-          {['owner', 'manager'].includes(companyRole) && (
-            <button 
+          {['owner', 'manager', 'employee'].includes(companyRole) && (
+            <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all active:scale-95"
+              className={`${theme.bgPrimary} ${theme.bgPrimaryHover} text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all active:scale-95`}
             >
-              + Create New Group
+              + Create New
             </button>
           )}
         </div>
@@ -122,21 +124,21 @@ export default function Groups() {
           {groups.map(g => (
             <div key={g._id} className="bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all group">
               <div className="flex justify-between items-center mb-5">
-                <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-200">
-                  <IoPeopleOutline size={30}/>
+                <div className={`${theme.bgPrimaryLight} p-3 rounded-xl ${theme.textPrimary} group-hover:${theme.bgPrimary} group-hover:text-white transition-colors duration-200`}>
+                  <IoPeopleOutline size={30} />
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Progress</p>
                   <p className="text-lg font-bold text-slate-800 mt-1">{g.progress}%</p>
                 </div>
               </div>
-              
+
               <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">{g.name}</h3>
               <p className="text-slate-500 text-sm mb-6 line-clamp-2">{g.description || "Active collaboration squad for group projects."}</p>
-              
-              <button 
-                onClick={() => openView(g)} 
-                className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-all"
+
+              <button
+                onClick={() => openView(g)}
+                className={`w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:${theme.bgPrimary} transition-all`}
               >
                 VIEW DETAILS
               </button>
@@ -155,17 +157,17 @@ export default function Groups() {
                 <p className="text-slate-500 mt-2">{viewGroup.description}</p>
               </div>
               <div className="flex items-center gap-2">
-                {['owner', 'manager'].includes(companyRole) && (
+                {['owner', 'manager', 'employee'].includes(companyRole) && (
                   <button
                     onClick={deleteGroup}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                     title="Delete group"
                   >
-                    <IoTrashOutline size={22}/>
+                    <IoTrashOutline size={22} />
                   </button>
                 )}
                 <button onClick={() => setViewGroup(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                  <IoCloseOutline size={28}/>
+                  <IoCloseOutline size={28} />
                 </button>
               </div>
             </div>
@@ -190,20 +192,20 @@ export default function Groups() {
             <div className="mb-12">
               <div className="flex justify-between items-center mb-5 border-b pb-2">
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">Group Members</h4>
-                <span className="text-xs font-black text-indigo-500">{viewGroup.members?.length} Total</span>
+                <span className={`text-xs font-black ${theme.textPrimary}`}>{viewGroup.members?.length} Total</span>
               </div>
               <div className="space-y-3 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
                 {viewGroup.members?.map(m => (
                   <div key={m._id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl group/member hover:bg-indigo-50/50 transition-all">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-[11px]">
+                      <div className={`w-9 h-9 rounded-full ${theme.bgPrimaryLight} flex items-center justify-center ${theme.textPrimary} font-bold text-[11px]`}>
                         {(m.firstName?.[0] || '?')}{(m.lastName?.[0] || '')}
                       </div>
                       <span className="text-sm font-semibold text-slate-800">{m.firstName} {m.lastName}</span>
                     </div>
                     {['owner', 'manager'].includes(companyRole) && m._id !== currentUserId && (
                       <button onClick={() => removeMember(m._id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                        <IoTrashOutline size={18}/>
+                        <IoTrashOutline size={18} />
                       </button>
                     )}
                   </div>
@@ -214,18 +216,18 @@ export default function Groups() {
             {/* Final Action */}
             <div className="flex gap-4">
               {viewGroup.members?.some(m => m._id === currentUserId) ? (
-                <button 
+                <button
                   onClick={() => handleMemberAction('leave')}
                   className="flex-1 py-4 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  <IoLogOutOutline size={22}/> LEAVE TEAM
+                  <IoLogOutOutline size={22} /> LEAVE TEAM
                 </button>
               ) : (
-                <button 
+                <button
                   onClick={() => handleMemberAction('join')}
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
+                  className={`flex-1 py-4 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} flex items-center justify-center gap-2 shadow-md transition-all active:scale-95`}
                 >
-                  <IoEnterOutline size={22}/> JOIN TEAM
+                  <IoEnterOutline size={22} /> JOIN TEAM
                 </button>
               )}
             </div>
@@ -243,7 +245,7 @@ export default function Groups() {
                 <p className="text-slate-500 mt-1">Build your team collaboration space</p>
               </div>
               <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={24}/>
+                <IoCloseOutline size={24} />
               </button>
             </div>
 
@@ -255,7 +257,7 @@ export default function Groups() {
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="Enter group name"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium"
+                  className={`w-full px-4 py-3 border border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none font-medium`}
                 />
               </div>
 
@@ -266,7 +268,7 @@ export default function Groups() {
                   onChange={(e) => setNewGroupDesc(e.target.value)}
                   placeholder="Enter group description (optional)"
                   rows="3"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium resize-none"
+                  className={`w-full px-4 py-3 border border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none font-medium resize-none`}
                 />
               </div>
 
@@ -282,9 +284,9 @@ export default function Groups() {
                 <button
                   type="submit"
                   disabled={creatingGroup}
-                  className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50 active:scale-95"
+                  className={`flex-1 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50 active:scale-95`}
                 >
-                  <IoAddOutline size={22}/> {creatingGroup ? 'Creating...' : 'Create Group'}
+                  <IoAddOutline size={22} /> {creatingGroup ? 'Creating...' : 'Create Group'}
                 </button>
               </div>
             </form>

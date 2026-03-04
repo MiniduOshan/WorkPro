@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { 
-  createGroup, 
-  listGroups, 
-  getGroup, 
-  joinGroup, 
-  leaveGroup, 
-  removeMemberFromGroup, 
-  deleteGroup 
+import {
+  createGroup,
+  listGroups,
+  getGroup,
+  joinGroup,
+  leaveGroup,
+  removeMemberFromGroup,
+  deleteGroup
 } from '../controllers/groupController.js';
+import { checkLimit } from '../middleware/limitMiddleware.js';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.get('/', protect, listGroups);
 router.get('/:id', protect, getGroup);
 
 // Create a new group
-router.post('/', protect, createGroup);
+router.post('/', protect, checkLimit('maxProjectGroups'), createGroup);
 
 // Join a group
 router.post('/:id/join', protect, joinGroup);

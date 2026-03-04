@@ -13,7 +13,7 @@ const googleOAuthClient = new OAuth2Client();
 const getUserResponse = (user) => {
     // A user is super admin if they are flagged OR they match the fixed email
     const isSuperAdmin = user.isSuperAdmin === true || user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
-    
+
     return {
         _id: user._id,
         firstName: user.firstName,
@@ -51,11 +51,11 @@ const registerUser = async (req, res) => {
 
         // Check if this is the super admin email
         const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
-        
-        const user = await User.create({ 
-            firstName, 
-            lastName, 
-            email, 
+
+        const user = await User.create({
+            firstName,
+            lastName,
+            email,
             password,
             isSuperAdmin: isSuperAdmin  // Only set true for admin.workpro@gmail.com
         });
@@ -66,7 +66,7 @@ const registerUser = async (req, res) => {
             res.status(400).json({ message: 'Invalid user data (Mongoose validation error)' });
         }
     } catch (error) {
-        console.error("[AUTH ERROR] Database or Server Error during signup:", error); 
+        console.error("[AUTH ERROR] Database or Server Error during signup:", error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -100,14 +100,14 @@ const authUser = async (req, res) => {
 // @route 	GET /api/users/lookup?email=...
 // @access 	Public (Used for invitation flow)
 const getUserByEmail = async (req, res) => {
-    const { email } = req.query; 
+    const { email } = req.query;
 
     if (!email) {
         return res.status(400).json({ message: 'Email query parameter is required for lookup.' });
     }
 
     try {
-        const user = await User.findOne({ email }).select('_id firstName lastName'); 
+        const user = await User.findOne({ email }).select('_id firstName lastName');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found with this email.' });
@@ -129,7 +129,7 @@ const getUserByEmail = async (req, res) => {
 // @route 	GET /api/users/profile
 // @access 	Private (Requires JWT via 'protect' middleware)
 const getUserProfile = async (req, res) => {
-    const user = req.user; 
+    const user = req.user;
 
     if (user) {
         res.json({
@@ -157,34 +157,34 @@ const updateUserProfile = async (req, res) => {
         // Update name, mobile number, and profile pic
         user.firstName = req.body.firstName || user.firstName;
         user.lastName = req.body.lastName || user.lastName;
-        user.mobileNumber = req.body.mobileNumber || user.mobileNumber; 
-        
+        user.mobileNumber = req.body.mobileNumber || user.mobileNumber;
+
         // Allow updating profilePic URL (using !== undefined to allow clearing the field)
-        if (req.body.profilePic !== undefined) { 
-             user.profilePic = req.body.profilePic;
+        if (req.body.profilePic !== undefined) {
+            user.profilePic = req.body.profilePic;
         }
 
         // Handle potential email change
         if (req.body.email && req.body.email !== user.email) {
-             const emailExists = await User.findOne({ email: req.body.email });
-             if (emailExists) {
-                 return res.status(400).json({ message: 'Email already in use.' });
-             }
-             user.email = req.body.email; 
+            const emailExists = await User.findOne({ email: req.body.email });
+            if (emailExists) {
+                return res.status(400).json({ message: 'Email already in use.' });
+            }
+            user.email = req.body.email;
         }
 
         // Handle password change logic
         if (req.body.password) {
             if (req.body.password !== req.body.confirmPassword) {
-                 return res.status(400).json({ message: 'New passwords do not match' });
+                return res.status(400).json({ message: 'New passwords do not match' });
             }
-            user.password = req.body.password; 
+            user.password = req.body.password;
         }
 
         const updatedUser = await user.save();
-        
+
         // Respond with the updated user data and a new JWT
-        res.json(getUserResponse(updatedUser)); 
+        res.json(getUserResponse(updatedUser));
     } else {
         res.status(404).json({ message: 'User not found' });
     }
@@ -200,14 +200,14 @@ const uploadProfilePic = async (req, res) => {
         }
 
         const user = await User.findById(req.user._id);
-        
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         // Store the file path relative to the uploads directory
         user.profilePic = `/uploads/${req.file.filename}`;
-        
+
         const updatedUser = await user.save();
 
         res.json({
@@ -227,7 +227,7 @@ const uploadProfilePic = async (req, res) => {
 const deleteUserAccount = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
-        
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -239,7 +239,6 @@ const deleteUserAccount = async (req, res) => {
         const Note = req.app.locals.Note || (await import('../models/Note.js')).default;
         const Group = req.app.locals.Group || (await import('../models/Group.js')).default;
         const Department = req.app.locals.Department || (await import('../models/Department.js')).default;
-        const Team = req.app.locals.Team || (await import('../models/Team.js')).default;
         const Channel = req.app.locals.Channel || (await import('../models/Channel.js')).default;
         const Notification = req.app.locals.Notification || (await import('../models/Notification.js')).default;
         const Invitation = req.app.locals.Invitation || (await import('../models/Invitation.js')).default;
@@ -266,12 +265,6 @@ const deleteUserAccount = async (req, res) => {
         await Department.updateMany(
             { managers: user._id },
             { $pull: { managers: user._id } }
-        );
-
-        // 6. Remove user from teams
-        await Team.updateMany(
-            { members: user._id },
-            { $pull: { members: user._id } }
         );
 
         // 7. Remove user from channels
@@ -352,14 +345,14 @@ const forgotPassword = async (req, res) => {
 
         // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
-        
+
         // Hash token and set expiry (1 hour)
         user.resetPasswordToken = crypto
             .createHash('sha256')
             .update(resetToken)
             .digest('hex');
         user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
-        
+
         await user.save();
 
         // Create reset URL
@@ -391,8 +384,8 @@ const forgotPassword = async (req, res) => {
             user.resetPasswordToken = undefined;
             user.resetPasswordExpire = undefined;
             await user.save();
-            
-            return res.status(500).json({ 
+
+            return res.status(500).json({
                 message: 'Email could not be sent. Please try again later.',
                 error: emailError.message
             });
@@ -426,8 +419,8 @@ const resetPassword = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(400).json({ 
-                message: 'Invalid or expired password reset token' 
+            return res.status(400).json({
+                message: 'Invalid or expired password reset token'
             });
         }
 
@@ -437,7 +430,7 @@ const resetPassword = async (req, res) => {
         user.resetPasswordExpire = undefined;
         await user.save();
 
-        res.json({ 
+        res.json({
             message: 'Password reset successful',
             token: generateToken(user._id)
         });
@@ -531,7 +524,7 @@ const googleAuth = async (req, res) => {
 export default {
     registerUser,
     authUser,
-    getUserByEmail, 
+    getUserByEmail,
     getUserProfile,
     updateUserProfile, // <--- Preserved and updated
     uploadProfilePic,   // <--- New file upload endpoint

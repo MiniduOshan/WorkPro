@@ -14,10 +14,11 @@ import {
   IoShieldCheckmarkOutline,
   IoFlashOutline,
   IoDocumentTextOutline,
-  IoSparklesOutline
+  IoSparklesOutline,
+  IoWalletOutline
 } from 'react-icons/io5';
 
-const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () => {} }) => {
+const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () => { } }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '', isSuperAdmin: false });
@@ -64,7 +65,9 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
   const managementLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/manager' },
     { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
-    ...(companyRole === 'owner' ? [{ name: 'Team Members', icon: IoPeopleOutline, path: '/dashboard/manager/teams' }] : []),
+    ...(companyRole === 'owner' ? [
+      { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
+    ] : []),
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },
     { name: 'Departments', icon: IoLayersOutline, path: '/dashboard/manager/departments' },
     { name: 'Documents', icon: IoDocumentTextOutline, path: '/dashboard/manager/documents' },
@@ -73,7 +76,7 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
   ];
 
   const communicationLinks = [
-    { name: 'Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
+    { name: 'Project Groups', icon: IoPeopleOutline, path: '/dashboard/manager/groups' },
     { name: 'Channels', icon: IoChatbubblesOutline, path: '/dashboard/manager/channels', badge: '3' },
     { name: 'Announcements', icon: IoMegaphoneOutline, path: '/dashboard/manager/announcements' },
   ];
@@ -86,11 +89,10 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
     <Link
       to={path}
       onClick={onNavigate}
-      className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-        isActive
-          ? 'active bg-blue-50 text-blue-600'
-          : 'text-slate-500 hover:bg-slate-50'
-      }`}
+      className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive
+        ? 'active bg-blue-50 text-blue-600'
+        : 'text-slate-500 hover:bg-slate-50'
+        }`}
     >
       <Icon className="w-5 h-5" />
       <span>{name}</span>
@@ -148,6 +150,23 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
           </div>
         </div>
 
+        {/* Billing Section - Only for Owners */}
+        {companyRole === 'owner' && (
+          <div className="px-4 mb-6">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">
+              Billing
+            </p>
+            <div className="space-y-1">
+              <SidebarLink
+                name="Billing"
+                icon={IoWalletOutline}
+                path="/dashboard/manager/billing"
+                isActive={isLinkActive('/dashboard/manager/billing')}
+              />
+            </div>
+          </div>
+        )}
+
         {/* System Section */}
         <div className="px-4">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">
@@ -161,7 +180,7 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
                 isActive={isLinkActive(link.path)}
               />
             ))}
-            
+
             {/* Super Admin Link */}
             {profile.isSuperAdmin && (
               <Link

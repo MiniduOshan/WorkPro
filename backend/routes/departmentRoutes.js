@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import { createDepartment, listDepartments, updateDepartment, deleteDepartment, getDepartmentDetail, addMemberToDepartment, removeMemberFromDepartment, joinDepartment, leaveDepartment } from '../controllers/departmentController.js';
+import { checkLimit } from '../middleware/limitMiddleware.js';
 
 const router = Router();
 
-router.post('/', protect, createDepartment);
+router.post('/', protect, checkLimit('maxDepartments'), createDepartment);
 router.get('/', protect, listDepartments);
 router.get('/:id', protect, getDepartmentDetail);
 router.put('/:id', protect, updateDepartment);

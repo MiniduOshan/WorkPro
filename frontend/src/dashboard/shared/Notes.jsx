@@ -77,7 +77,7 @@ export default function Notes() {
 
       <div className="grow overflow-y-auto p-8 custom-scrollbar">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Creator Section */}
           <div className="lg:col-span-4 lg:sticky lg:top-0 h-fit">
             <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
@@ -109,8 +109,8 @@ export default function Notes() {
                     type="submit"
                     disabled={saving || (!newTitle && !newContent)}
                     className={`px-6 py-2.5 font-bold rounded-xl transition-all shadow-lg flex items-center gap-2 
-                      ${(saving || (!newTitle && !newContent)) 
-                        ? 'bg-slate-300 text-slate-600 shadow-none cursor-not-allowed' 
+                      ${(saving || (!newTitle && !newContent))
+                        ? 'bg-slate-300 text-slate-600 shadow-none cursor-not-allowed'
                         : `${theme.bgPrimary} text-white ${theme.bgPrimaryHover} shadow-emerald-100`}`}
                   >
                     {saving ? 'Creating...' : 'Save Note'}
@@ -135,11 +135,11 @@ export default function Notes() {
             ) : (
               <div className="columns-1 md:columns-2 gap-6 space-y-6">
                 {notes.map(note => (
-                  <NoteCard 
-                    key={note._id} 
-                    note={note} 
-                    onUpdate={updateNote} 
-                    onDelete={deleteNote} 
+                  <NoteCard
+                    key={note._id}
+                    note={note}
+                    onUpdate={updateNote}
+                    onDelete={deleteNote}
                   />
                 ))}
               </div>
@@ -167,18 +167,18 @@ const NoteCard = ({ note, onUpdate, onDelete }) => {
       <div className="p-6">
         {isEditing ? (
           <div className="space-y-2">
-            <input 
+            <input
               autoFocus
               className="w-full font-bold text-slate-800 border-none focus:ring-0 p-0 text-base bg-transparent"
               value={val.title}
-              onChange={e => setVal({...val, title: e.target.value})}
+              onChange={e => setVal({ ...val, title: e.target.value })}
               onBlur={handleBlur}
             />
-            <textarea 
+            <textarea
               className="w-full text-slate-700 font-medium border-none focus:ring-0 p-0 text-sm resize-none bg-transparent"
               rows={5}
               value={val.content}
-              onChange={e => setVal({...val, content: e.target.value})}
+              onChange={e => setVal({ ...val, content: e.target.value })}
               onBlur={handleBlur}
             />
           </div>

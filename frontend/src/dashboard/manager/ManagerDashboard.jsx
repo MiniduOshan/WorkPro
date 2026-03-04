@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import CalendarWidget from '../shared/CalendarWidget.jsx';
-import { 
-  IoCheckmarkDoneOutline, 
-  IoTimeOutline, 
-  IoPeopleOutline, 
+import UsageStatsWidget from '../shared/UsageStatsWidget.jsx';
+import {
+  IoCheckmarkDoneOutline,
+  IoTimeOutline,
+  IoPeopleOutline,
   IoWarningOutline,
   IoSearchOutline,
   IoFilterOutline,
@@ -26,15 +27,15 @@ import {
 
 // --- SUB-COMPONENTS MOVED OUTSIDE TO FIX INPUT FOCUS ISSUE ---
 
-const CompanyCreationModal = ({ 
-  companyForm, 
-  setCompanyForm, 
-  handleCreateCompany, 
-  isCreatingCompany, 
-  newDept, 
-  setNewDept, 
-  handleAddDepartment, 
-  handleRemoveDepartment 
+const CompanyCreationModal = ({
+  companyForm,
+  setCompanyForm,
+  handleCreateCompany,
+  isCreatingCompany,
+  newDept,
+  setNewDept,
+  handleAddDepartment,
+  handleRemoveDepartment
 }) => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -45,28 +46,28 @@ const CompanyCreationModal = ({
         </h2>
         <p className="text-blue-100 mt-1">Set up your organization to get started</p>
       </div>
-      
+
       <form onSubmit={handleCreateCompany} className="p-6 space-y-6">
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Company Name *</label>
-          <input 
+          <input
             type="text"
             required
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             placeholder="e.g., TechFlow Systems"
             value={companyForm.name}
-            onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
+            onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
           />
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-          <textarea 
+          <textarea
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             placeholder="Brief description of your company"
             rows="3"
             value={companyForm.description}
-            onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
+            onChange={(e) => setCompanyForm({ ...companyForm, description: e.target.value })}
           />
         </div>
 
@@ -75,24 +76,24 @@ const CompanyCreationModal = ({
             <IoGlobeOutline className="w-5 h-5" />
             Website
           </label>
-          <input 
+          <input
             type="url"
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             placeholder="https://example.com"
             value={companyForm.website}
-            onChange={(e) => setCompanyForm({...companyForm, website: e.target.value})}
+            onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Mission</label>
-            <input 
+            <input
               type="text"
               className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="Our mission..."
               value={companyForm.mission}
-              onChange={(e) => setCompanyForm({...companyForm, mission: e.target.value})}
+              onChange={(e) => setCompanyForm({ ...companyForm, mission: e.target.value })}
             />
           </div>
           <div>
@@ -100,31 +101,31 @@ const CompanyCreationModal = ({
               <IoRocketOutline className="w-5 h-5" />
               Vision
             </label>
-            <input 
+            <input
               type="text"
               className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="Our vision..."
               value={companyForm.vision}
-              onChange={(e) => setCompanyForm({...companyForm, vision: e.target.value})}
+              onChange={(e) => setCompanyForm({ ...companyForm, vision: e.target.value })}
             />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Industry</label>
-          <input 
+          <input
             type="text"
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             placeholder="e.g., Technology, Healthcare"
             value={companyForm.industry}
-            onChange={(e) => setCompanyForm({...companyForm, industry: e.target.value})}
+            onChange={(e) => setCompanyForm({ ...companyForm, industry: e.target.value })}
           />
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Departments</label>
           <div className="flex gap-2 mb-3">
-            <input 
+            <input
               type="text"
               className="flex-1 border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="Add new department"
@@ -132,7 +133,7 @@ const CompanyCreationModal = ({
               onChange={(e) => setNewDept(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddDepartment())}
             />
-            <button 
+            <button
               type="button"
               onClick={handleAddDepartment}
               className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold"
@@ -157,7 +158,7 @@ const CompanyCreationModal = ({
         </div>
 
         <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
-          <button 
+          <button
             type="submit"
             disabled={isCreatingCompany}
             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:opacity-90 transition-all font-bold disabled:opacity-50"
@@ -182,11 +183,11 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
         <form onSubmit={handleInviteEmployee} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Role *</label>
-            <select 
+            <select
               required
               className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={inviteForm.role}
-              onChange={(e) => setInviteForm({...inviteForm, role: e.target.value})}
+              onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value })}
             >
               <option value="employee">Employee</option>
               <option value="manager">Manager</option>
@@ -195,10 +196,10 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
 
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Department</label>
-            <select 
+            <select
               className="w-full border-2 border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={inviteForm.department}
-              onChange={(e) => setInviteForm({...inviteForm, department: e.target.value})}
+              onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
             >
               <option value="">Select Department</option>
               {companyData?.members && [...new Set(companyData.members.map(m => m.department))].map(dept => (
@@ -208,14 +209,14 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
           </div>
 
           <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setShowInviteModal(false)}
               className="flex-1 border-2 border-gray-300 text-gray-700 py-2 rounded-lg"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               disabled={inviteGenerating}
               className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-lg disabled:opacity-50"
@@ -241,7 +242,7 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
             </div>
           </div>
 
-          <button 
+          <button
             type="button"
             onClick={onCopyLink}
             className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${copied ? 'bg-blue-600 text-white' : 'border-2 border-slate-200 text-slate-700 hover:border-slate-300'}`}
@@ -250,7 +251,7 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
 
-          <button 
+          <button
             onClick={() => { setShowInviteModal(false); }}
             className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
           >
@@ -267,7 +268,7 @@ const InviteEmployeeModal = ({ inviteForm, setInviteForm, handleInviteEmployee, 
 export default function ManagerDashboard() {
   const [searchParams] = useSearchParams();
   const isFirstTime = searchParams.get('first-time') === 'true';
-  
+
   const [companyData, setCompanyData] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [showCompanyModal, setShowCompanyModal] = useState(isFirstTime);
@@ -346,8 +347,8 @@ export default function ManagerDashboard() {
         name: `${m.user?.firstName || ''} ${m.user?.lastName || ''}`.trim(),
         role: m.role,
         department: (m.department || 'GENERAL').toUpperCase(),
-        capacity: Math.floor(Math.random()*60)+30,
-        initials: `${(m.user?.firstName||'')[0]||'U'}${(m.user?.lastName||'')[0]||'S'}`,
+        capacity: Math.floor(Math.random() * 60) + 30,
+        initials: `${(m.user?.firstName || '')[0] || 'U'}${(m.user?.lastName || '')[0] || 'S'}`,
         color: 'slate'
       })));
       setMessages([
@@ -365,8 +366,12 @@ export default function ManagerDashboard() {
       const { data } = await api.get('/api/ai/progress-summary', { headers: { 'x-company-id': companyId } });
       setAiSummary(data.summary);
     } catch (err) {
-      console.error('Failed to fetch AI summary:', err);
-      setAiSummary('AI summary unavailable right now.');
+      if (err.response && err.response.status === 403) {
+        setAiSummary('AI insights are not enabled for your current plan.');
+      } else {
+        console.error('Failed to fetch AI summary:', err);
+        setAiSummary('AI summary unavailable right now.');
+      }
     } finally {
       setAiSummaryLoading(false);
     }
@@ -435,7 +440,7 @@ export default function ManagerDashboard() {
 
   const copyInviteLink = () => {
     if (!inviteLink) return;
-    
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(inviteLink)
         .then(() => {
@@ -497,7 +502,7 @@ export default function ManagerDashboard() {
   return (
     <>
       {showCompanyModal && (
-        <CompanyCreationModal 
+        <CompanyCreationModal
           companyForm={companyForm}
           setCompanyForm={setCompanyForm}
           handleCreateCompany={handleCreateCompany}
@@ -508,9 +513,9 @@ export default function ManagerDashboard() {
           handleRemoveDepartment={handleRemoveDepartment}
         />
       )}
-      
+
       {showInviteModal && (
-        <InviteEmployeeModal 
+        <InviteEmployeeModal
           inviteForm={inviteForm}
           setInviteForm={setInviteForm}
           handleInviteEmployee={handleInviteEmployee}
@@ -524,122 +529,123 @@ export default function ManagerDashboard() {
       )}
 
       <div className="grow flex flex-col overflow-hidden">
-      {!companyData && !localStorage.getItem('companyId') ? (
-        <div className="grow flex flex-col items-center justify-center p-8 text-center bg-slate-50">
-          <div className="max-w-md">
-            <h2 className="text-2xl font-bold text-slate-800 mb-3">Welcome to WorkPro!</h2>
-            <button onClick={() => setShowCompanyModal(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold">
-              Create Company
-            </button>
+        {!companyData && !localStorage.getItem('companyId') ? (
+          <div className="grow flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+            <div className="max-w-md">
+              <h2 className="text-2xl font-bold text-slate-800 mb-3">Welcome to WorkPro!</h2>
+              <button onClick={() => setShowCompanyModal(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold">
+                Create Company
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <>
-          <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
-            <h1 className="text-xl font-bold text-slate-800">Manager Dashboard</h1>
-            <div className="flex items-center gap-6">
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-slate-100 rounded-full py-2 px-4 text-sm focus:ring-2 focus:ring-blue-500 w-64"
-              />
-            </div>
-          </header>
+        ) : (
+          <>
+            <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
+              <h1 className="text-xl font-bold text-slate-800">Manager Dashboard</h1>
+              <div className="flex items-center gap-6">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-slate-100 rounded-full py-2 px-4 text-sm focus:ring-2 focus:ring-blue-500 w-64"
+                />
+              </div>
+            </header>
 
-          <div className="grow overflow-y-auto p-8 bg-slate-50">
-            {/* Dashboard Header */}
-            <div className="mb-10 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white flex justify-between items-center shadow-xl">
-               <div>
+            <div className="grow overflow-y-auto p-8 bg-slate-50">
+              {/* Dashboard Header */}
+              <div className="mb-10 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white flex justify-between items-center shadow-xl">
+                <div>
                   <h2 className="text-3xl font-bold mb-2">{companyData?.name || 'My Company'} HQ</h2>
-               </div>
-            </div>
-
-            {/* Main Grid: Summary on left, Calendar on right */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-10">
-              {/* Left: Summary & Stats */}
-              <div className="xl:col-span-2 space-y-6">
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-blue-600 font-semibold mb-2">Executive Summary</p>
-                    <h3 className="text-xl font-bold text-slate-900 mb-3">Last 24h AI Briefing</h3>
-                    <p className="text-slate-600 whitespace-pre-line text-sm leading-relaxed">
-                      {aiSummaryLoading ? 'Generating summary…' : aiSummary || 'No recent activity yet.'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 min-w-[160px]">
-                    <button
-                      onClick={() => fetchProgressSummary(localStorage.getItem('companyId'))}
-                      disabled={aiSummaryLoading}
-                      className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2 justify-center"
-                    >
-                      <IoSparklesOutline /> {aiSummaryLoading ? 'Refreshing...' : 'Refresh AI'}
-                    </button>
-                    <span className="text-xs text-slate-500 text-center">Uses recent tasks & announcements</span>
-                  </div>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {companyRole === 'owner' && (
+              {/* Main Grid: Summary on left, Calendar on right */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-10">
+                {/* Left: Summary & Stats */}
+                <div className="xl:col-span-2 space-y-6">
+                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-blue-600 font-semibold mb-2">Executive Summary</p>
+                      <h3 className="text-xl font-bold text-slate-900 mb-3">Last 24h AI Briefing</h3>
+                      <p className="text-slate-600 whitespace-pre-line text-sm leading-relaxed">
+                        {aiSummaryLoading ? 'Generating summary…' : aiSummary || 'No recent activity yet.'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 min-w-[160px]">
+                      <button
+                        onClick={() => fetchProgressSummary(localStorage.getItem('companyId'))}
+                        disabled={aiSummaryLoading}
+                        className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2 justify-center"
+                      >
+                        <IoSparklesOutline /> {aiSummaryLoading ? 'Refreshing...' : 'Refresh AI'}
+                      </button>
+                      <span className="text-xs text-slate-500 text-center">Uses recent tasks & announcements</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {companyRole === 'owner' && (
+                      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-slate-500 text-[10px] font-semibold uppercase">Team Members</p>
+                            <h3 className="text-xl font-bold text-slate-800 mt-1">{teamMembers.length}</h3>
+                          </div>
+                          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                            <i className="fa-solid fa-people-group text-green-600 text-sm"></i>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-slate-500 text-[10px] font-semibold uppercase">Team Members</p>
-                          <h3 className="text-xl font-bold text-slate-800 mt-1">{teamMembers.length}</h3>
+                          <p className="text-slate-500 text-[10px] font-semibold uppercase">Your Role</p>
+                          <h3 className="text-xl font-bold text-slate-800 mt-1">{stats.avgCompletionTime}</h3>
                         </div>
-                        <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                          <i className="fa-solid fa-people-group text-green-600 text-sm"></i>
+                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                          <i className="fa-solid fa-clock text-orange-600 text-sm"></i>
                         </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-slate-500 text-[10px] font-semibold uppercase">Your Role</p>
-                        <h3 className="text-xl font-bold text-slate-800 mt-1">{stats.avgCompletionTime}</h3>
-                      </div>
-                      <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <i className="fa-solid fa-clock text-orange-600 text-sm"></i>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-4 mt-2">
-                    <h3 className="text-xl font-bold text-slate-800">Priority Tasks</h3>
-                    <button
-                      onClick={() => navigate('/dashboard/manager/tasks')}
-                      className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-lg transition-colors"
-                    >
-                      View All
-                    </button>
+                  <div>
+                    <div className="flex items-center justify-between mb-4 mt-2">
+                      <h3 className="text-xl font-bold text-slate-800">Priority Tasks</h3>
+                      <button
+                        onClick={() => navigate('/dashboard/manager/tasks')}
+                        className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded-lg transition-colors"
+                      >
+                        View All
+                      </button>
+                    </div>
+                    {tasks.length === 0 ? (
+                      <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+                        <p className="text-slate-400">No tasks assigned yet.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {tasks.slice(0, 4).map((task) => (
+                          <TaskCardManagerCompact key={task._id} task={task} navigate={navigate} />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {tasks.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
-                      <p className="text-slate-400">No tasks assigned yet.</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      {tasks.slice(0, 4).map((task) => (
-                        <TaskCardManagerCompact key={task._id} task={task} navigate={navigate} />
-                      ))}
-                    </div>
-                  )}
                 </div>
-              </div>
 
-              {/* Right Sidebar: Calendar */}
-              <div className="space-y-8">
-                <CalendarWidget />
+                {/* Right Sidebar: Calendar */}
+                <div className="space-y-8">
+                  <CalendarWidget />
+                  <UsageStatsWidget companyId={localStorage.getItem('companyId')} />
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
       </div>
 
 
@@ -657,12 +663,11 @@ const TaskCardManagerCompact = ({ task, navigate }) => {
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-blue-300 transition-all flex flex-col group relative overflow-hidden">
       <div className="flex justify-between items-center mb-4">
-        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-md uppercase ${
-            priority === 'urgent' ? 'bg-red-50 text-red-600' : 
-            priority === 'high' ? 'bg-orange-50 text-orange-600' : 
+        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-md uppercase ${priority === 'urgent' ? 'bg-red-50 text-red-600' :
+          priority === 'high' ? 'bg-orange-50 text-orange-600' :
             priority === 'medium' ? 'bg-yellow-50 text-yellow-600' :
-            'bg-green-50 text-green-600'
-        }`}>
+              'bg-green-50 text-green-600'
+          }`}>
           {priority || 'medium'}
         </span>
         <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold shadow-sm">
@@ -679,9 +684,8 @@ const TaskCardManagerCompact = ({ task, navigate }) => {
         </span>
         <button
           onClick={handleLaunch}
-          className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${
-            isDone ? 'bg-slate-50 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-          }`}
+          className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${isDone ? 'bg-slate-50 text-slate-400' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+            }`}
         >
           {isDone ? 'Finished' : 'Launch'}
         </button>

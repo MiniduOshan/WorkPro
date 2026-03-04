@@ -1,12 +1,16 @@
 import { Router } from 'express';
-import { protect } from '../middleware/authMiddleware.js';
-import { searchCompanies, createCompany, myCompanies, getCompany, updateCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany, deleteCompany } from '../controllers/companyController.js';
+import { protect, requireSuperAdmin } from '../middleware/authMiddleware.js';
+import { searchCompanies, createCompany, myCompanies, getCompany, updateCompany, createInvitation, acceptInvitation, getInvitationDetails, listMembers, removeMember, myRole, acceptInvitationPublic, getUserCompanies, switchCompany, deleteCompany, getAllCompanies } from '../controllers/companyController.js';
 import { loadCompanyContext, requireRole } from '../middleware/companyAuth.js';
+import { checkLimit } from '../middleware/limitMiddleware.js';
 
 const router = Router();
 
 // Search (public)
 router.get('/search', searchCompanies);
+
+// SuperAdmin: list all companies
+router.get('/all', protect, requireSuperAdmin, getAllCompanies);
 
 // Companies - specific routes first
 router.get('/mine', protect, myCompanies);
@@ -25,8 +29,9 @@ router.post('/', protect, createCompany);
 // Generic company routes with parameters
 router.get('/:id', protect, getCompany);
 router.put('/:companyId', protect, loadCompanyContext, requireRole(['manager', 'owner']), updateCompany);
+
 router.delete('/:companyId', protect, deleteCompany);
-router.post('/:companyId/invitations', protect, createInvitation);
+router.post('/:companyId/invitations', protect, checkLimit('maxUsers'), createInvitation);
 router.get('/:companyId/members', protect, listMembers);
 // ROLE CHANGES DISABLED - Roles can only be assigned via invitation links
 // There is NO PUT endpoint for member roles; this prevents post-creation role changes

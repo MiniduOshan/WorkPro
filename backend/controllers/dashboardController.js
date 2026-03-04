@@ -1,6 +1,5 @@
 import Task from '../models/Task.js';
 import Company from '../models/Company.js';
-import Team from '../models/Team.js';
 import Department from '../models/Department.js';
 import Announcement from '../models/Announcement.js';
 import User from '../models/User.js';
@@ -22,12 +21,11 @@ export const managerSummary = async (req, res) => {
     if (error) return res.status(403).json({ message: error });
     if (!['owner', 'manager'].includes(role)) return res.status(403).json({ message: 'Only managers can view manager dashboard' });
 
-    const [tasksByStatus, teams, departments, membersCount] = await Promise.all([
+    const [tasksByStatus, departments, membersCount] = await Promise.all([
       Task.aggregate([
         { $match: { company: company._id } },
         { $group: { _id: '$status', count: { $sum: 1 } } },
       ]),
-      Team.find({ company: company._id }).select('name members').lean(),
       Department.find({ company: company._id }).select('name managers').lean(),
       Promise.resolve(company.members.length)
     ]);
@@ -35,10 +33,9 @@ export const managerSummary = async (req, res) => {
     const statusMap = tasksByStatus.reduce((acc, x) => { acc[x._id] = x.count; return acc; }, {});
     res.json({
       tasks: {
-        total: (statusMap['to-do']||0)+(statusMap['in-progress']||0)+(statusMap['cancelled']||0)+(statusMap['done']||0),
+        total: (statusMap['to-do'] || 0) + (statusMap['in-progress'] || 0) + (statusMap['cancelled'] || 0) + (statusMap['done'] || 0),
         byStatus: statusMap,
       },
-      teams: teams.map(t => ({ _id: t._id, name: t.name, members: t.members.length })),
       departments: departments.map(d => ({ _id: d._id, name: d.name, managers: d.managers.length })),
       members: membersCount,
     });
@@ -54,7 +51,7 @@ export const userSummary = async (req, res) => {
     const { company, error } = await ensureMember(companyId, req.user._id);
     if (error) return res.status(403).json({ message: error });
     const myTasks = await Task.find({ company: company._id, assignee: req.user._id }).sort({ dueDate: 1 }).limit(50);
-    const counts = myTasks.reduce((acc, t) => { acc[t.status] = (acc[t.status]||0)+1; return acc; }, {});
+    const counts = myTasks.reduce((acc, t) => { acc[t.status] = (acc[t.status] || 0) + 1; return acc; }, {});
     res.json({
       tasks: {
         total: myTasks.length,
@@ -76,7 +73,7 @@ export const getTaskAnalytics = async (req, res) => {
     if (error) return res.status(403).json({ message: error });
 
     const tasks = await Task.find({ company: company._id });
-    
+
     // Calculate analytics
     const byStatus = {};
     const byPriority = {};
@@ -86,10 +83,10 @@ export const getTaskAnalytics = async (req, res) => {
     tasks.forEach(task => {
       // By status
       byStatus[task.status] = (byStatus[task.status] || 0) + 1;
-      
+
       // By priority
       byPriority[task.priority] = (byPriority[task.priority] || 0) + 1;
-      
+
       // By assignee
       if (task.assignee) {
         const assigneeId = task.assignee.toString();
@@ -129,16 +126,14 @@ export const getManagerDashboard = async (req, res) => {
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
 
-    const [tasks, announcements, teams, departments, members] = await Promise.all([
+    const [tasks, announcements, departments, members] = await Promise.all([
       Task.find({ company: company._id })
         .populate('assignee', 'firstName lastName')
-        .populate('team', 'name')
         .sort({ dueDate: 1 }),
       Announcement.find({ company: company._id })
         .populate('createdBy', 'firstName lastName')
         .sort({ pinned: -1, createdAt: -1 })
         .limit(5),
-      Team.find({ company: company._id }).populate('members', 'firstName lastName'),
       Department.find({ company: company._id }).populate('managers', 'firstName lastName'),
       company.members,
     ]);
@@ -160,7 +155,6 @@ export const getManagerDashboard = async (req, res) => {
     res.json({
       taskStats,
       recentAnnouncements: announcements,
-      teams: teams.map(t => ({ _id: t._id, name: t.name, memberCount: t.members.length })),
       departments: departments.map(d => ({ _id: d._id, name: d.name, managerCount: d.managers.length })),
       memberCount: members.length,
       upcomingTasks: tasks.filter(t => t.dueDate && t.status !== 'done').slice(0, 10),
@@ -178,11 +172,10 @@ export const getEmployeeDashboard = async (req, res) => {
     const { company, error } = await ensureMember(companyId, req.user._id);
     if (error) return res.status(403).json({ message: error });
 
-    const [myTasks, announcements, teams, userTeams] = await Promise.all([
+    const [myTasks, announcements] = await Promise.all([
       Task.find({ company: company._id, assignee: req.user._id })
-        .populate('team', 'name')
         .sort({ dueDate: 1 }),
-      Announcement.find({ 
+      Announcement.find({
         company: company._id,
         $or: [
           { audience: 'all' },
@@ -192,8 +185,6 @@ export const getEmployeeDashboard = async (req, res) => {
         .populate('createdBy', 'firstName lastName')
         .sort({ pinned: -1, createdAt: -1 })
         .limit(10),
-      Team.find({ company: company._id, members: req.user._id }).populate('members', 'firstName lastName'),
-      Team.find({ company: company._id, members: req.user._id }),
     ]);
 
     // Calculate task stats
@@ -210,7 +201,6 @@ export const getEmployeeDashboard = async (req, res) => {
       taskStats,
       myTasks: myTasks.slice(0, 10),
       announcements,
-      myTeams: teams.map(t => ({ _id: t._id, name: t.name, members: t.members })),
       upcomingDeadlines: myTasks.filter(t => t.dueDate && t.status !== 'done').slice(0, 5),
     });
   } catch (e) {

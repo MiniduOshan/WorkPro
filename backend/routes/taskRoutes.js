@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import { createTask, listTasks, getTask, updateTask, deleteTask } from '../controllers/taskController.js';
 
+import { checkLimit } from '../middleware/limitMiddleware.js';
+
 const router = Router();
 
-router.post('/', protect, createTask);
+router.post('/', protect, checkLimit('maxTasks'), createTask);
 router.get('/', protect, listTasks);
 router.get('/:id', protect, getTask);
 router.put('/:id', protect, updateTask);

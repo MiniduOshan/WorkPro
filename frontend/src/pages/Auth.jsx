@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  IoMailOutline, 
-  IoLockClosedOutline, 
-  IoArrowBackOutline, 
-  IoPersonOutline, 
-  IoEyeOutline, 
+import {
+  IoMailOutline,
+  IoLockClosedOutline,
+  IoArrowBackOutline,
+  IoPersonOutline,
+  IoEyeOutline,
   IoEyeOffOutline,
   IoCloseOutline
 } from 'react-icons/io5';
@@ -28,7 +28,7 @@ const AuthInput = ({ name, placeholder, type = 'text', icon: Icon, formData, han
       />
       <Icon className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
       {type === 'password' && (
-        <div 
+        <div
           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-blue-600"
           onClick={() => setShowPassword(!showPassword)}
         >
@@ -64,7 +64,7 @@ const Auth = ({ type }) => {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setForgotPasswordMessage('');
-    
+
     try {
       await api.post('/api/users/forgot-password', { email: forgotEmail });
       setForgotPasswordMessage('Password reset link sent to your email!');
@@ -260,39 +260,39 @@ const Auth = ({ type }) => {
           <form onSubmit={handleSubmit} className="space-y-2">
             {!isLogin && (
               <div className="flex space-x-4">
-                <AuthInput 
-                  name="firstName" 
-                  placeholder="First" 
-                  icon={IoPersonOutline} 
-                  formData={formData} 
-                  handleChange={handleChange} 
+                <AuthInput
+                  name="firstName"
+                  placeholder="First"
+                  icon={IoPersonOutline}
+                  formData={formData}
+                  handleChange={handleChange}
                 />
-                <AuthInput 
-                  name="lastName" 
-                  placeholder="Last" 
-                  icon={IoPersonOutline} 
-                  formData={formData} 
-                  handleChange={handleChange} 
+                <AuthInput
+                  name="lastName"
+                  placeholder="Last"
+                  icon={IoPersonOutline}
+                  formData={formData}
+                  handleChange={handleChange}
                 />
               </div>
             )}
 
-            <AuthInput 
-              name="email" 
-              placeholder="Email Address" 
-              type="email" 
-              icon={IoMailOutline} 
-              formData={formData} 
-              handleChange={handleChange} 
+            <AuthInput
+              name="email"
+              placeholder="Email Address"
+              type="email"
+              icon={IoMailOutline}
+              formData={formData}
+              handleChange={handleChange}
             />
 
-            <AuthInput 
-              name="password" 
-              placeholder="Password" 
-              type="password" 
-              icon={IoLockClosedOutline} 
-              formData={formData} 
-              handleChange={handleChange} 
+            <AuthInput
+              name="password"
+              placeholder="Password"
+              type="password"
+              icon={IoLockClosedOutline}
+              formData={formData}
+              handleChange={handleChange}
             />
 
             {isLogin && (
@@ -308,18 +308,18 @@ const Auth = ({ type }) => {
             )}
 
             {!isLogin && (
-              <AuthInput 
-                name="confirmPassword" 
-                placeholder="Confirm Password" 
-                type="password" 
-                icon={IoLockClosedOutline} 
-                formData={formData} 
-                handleChange={handleChange} 
+              <AuthInput
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                type="password"
+                icon={IoLockClosedOutline}
+                formData={formData}
+                handleChange={handleChange}
               />
             )}
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="w-full py-3 mt-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-none transition-all active:scale-[0.98]"
             >
               {isLogin ? 'Login Now' : 'Signup Now'}
@@ -342,8 +342,8 @@ const Auth = ({ type }) => {
             </div>
           )}
 
-          <Link 
-            to={isLogin ? '/signup' : '/login'} 
+          <Link
+            to={isLogin ? '/signup' : '/login'}
             className="w-full block text-center py-3 border-2 border-blue-600 text-blue-600 text-lg font-semibold rounded-lg hover:bg-blue-50 transition-all"
           >
             {isLogin ? 'Create Account' : 'Login to Existing Account'}
@@ -387,11 +387,10 @@ const Auth = ({ type }) => {
             </div>
 
             {forgotPasswordMessage && (
-              <div className={`p-4 mb-4 text-sm rounded-lg ${
-                forgotPasswordMessage.includes('sent') 
-                  ? 'text-green-700 bg-green-50 border border-green-200' 
+              <div className={`p-4 mb-4 text-sm rounded-lg ${forgotPasswordMessage.includes('sent')
+                  ? 'text-green-700 bg-green-50 border border-green-200'
                   : 'text-red-700 bg-red-50 border border-red-200'
-              }`}>
+                }`}>
                 {forgotPasswordMessage}
               </div>
             )}

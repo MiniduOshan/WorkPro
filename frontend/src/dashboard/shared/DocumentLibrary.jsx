@@ -11,6 +11,8 @@ import {
   IoClose,
   IoFolderOutline,
   IoFilterOutline,
+  IoMusicalNoteOutline,
+  IoVideocamOutline,
 } from 'react-icons/io5';
 import api from '../../api/axios';
 
@@ -18,7 +20,7 @@ import api from '../../api/axios';
 const getThemeColorValues = () => {
   const path = window.location.pathname;
   const isEmployee = path.startsWith('/dashboard') && !path.startsWith('/dashboard/manager') && !path.startsWith('/dashboard/super-admin');
-  
+
   if (isEmployee) {
     // Green theme for employees
     return {
@@ -30,7 +32,7 @@ const getThemeColorValues = () => {
       accentLight: '#86efac',     // green-300
     };
   }
-  
+
   // Blue theme for managers
   return {
     bgPrimary: '#2563eb',       // blue-600
@@ -68,7 +70,7 @@ const DocumentLibrary = () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
       if (categoryFilter !== 'all') params.append('category', categoryFilter);
-      
+
       const response = await api.get(`/api/documents?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
       });
@@ -130,7 +132,7 @@ const DocumentLibrary = () => {
         headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
         responseType: 'blob',
       });
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -147,7 +149,7 @@ const DocumentLibrary = () => {
 
   const handleDelete = async (docId) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
-    
+
     try {
       await api.delete(`/api/documents/${docId}`, {
         headers: { Authorization: `Bearer ${token}`, 'x-company-id': companyId },
@@ -190,22 +192,22 @@ const DocumentLibrary = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard 
-          label="Total Files" 
-          value={stats.totalDocuments} 
-          icon={<IoDocumentOutline />} 
+        <StatCard
+          label="Total Files"
+          value={stats.totalDocuments}
+          icon={<IoDocumentOutline />}
           theme={theme}
         />
-        <StatCard 
-          label="Storage Used" 
-          value={formatFileSize(stats.totalSize)} 
-          icon={<IoFolderOutline />} 
+        <StatCard
+          label="Storage Used"
+          value={formatFileSize(stats.totalSize)}
+          icon={<IoFolderOutline />}
           theme={theme}
         />
-        <StatCard 
-          label="Total Downloads" 
-          value={stats.totalAccess || 0} 
-          icon={<IoDownloadOutline />} 
+        <StatCard
+          label="Total Downloads"
+          value={stats.totalAccess || 0}
+          icon={<IoDownloadOutline />}
           theme={theme}
         />
       </div>
@@ -225,7 +227,7 @@ const DocumentLibrary = () => {
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <IoFilterOutline className="text-slate-400 hidden md:block" />
-          
+
         </div>
       </div>
 
@@ -237,8 +239,8 @@ const DocumentLibrary = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {documents.map((doc) => (
-            <DocumentCard 
-              key={doc._id} 
+            <DocumentCard
+              key={doc._id}
               doc={doc}
               theme={theme}
               onDownload={() => handleDownload(doc._id, doc.originalName)}
@@ -251,11 +253,11 @@ const DocumentLibrary = () => {
 
       {/* Modals */}
       {showUploadModal && (
-        <UploadModal 
+        <UploadModal
           onClose={() => {
             setShowUploadModal(false);
             setUploadError('');
-          }} 
+          }}
           onUpload={handleUpload}
           uploadData={uploadData}
           setUploadData={setUploadData}
@@ -299,11 +301,11 @@ const DocumentCard = ({ doc, theme, onDownload, onDelete, formatFileSize }) => (
         </button>
       </div>
     </div>
-    
+
     <h3 className="font-bold text-slate-800 text-sm mb-1 line-clamp-1 transition-colors" title={doc.name}>
       {doc.name}
     </h3>
-    
+
     <div className="flex items-center gap-2 mb-4">
       <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase" style={{ color: theme.textPrimary, backgroundColor: theme.bgLight }}>
         {doc.category}
@@ -322,10 +324,11 @@ const DocumentCard = ({ doc, theme, onDownload, onDelete, formatFileSize }) => (
 
 const FileIcon = ({ type, theme }) => {
   const t = type?.toLowerCase();
-  const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.svg'];
+  const imageExts = ['.jpg', '.jpeg', '.png'];
   if (t?.includes('pdf')) return <IoDocumentTextOutline className="text-rose-500" />;
   if (imageExts.some((ext) => t?.includes(ext))) return <IoImageOutline className="text-amber-500" />;
-  if (t?.includes('xls') || t?.includes('csv')) return <IoFileTrayFullOutline style={{ color: theme.bgPrimary }} />;
+  if (t?.includes('mp3')) return <IoMusicalNoteOutline className="text-purple-500" />;
+  if (t?.includes('mp4')) return <IoVideocamOutline className="text-blue-500" />;
   return <IoDocumentOutline className="text-slate-400" />;
 };
 
@@ -335,20 +338,31 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
       <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
         <h2 className="text-xl font-bold text-slate-800">Upload Document</h2>
         <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600">
-          <IoClose size={20}/>
+          <IoClose size={20} />
         </button>
       </div>
 
       <form onSubmit={onUpload} className="p-8 space-y-5">
         <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center transition-colors bg-slate-50 group cursor-pointer relative">
-          <input 
-            type="file" 
-            className="absolute inset-0 opacity-0 cursor-pointer" 
-            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+          <input
+            type="file"
+            className="absolute inset-0 opacity-0 cursor-pointer"
+            accept=".pdf,.doc,.docx,.mp3,.mp4,.jpeg,.jpg,.png"
             onChange={(e) => {
               const file = e.target.files[0];
+              if (!file) return;
+
+              const allowedExtensions = ['.pdf', '.doc', '.docx', '.mp3', '.mp4', '.jpeg', '.jpg', '.png'];
+              const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+              if (!allowedExtensions.includes(ext)) {
+                alert('Invalid file type. Please select a PDF, Word, MP3, MP4, or Image (JPEG, PNG, JPG) file.');
+                e.target.value = '';
+                return;
+              }
+
               setSelectedFile(file);
-              if (file) setUploadData(prev => ({ ...prev, name: file.name }));
+              setUploadData(prev => ({ ...prev, name: file.name }));
             }}
           />
           <IoCloudUploadOutline className="w-10 h-10 mx-auto mb-3 text-slate-400" />
@@ -401,8 +415,8 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
 
         <div className="flex gap-3 pt-4">
           <button type="button" onClick={onClose} className="flex-1 py-3 font-bold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="flex-1 py-3 text-white rounded-xl font-bold transition-all"
             style={{ backgroundColor: theme.bgPrimary, boxShadow: `0 10px 15px -3px ${theme.bgPrimary}40` }}
             onMouseEnter={(e) => e.target.style.backgroundColor = theme.bgPrimaryHover}
@@ -421,11 +435,11 @@ const EmptyState = ({ onUpload, theme }) => (
     </div>
     <h3 className="text-xl font-bold text-slate-800">Library is Empty</h3>
     <p className="text-slate-400 text-sm mt-2 mb-8 max-w-xs mx-auto">Start by uploading important documents for your team to access.</p>
-    <button 
-      onClick={onUpload} 
-      className="text-white px-8 py-3 rounded-xl font-bold transition" 
-      style={{ backgroundColor: theme.bgPrimary }} 
-      onMouseEnter={(e) => e.target.style.backgroundColor = theme.bgPrimaryHover} 
+    <button
+      onClick={onUpload}
+      className="text-white px-8 py-3 rounded-xl font-bold transition"
+      style={{ backgroundColor: theme.bgPrimary }}
+      onMouseEnter={(e) => e.target.style.backgroundColor = theme.bgPrimaryHover}
       onMouseLeave={(e) => e.target.style.backgroundColor = theme.bgPrimary}
     >
       Add Your First File

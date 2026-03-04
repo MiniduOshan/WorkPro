@@ -12,6 +12,7 @@ import TermsOfService from './pages/TermsOfService.jsx';
 import LandingPage from './pages/LandingPage.jsx';
 import Auth from './pages/Auth.jsx';
 import Payment from './pages/Payment.jsx';
+import PaymentMethod from './pages/PaymentMethod.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 
 import EmployeeDashboardLayout from './dashboard/employee/EmployeeDashboardLayout.jsx';
@@ -26,6 +27,7 @@ import SuperAdminUsers from './dashboard/superadmin/SuperAdminUsers.jsx';
 import SuperAdminPricing from './dashboard/superadmin/SuperAdminPricing.jsx';
 import SuperAdminRevenue from './dashboard/superadmin/SuperAdminRevenue.jsx';
 import SuperAdminNotifications from './dashboard/superadmin/SuperAdminNotifications.jsx';
+import SuperAdminEmails from './dashboard/superadmin/SuperAdminEmails.jsx';
 import PlatformContent from './dashboard/superadmin/PlatformContent.jsx';
 import Profile from './dashboard/shared/Profile.jsx';
 import TasksBoard from './dashboard/shared/TasksBoard.jsx';
@@ -42,7 +44,10 @@ import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/shared/Invite.jsx';
 import SelectCompany from './pages/SelectCompany.jsx';
+import Billing from './pages/Billing.jsx';
+import PostSignupPlanSelection from './pages/PostSignupPlanSelection.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
+import GlobalAlert from './components/GlobalAlert.jsx';
 
 
 const isAuthenticated = () => {
@@ -53,7 +58,7 @@ const ProtectedRoute = ({ children, requireCompany = false, allowedRoles, requir
     if (!isAuthenticated()) {
         return <Navigate to="/login" />;
     }
-    
+
     const userProfile = localStorage.getItem('userProfile');
     let isSuperAdmin = false;
     if (userProfile) {
@@ -76,7 +81,7 @@ const ProtectedRoute = ({ children, requireCompany = false, allowedRoles, requir
     if (isSuperAdmin) {
         return children;
     }
-    
+
     if (requireCompany && !localStorage.getItem('companyId')) {
         return <Navigate to="/select-company" />;
     }
@@ -84,12 +89,12 @@ const ProtectedRoute = ({ children, requireCompany = false, allowedRoles, requir
     // Enforce role-based routing - users CANNOT access wrong dashboard by typing URL
     if (allowedRoles && allowedRoles.length > 0 && allowedRoles.length < 3) {
         const role = localStorage.getItem('companyRole');
-        
+
         // If companyRole is not set, user must select a company first
         if (!role) {
             return <Navigate to="/select-company" />;
         }
-        
+
         // If role doesn't match allowed roles for this route, redirect to their correct dashboard
         if (!allowedRoles.includes(role)) {
             // Managers/Owners trying to access employee routes → redirect to manager dashboard
@@ -104,7 +109,7 @@ const ProtectedRoute = ({ children, requireCompany = false, allowedRoles, requir
             return <Navigate to="/dashboard" replace />;
         }
     }
-    
+
     return children;
 };
 
@@ -127,16 +132,16 @@ function App() {
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('companyRole');
         const companyId = localStorage.getItem('companyId');
-        
+
         // Only enforce on dashboard routes
         if (!location.pathname.startsWith('/dashboard')) return;
-        
+
         // Must be authenticated
         if (!token) {
             navigate('/login', { replace: true });
             return;
         }
-        
+
         // SuperAdmins bypass company selection - they view global analytics
         const userProfile = localStorage.getItem('userProfile');
         let isSuperAdmin = false;
@@ -161,23 +166,23 @@ function App() {
         if (isSuperAdmin) {
             return; // SuperAdmins don't need company selection
         }
-        
+
         // Must have company selected (except for create-company route)
         if (!companyId && !location.pathname.includes('create-company') && !location.pathname.includes('select-company')) {
             navigate('/select-company', { replace: true });
             return;
         }
-        
+
         // STRICT ROLE ENFORCEMENT - prevent URL manipulation
         if (role && companyId) {
             // Managers/Owners trying to access /dashboard → redirect to /dashboard/manager
-            if ((role === 'manager' || role === 'owner') && 
-                location.pathname.startsWith('/dashboard') && 
+            if ((role === 'manager' || role === 'owner') &&
+                location.pathname.startsWith('/dashboard') &&
                 !location.pathname.startsWith('/dashboard/manager')) {
                 navigate('/dashboard/manager', { replace: true });
                 return;
             }
-            
+
             // Employees trying to access /dashboard/manager → redirect to /dashboard
             if (role === 'employee' && location.pathname.startsWith('/dashboard/manager')) {
                 navigate('/dashboard', { replace: true });
@@ -187,30 +192,35 @@ function App() {
     }, [location.pathname, navigate]);
 
     return (
-        <> 
+        <>
+            <GlobalAlert />
             <Routes>
-                
+
                 {/* 1. INDEPENDENT AUTH PAGES (NO Header/Footer Layout) */}
-                
+
                 {/* Login Page: Independent */}
                 <Route path="/login" element={<Auth type="login" />} />
-                
+
                 {/* Signup Page: Now independent, outside the PublicLayout */}
                 <Route path="/signup" element={<Auth type="signup" />} />
-                
+
                 {/* Payment Page: Independent */}
                 <Route path="/payment" element={<Payment />} />
-                
+
+                {/* Payment Method (add/edit card only) */}
+                <Route path="/payment-method" element={<PaymentMethod />} />
+
                 {/* Reset Password Page: Independent */}
                 <Route path="/reset-password" element={<ResetPassword />} />
-                
-                
+
+
                 {/* 2. PUBLIC PAGES (Routes that **SHOULD** have the Header and Footer via PublicLayout) */}
                 <Route element={<PublicLayout />}>
                     {/* These pages use the Header and Footer */}
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/pricing" element={<Pricing />} />
+                    {/* <Route path="/pricing" element={<Pricing />} /> */}
+                    <Route path="/pricing" element={<Navigate to="/" replace />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/terms" element={<TermsOfService />} />
@@ -233,6 +243,16 @@ function App() {
                     element={
                         <ProtectedRoute>
                             <SelectCompany />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* Post-Signup Plan Selection */}
+                <Route
+                    path="/select-plan"
+                    element={
+                        <ProtectedRoute requireCompany={true}>
+                            <PostSignupPlanSelection />
                         </ProtectedRoute>
                     }
                 />
@@ -264,7 +284,7 @@ function App() {
                 <Route
                     path="/dashboard/manager"
                     element={
-                        <ProtectedRoute requireCompany={true} allowedRoles={['owner','manager']}>
+                        <ProtectedRoute requireCompany={true} allowedRoles={['owner', 'manager']}>
                             <ManagerDashboardLayout />
                         </ProtectedRoute>
                     }
@@ -273,7 +293,7 @@ function App() {
                     <Route path="profile" element={<Profile />} />
                     <Route path="tasks" element={<TasksBoard />} />
                     <Route path="channels" element={<Channels />} />
-                    <Route path="teams" element={<Teams />} />
+                    <Route path="teams" element={<ProtectedRoute requireCompany={true} allowedRoles={['owner']}><Teams /></ProtectedRoute>} />
                     <Route path="departments" element={<Departments />} />
                     <Route path="groups" element={<Groups />} />
                     <Route path="announcements" element={<Announcements />} />
@@ -282,6 +302,8 @@ function App() {
                     <Route path="documents" element={<DocumentLibrary />} />
                     <Route path="notes" element={<Notes />} />
                     <Route path="ai-insights" element={<AIInsights />} />
+                    <Route path="ai-insights" element={<AIInsights />} />
+                    <Route path="billing" element={<ProtectedRoute requireCompany={true} allowedRoles={['owner']}><Billing /></ProtectedRoute>} />
                     <Route path="create-company" element={<CompanyCreate />} />
                 </Route>
 
@@ -300,7 +322,9 @@ function App() {
                     <Route path="users" element={<SuperAdminUsers />} />
                     <Route path="pricing" element={<SuperAdminPricing />} />
                     <Route path="revenue" element={<SuperAdminRevenue />} />
+                    <Route path="revenue" element={<SuperAdminRevenue />} />
                     <Route path="platform-content" element={<PlatformContent />} />
+                    <Route path="emails" element={<SuperAdminEmails />} />
                     <Route path="notifications" element={<SuperAdminNotifications />} />
                 </Route>
 

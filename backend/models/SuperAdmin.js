@@ -6,10 +6,9 @@ const SuperAdminSchema = new mongoose.Schema(
     totalCompanies: { type: Number, default: 0 },
     totalUsers: { type: Number, default: 0 },
     totalTasks: { type: Number, default: 0 },
-    totalTeams: { type: Number, default: 0 },
     totalDepartments: { type: Number, default: 0 },
     totalAnnouncements: { type: Number, default: 0 },
-    
+
     // Analytics breakdown
     analyticsData: {
       tasksByStatus: {
@@ -30,7 +29,7 @@ const SuperAdminSchema = new mongoose.Schema(
         employee: { type: Number, default: 0 },
       },
     },
-    
+
     // Pricing and monetization
     pricingPlans: [
       {
@@ -40,7 +39,7 @@ const SuperAdminSchema = new mongoose.Schema(
         activeCompanies: { type: Number, default: 0 },
       },
     ],
-    
+
     // Platform content settings for landing page
     platformContent: {
       siteName: { type: String, default: 'WorkPro' },
@@ -67,7 +66,7 @@ const SuperAdminSchema = new mongoose.Schema(
         tasksLabel: { type: String, default: 'Tasks Completed' },
       },
     },
-    
+
     // Activity tracking for future monetization
     activityLog: [
       {
@@ -77,7 +76,7 @@ const SuperAdminSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
       },
     ],
-    
+
     lastUpdated: { type: Date, default: Date.now },
   },
   { timestamps: true }

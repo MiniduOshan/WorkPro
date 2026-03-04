@@ -6,11 +6,13 @@ import {
   breakdownTask,
   progressSummary,
 } from '../controllers/aiController.js';
+import { checkFeature } from '../middleware/limitMiddleware.js';
 
 const router = Router();
 
 // All routes require authentication
 router.use(protect);
+router.use(checkFeature('aiInsights'));
 
 router.get('/daily-data', getDailySummaryData);
 router.get('/summarize', generateAISummary);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
+import {
   IoLayersOutline, IoAddOutline, IoPeopleOutline, IoCloseOutline,
   IoPersonAddOutline, IoPersonRemoveOutline, IoTrashOutline, IoCheckmarkOutline,
   IoBusinessOutline
@@ -115,7 +115,7 @@ export default function Departments() {
       await api.post(`/api/departments/${viewDept._id}/members/add`, { userId: selectedMember });
       setSelectedMember('');
       openView(viewDept);
-    } catch (err) { 
+    } catch (err) {
       alert(err.response?.data?.message || 'Failed to add member');
     } finally {
       setAddingMember(false);
@@ -153,7 +153,7 @@ export default function Departments() {
             <p className="text-slate-600">Organize teams and manage departmental collaboration</p>
           </div>
           {['owner', 'manager'].includes(companyRole) && (
-            <button 
+            <button
               onClick={() => setShowCreateModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all active:scale-95"
             >
@@ -170,19 +170,19 @@ export default function Departments() {
             <div key={dept._id} className="bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all relative">
               <div className="flex justify-between items-center mb-5">
                 <div className="bg-amber-50 p-3 rounded-xl text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-200">
-                  <IoBusinessOutline size={30}/>
+                  <IoBusinessOutline size={30} />
                 </div>
                 <div className="text-right">
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Members</p>
                   <p className="text-lg font-bold text-slate-800 mt-1">{dept.memberCount || 0}</p>
                 </div>
               </div>
-              
+
               <h3 className="text-xl font-bold text-slate-900 mb-2 leading-tight">{dept.name}</h3>
               <p className="text-slate-500 text-sm mb-6 line-clamp-2">{dept.description || "Department workspace for team collaboration."}</p>
-              
-              <button 
-                onClick={() => openView(dept)} 
+
+              <button
+                onClick={() => openView(dept)}
                 className="w-full py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-indigo-600 transition-all"
               >
                 VIEW DETAILS
@@ -208,11 +208,11 @@ export default function Departments() {
                     className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                     title="Delete department"
                   >
-                    <IoTrashOutline size={22}/>
+                    <IoTrashOutline size={22} />
                   </button>
                 )}
                 <button onClick={() => setViewDept(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                  <IoCloseOutline size={28}/>
+                  <IoCloseOutline size={28} />
                 </button>
               </div>
             </div>
@@ -253,7 +253,7 @@ export default function Departments() {
                     </div>
                     {['owner', 'manager'].includes(companyRole) && String(m.user?._id) !== String(localStorage.getItem('userId')) && (
                       <button onClick={() => removeMemberFromDepartment(m.user?._id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                        <IoTrashOutline size={18}/>
+                        <IoTrashOutline size={18} />
                       </button>
                     )}
                   </div>
@@ -266,16 +266,16 @@ export default function Departments() {
               <div className="mb-8 pb-8 border-b">
                 <h4 className="text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-3">Add Members</h4>
                 <div className="flex gap-2">
-                  <select 
-                    value={selectedMember} 
-                    onChange={(e) => setSelectedMember(e.target.value)} 
+                  <select
+                    value={selectedMember}
+                    onChange={(e) => setSelectedMember(e.target.value)}
                     className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none font-medium bg-white"
                   >
                     <option value="">Select a member...</option>
                     {availableMembers.map(m => <option key={m.user?._id} value={m.user?._id}>{m.user?.firstName} {m.user?.lastName}</option>)}
                   </select>
-                  <button 
-                    onClick={addMemberToDepartment} 
+                  <button
+                    onClick={addMemberToDepartment}
                     disabled={!selectedMember || addingMember}
                     className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all disabled:opacity-50 active:scale-95"
                   >
@@ -288,18 +288,18 @@ export default function Departments() {
             {/* Action Buttons */}
             <div className="flex gap-4">
               {isUserInDepartment() ? (
-                <button 
+                <button
                   onClick={leaveDepartment}
                   className="flex-1 py-4 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  <IoPersonRemoveOutline size={22}/> LEAVE DEPARTMENT
+                  <IoPersonRemoveOutline size={22} /> LEAVE DEPARTMENT
                 </button>
               ) : (
-                <button 
+                <button
                   onClick={joinDepartment}
                   className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
                 >
-                  <IoPersonAddOutline size={22}/> JOIN DEPARTMENT
+                  <IoPersonAddOutline size={22} /> JOIN DEPARTMENT
                 </button>
               )}
             </div>
@@ -317,7 +317,7 @@ export default function Departments() {
                 <p className="text-slate-500 mt-1">Build a new organizational unit</p>
               </div>
               <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <IoCloseOutline size={24}/>
+                <IoCloseOutline size={24} />
               </button>
             </div>
 
@@ -358,7 +358,7 @@ export default function Departments() {
                   disabled={creatingDept}
                   className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50 active:scale-95"
                 >
-                  <IoAddOutline size={22}/> {creatingDept ? 'Creating...' : 'Create'}
+                  <IoAddOutline size={22} /> {creatingDept ? 'Creating...' : 'Create'}
                 </button>
               </div>
             </form>

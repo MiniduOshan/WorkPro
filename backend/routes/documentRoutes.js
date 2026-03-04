@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { protect } from '../middleware/authMiddleware.js';
+import { checkLimit } from '../middleware/limitMiddleware.js';
 import {
   getDocuments,
   uploadDocument,
@@ -17,7 +18,7 @@ const router = Router();
 router.use(protect);
 
 router.get('/', getDocuments);
-router.post('/', upload.single('file'), uploadDocument);
+router.post('/', upload.single('file'), checkLimit('maxStorage'), uploadDocument);
 router.get('/stats', getDocumentStats);
 router.get('/:id', getDocument);
 router.get('/:id/download', downloadDocument);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import CalendarWidget from '../shared/CalendarWidget.jsx';
+import UsageStatsWidget from '../shared/UsageStatsWidget.jsx';
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const EmployeeDashboard = () => {
   return (
     <div className="flex flex-col h-full bg-slate-50 font-sans">
       <div className="grow overflow-y-auto p-6 lg:p-10">
-        
+
         {/* Header Section */}
         <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
@@ -124,7 +125,7 @@ const EmployeeDashboard = () => {
           {/* Sidebar (Right) */}
           <div className="space-y-8">
             <CalendarWidget />
-            <PerformanceWidget />
+            <UsageStatsWidget companyId={localStorage.getItem('companyId')} />
           </div>
         </div>
       </div>
@@ -162,12 +163,11 @@ const TaskCardCompact = ({ task, navigate }) => {
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-green-300 transition-all flex flex-col group relative overflow-hidden">
       <div className="flex justify-between items-center mb-4">
-        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-md uppercase ${
-            priority === 'urgent' ? 'bg-red-50 text-red-600' :
-            priority === 'high' ? 'bg-orange-50 text-orange-600' :
+        <span className={`text-[10px] font-extrabold px-2 py-1 rounded-md uppercase ${priority === 'urgent' ? 'bg-red-50 text-red-600' :
+          priority === 'high' ? 'bg-orange-50 text-orange-600' :
             priority === 'medium' ? 'bg-yellow-50 text-yellow-600' :
-            'bg-green-50 text-green-600'
-        }`}>
+              'bg-green-50 text-green-600'
+          }`}>
           {priority || 'medium'}
         </span>
         <div className="w-7 h-7 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold shadow-sm">
@@ -176,17 +176,16 @@ const TaskCardCompact = ({ task, navigate }) => {
       </div>
       <h4 className="font-bold text-slate-800 mb-1 group-hover:text-green-600 transition-colors leading-snug">{task.title}</h4>
       <p className="text-xs text-slate-500 line-clamp-2 mb-6 h-8 leading-relaxed">{task.description || 'No description provided.'}</p>
-      
+
       <div className="flex justify-between items-center mt-auto border-t border-slate-100 pt-4">
         <span className="text-[10px] font-bold text-slate-400">
-          <i className="fa-regular fa-clock mr-1"></i> 
+          <i className="fa-regular fa-clock mr-1"></i>
           {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Set Date'}
         </span>
-        <button 
+        <button
           onClick={handleLaunch}
-          className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${
-          isDone ? 'bg-slate-50 text-slate-400' : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
-        }`}>
+          className={`text-[11px] font-bold px-4 py-1.5 rounded-xl transition-all ${isDone ? 'bg-slate-50 text-slate-400' : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
+            }`}>
           {isDone ? 'Finished' : 'Launch'}
         </button>
       </div>
@@ -208,10 +207,10 @@ const AnnouncementItem = ({ announcement }) => (
 const PerformanceWidget = () => (
   <div>
     <h4 className="font-bold text-slate-800 text-sm mb-5 flex items-center gap-2">
- 
+
     </h4>
     <div className="space-y-5">
-      
+
     </div>
   </div>
 );

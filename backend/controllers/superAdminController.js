@@ -2,7 +2,6 @@ import SuperAdmin from '../models/SuperAdmin.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
 import Task from '../models/Task.js';
-import Team from '../models/Team.js';
 import Department from '../models/Department.js';
 import Announcement from '../models/Announcement.js';
 import Notification from '../models/Notification.js';
@@ -91,11 +90,10 @@ export const getSuperAdminAnalytics = async (req, res) => {
       return res.status(403).json({ message: 'Only super admins can access this' });
     }
 
-    const [totalCompanies, totalUsers, totalTasks, totalTeams, totalDepartments, totalAnnouncements] = await Promise.all([
+    const [totalCompanies, totalUsers, totalTasks, totalDepartments, totalAnnouncements] = await Promise.all([
       Company.countDocuments(),
       User.countDocuments(),
       Task.countDocuments(),
-      Team.countDocuments(),
       Department.countDocuments(),
       Announcement.countDocuments(),
     ]);
@@ -151,7 +149,6 @@ export const getSuperAdminAnalytics = async (req, res) => {
         totalCompanies,
         totalUsers,
         totalTasks,
-        totalTeams,
         totalDepartments,
         totalAnnouncements,
       },
@@ -186,7 +183,6 @@ export const getAllCompaniesAnalytics = async (req, res) => {
     const companiesAnalytics = await Promise.all(
       companies.map(async (company) => {
         const taskCount = await Task.countDocuments({ company: company._id });
-        const teamCount = await Team.countDocuments({ company: company._id });
         const departmentCount = await Department.countDocuments({ company: company._id });
 
         return {
@@ -195,7 +191,6 @@ export const getAllCompaniesAnalytics = async (req, res) => {
           owner: company.owner,
           memberCount: company.members.length,
           taskCount,
-          teamCount,
           departmentCount,
           createdAt: company.createdAt,
         };
@@ -279,7 +274,7 @@ export const getPricingPlans = async (req, res) => {
     }
 
     const superAdminRecord = await SuperAdmin.findOne({ user: req.user._id });
-    
+
     // Return empty array if no pricing plans exist yet
     const pricingPlans = superAdminRecord?.pricingPlans || [];
     res.json(pricingPlans);
@@ -691,6 +686,70 @@ export const deleteNotification = async (req, res) => {
 
     res.json({ message: 'Notification deleted' });
   } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// Get revenue analytics
+export const getRevenueAnalytics = async (req, res) => {
+  try {
+    const PricingPlan = (await import('../models/PricingPlan.js')).default;
+
+    // All companies with their plans
+    const companies = await Company.find({ subscriptionStatus: { $in: ['active'] } })
+      .populate('plan', 'name price billingCycle')
+      .select('name plan subscriptionStatus createdAt members');
+
+    // Current MRR (Monthly Recurring Revenue) = sum of all active plan prices
+    const mrr = companies.reduce((sum, c) => sum + (c.plan?.price || 0), 0);
+
+    // All plans for breakdown
+    const allPlans = await PricingPlan.find({});
+    const planBreakdown = allPlans.map(plan => {
+      const count = companies.filter(c => c.plan?._id?.toString() === plan._id.toString()).length;
+      return {
+        name: plan.name,
+        price: plan.price,
+        subscribers: count,
+        revenue: plan.price * count,
+      };
+    }).filter(p => p.price > 0);
+
+    // Monthly revenue for last 6 months based on subscription starts
+    const now = new Date();
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      const monthLabel = monthStart.toLocaleString('default', { month: 'short', year: '2-digit' });
+
+      // Count active paid companies created up to that month
+      const activeByMonth = await Company.find({
+        subscriptionStatus: 'active',
+        createdAt: { $lte: monthEnd },
+      }).populate('plan', 'price');
+
+      const revenue = activeByMonth.reduce((sum, c) => sum + (c.plan?.price || 0), 0);
+      monthlyData.push({ month: monthLabel, revenue });
+    }
+
+    // Total subscribers (active paid companies)
+    const totalSubscribers = companies.length;
+    const avgOrderValue = totalSubscribers > 0 ? Math.round(mrr / totalSubscribers) : 0;
+
+    // Total ARR
+    const arr = mrr * 12;
+
+    res.json({
+      mrr,
+      arr,
+      totalSubscribers,
+      avgOrderValue,
+      planBreakdown,
+      monthlyData,
+    });
+  } catch (e) {
+    console.error('Revenue analytics error:', e);
     res.status(500).json({ message: e.message });
   }
 };

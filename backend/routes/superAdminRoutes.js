@@ -20,6 +20,7 @@ import {
   markNotificationAsRead,
   updateNotification,
   deleteNotification,
+  getRevenueAnalytics,
 } from '../controllers/superAdminController.js';
 
 const router = Router();
@@ -41,6 +42,7 @@ router.get('/analytics', getSuperAdminAnalytics);
 router.get('/analytics/companies', getAllCompaniesAnalytics);
 router.get('/analytics/company/:companyId/tasks', getCompanyTaskAnalytics);
 router.get('/analytics/users', getUserAnalytics);
+router.get('/revenue', getRevenueAnalytics);
 
 // Pricing plan management
 router.get('/pricing-plans', getPricingPlans);
@@ -59,5 +61,10 @@ router.delete('/notifications/:notificationId', deleteNotification);
 // Activity tracking
 router.post('/activity', logActivity);
 router.get('/activity', getActivityLog);
+
+// Email Management
+import { getEmailRecipients, sendEmailToUsers } from '../controllers/emailController.js';
+router.get('/emails/recipients', getEmailRecipients);
+router.post('/emails/send', sendEmailToUsers);
 
 export default router;

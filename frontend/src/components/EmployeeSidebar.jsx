@@ -15,7 +15,7 @@ import {
   IoBusinessOutline,
   IoPeopleCircleOutline
 } from 'react-icons/io5';
-const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () => {} }) => {
+const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () => { } }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '', isSuperAdmin: false });
@@ -68,7 +68,7 @@ const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () 
   ];
 
   const communicationLinks = [
-    { name: 'Groups', icon: IoPeopleCircleOutline, path: '/dashboard/groups' },
+    { name: 'Project Groups', icon: IoPeopleCircleOutline, path: '/dashboard/groups' },
     { name: 'Channels', icon: IoChatbubblesOutline, path: '/dashboard/channels', badge: '3' },
     { name: 'Announcements', icon: IoMegaphoneOutline, path: '/dashboard/announcements' }
   ];
@@ -81,11 +81,10 @@ const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () 
     <Link
       to={path}
       onClick={onNavigate}
-      className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-        isActive
-          ? 'active bg-green-50 text-green-600'
-          : 'text-slate-500 hover:bg-slate-50'
-      }`}
+      className={`sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${isActive
+        ? 'active bg-green-50 text-green-600'
+        : 'text-slate-500 hover:bg-slate-50'
+        }`}
     >
       <Icon className="w-5 h-5" />
       <span>{name}</span>
@@ -156,7 +155,7 @@ const EmployeeSidebar = ({ variant = 'desktop', className = '', onNavigate = () 
                 isActive={isLinkActive(link.path)}
               />
             ))}
-            
+
             {/* Super Admin Link */}
             {profile.isSuperAdmin && (
               <Link

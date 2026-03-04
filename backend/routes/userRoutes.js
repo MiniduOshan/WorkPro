@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import userController from '../controllers/userController.js';
-import {protect} from '../middleware/authMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
+import { checkLimit } from '../middleware/limitMiddleware.js';
 
 // Multer will be passed via app.upload from server.js
 let upload;
@@ -17,7 +18,7 @@ router.use((req, res, next) => {
 
 // Public Routes
 router.post('/signup', userController.registerUser);
-router.post('/login', userController.authUser); 
+router.post('/login', userController.authUser);
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 router.post('/auth/google', userController.googleAuth);
@@ -31,7 +32,7 @@ router.put('/profile', protect, userController.updateUserProfile);
 router.delete('/account', protect, userController.deleteUserAccount);
 
 // File upload route - requires multer middleware
-router.post('/upload-profile-pic', protect, (req, res, next) => {
+router.post('/upload-profile-pic', protect, checkLimit('maxStorage'), (req, res, next) => {
     if (!upload) {
         return res.status(500).json({ message: 'Upload service not available' });
     }

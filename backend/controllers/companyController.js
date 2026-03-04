@@ -16,9 +16,9 @@ export const searchCompanies = async (req, res) => {
         { description: regex }
       ]
     })
-    .select('name description industry website')
-    .limit(10)
-    .sort({ createdAt: -1 });
+      .select('name description industry website')
+      .limit(10)
+      .sort({ createdAt: -1 });
     res.json(companies);
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -35,10 +35,10 @@ export const createCompany = async (req, res) => {
     // Managers and owners can always create companies
     // Only employees who joined via invitation cannot create new companies
     const userCompanies = await Company.find({ 'members.user': req.user._id });
-    
+
     // Check if user is an employee (not manager/owner) in any company
     const isEmployeeOnly = userCompanies.some(company => {
-      const member = company.members.find(m => 
+      const member = company.members.find(m =>
         (m.user?._id || m.user).toString() === req.user._id.toString()
       );
       return member?.role === 'employee';
@@ -51,6 +51,21 @@ export const createCompany = async (req, res) => {
 
     const existing = await Company.findOne({ name });
     if (existing) return res.status(400).json({ message: 'Company name already taken' });
+
+    // Fetch default pricing plan
+    const PricingPlan = (await import('../models/PricingPlan.js')).default;
+    let defaultPlan = await PricingPlan.findOne({ isDefault: true });
+
+    // Fallback: if no default plan exists, create a basic Free plan
+    if (!defaultPlan) {
+      defaultPlan = await PricingPlan.create({
+        name: 'Free',
+        price: 0,
+        isDefault: true,
+        limits: { maxUsers: 2, maxStorageStr: '1GB', maxStorageBytes: 1073741824 }
+      });
+    }
+
     const company = await Company.create({
       name,
       description: description || '',
@@ -61,6 +76,8 @@ export const createCompany = async (req, res) => {
       departments: departments || [],
       owner: req.user._id,
       members: [{ user: req.user._id, role: 'owner' }],
+      plan: defaultPlan._id,
+      usage: { usersCount: 1, storageUsed: 0 }
     });
 
     // Update user's companies array and set as default company
@@ -94,17 +111,17 @@ export const getCompany = async (req, res) => {
   try {
     const company = await Company.findById(req.params.id)
       .populate('owner', 'firstName lastName email profilePic mobileNumber')
-      .populate('members.user', 'firstName lastName email profilePic mobileNumber');
+      .populate('members.user', 'firstName lastName email profilePic mobileNumber')
+      .populate('plan');
     if (!company) return res.status(404).json({ message: 'Company not found' });
-    
-    // Check if user is the owner OR a member
+
     const isOwner = company.owner?._id?.toString() === req.user._id?.toString();
     const role = company.getMemberRole(req.user._id);
-    
+
     if (!isOwner && !role) {
       return res.status(403).json({ message: 'Not a member of this company' });
     }
-    
+
     res.json(company);
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -154,16 +171,38 @@ export const createInvitation = async (req, res) => {
     if (!inviterRole) return res.status(403).json({ message: 'Not a member' });
     if (!['owner', 'manager'].includes(inviterRole)) return res.status(403).json({ message: 'Insufficient role' });
 
+    // Check Plan Limits (Max Users)
+    if (company.plan) {
+      const PricingPlan = (await import('../models/PricingPlan.js')).default;
+      // Populate plan if not already
+      if (!company.plan.limits) {
+        const plan = await PricingPlan.findById(company.plan);
+        company.plan = plan;
+      }
+
+      const limit = company.plan?.limits?.maxUsers;
+      const currentCount = company.members.length;
+      // Count pending invitations as potential users? Strictly speaking, yes, or we risk over-inviting.
+      // Let's count pending invitations too.
+      const pendingInvites = await Invitation.countDocuments({ company: companyId, status: 'pending' });
+
+      if (limit !== -1 && (currentCount + pendingInvites) >= limit) {
+        return res.status(403).json({
+          message: `Plan limit reached: Max ${limit} users allowed (including pending invites). Please upgrade your plan.`
+        });
+      }
+    }
+
     const token = crypto.randomBytes(24).toString('hex');
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
     const parsedMaxUses = Number(requestedMaxUses);
     const maxUses = Number.isFinite(parsedMaxUses) ? Math.max(50, parsedMaxUses) : 50;
-    const invitation = await Invitation.create({ 
-      company: companyId, 
-      inviter: req.user._id, 
+    const invitation = await Invitation.create({
+      company: companyId,
+      inviter: req.user._id,
       email: '', // email is optional; invites are link-based
-      role, 
-      token, 
+      role,
+      token,
       expiresAt,
       maxUses,
       usesCount: 0,
@@ -203,9 +242,9 @@ export const acceptInvitation = async (req, res) => {
       // Check user's current role in any existing company
       const existingCompanies = await Company.find({ 'members.user': req.user._id });
       let currentHighestRole = null; // null means new user (no companies)
-      
+
       existingCompanies.forEach(comp => {
-        const member = comp.members.find(m => 
+        const member = comp.members.find(m =>
           (m.user?._id || m.user).toString() === user._id.toString()
         );
         if (member?.role === 'owner') {
@@ -223,17 +262,31 @@ export const acceptInvitation = async (req, res) => {
         if (currentHighestRole === 'employee' && inv.role !== 'employee') {
           return res.status(403).json({ message: 'Employees can only accept employee role invitations.' });
         }
-        
+
         if ((currentHighestRole === 'manager' || currentHighestRole === 'owner') && inv.role !== currentHighestRole && inv.role !== 'manager' && inv.role !== 'owner') {
           return res.status(403).json({ message: 'Managers can only accept manager or owner role invitations.' });
         }
       }
     }
 
+    // Double check plan limit before adding member
+    if (company.plan) {
+      const PricingPlan = (await import('../models/PricingPlan.js')).default;
+      // Populate plan if needed - wait, finding by ID might be safer to ensure fresh data
+      const plan = await PricingPlan.findById(company.plan);
+      if (plan) {
+        const limit = plan.limits.maxUsers;
+        const currentCount = company.members.length;
+        if (limit !== -1 && currentCount >= limit) {
+          return res.status(403).json({ message: `Plan limit reached: Max ${limit} users allowed. The owner needs to upgrade.` });
+        }
+      }
+    }
+
     const already = company.members.find((m) => m.user.toString() === req.user._id.toString());
     if (!already) {
-      company.members.push({ 
-        user: req.user._id, 
+      company.members.push({
+        user: req.user._id,
         role: inv.role
       });
     }
@@ -275,7 +328,7 @@ export const getInvitationDetails = async (req, res) => {
     const maxUses = inv.maxUses ?? 1;
     const usesCount = inv.usesCount ?? 0;
     if (usesCount >= maxUses) return res.status(400).json({ message: 'Invitation usage limit reached' });
-    
+
     // Return invitation without department field
     const { department, ...invWithoutDept } = inv.toObject();
     res.json(invWithoutDept);
@@ -309,10 +362,10 @@ export const removeMember = async (req, res) => {
     if (!company) return res.status(404).json({ message: 'Company not found' });
     const actorRole = company.getMemberRole(req.user._id);
     if (!actorRole) return res.status(403).json({ message: 'Not a member' });
-    
+
     // Only owners can remove members, not managers
     if (actorRole !== 'owner') return res.status(403).json({ message: 'Only owners can remove members' });
-    
+
     const target = company.members.find((x) => x.user.toString() === userId);
     if (!target) return res.status(404).json({ message: 'Member not found' });
     if (target.role === 'owner') return res.status(400).json({ message: 'Owner cannot be removed' });
@@ -359,11 +412,28 @@ export const acceptInvitationPublic = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
+    // Check Plan Limits before adding member
+    if (company.plan) {
+      const PricingPlan = (await import('../models/PricingPlan.js')).default;
+      const plan = await PricingPlan.findById(company.plan);
+
+      if (plan) {
+        const limit = plan.limits.maxUsers;
+        const currentCount = company.members.length;
+
+        if (limit !== -1 && currentCount >= limit) {
+          return res.status(403).json({
+            message: `Plan limit reached: Max ${limit} users allowed. The owner needs to upgrade.`
+          });
+        }
+      }
+    }
+
     // Add user to company members
     const already = company.members.find((m) => m.user.toString() === userId);
     if (!already) {
-      company.members.push({ 
-        user: userId, 
+      company.members.push({
+        user: userId,
         role: inv.role
       });
     }
@@ -384,9 +454,9 @@ export const acceptInvitationPublic = async (req, res) => {
     inv.acceptedBy = userId;
     await inv.save();
 
-    res.json({ 
-      message: 'Successfully joined company', 
-      companyId: company._id, 
+    res.json({
+      message: 'Successfully joined company',
+      companyId: company._id,
       role: inv.role,
       company: { _id: company._id, name: company.name }
     });
@@ -400,7 +470,7 @@ export const getUserCompanies = async (req, res) => {
   try {
     const companies = await Company.find({ 'members.user': req.user._id })
       .select('name description industry owner members');
-    
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -442,8 +512,8 @@ export const switchCompany = async (req, res) => {
 
     user.defaultCompany = companyId;
     await user.save();
-    
-    res.json({ 
+
+    res.json({
       message: 'Company switched successfully',
       defaultCompany: companyId,
       role: role,
@@ -458,7 +528,7 @@ export const switchCompany = async (req, res) => {
 export const deleteCompany = async (req, res) => {
   const { companyId } = req.params;
   const { confirmation } = req.body; // Require confirmation phrase
-  
+
   if (!confirmation || confirmation !== 'DELETE MY COMPANY') {
     return res.status(400).json({ message: 'Confirmation phrase required: "DELETE MY COMPANY"' });
   }
@@ -466,14 +536,14 @@ export const deleteCompany = async (req, res) => {
   try {
     const company = await Company.findById(companyId);
     if (!company) return res.status(404).json({ message: 'Company not found' });
-    
+
     // Import isSuperAdmin from superAdminController
     const { isSuperAdmin } = await import('./superAdminController.js');
     const superAdmin = await isSuperAdmin(req.user._id);
-    
+
     const role = company.getMemberRole(req.user._id);
     const isOwner = role === 'owner';
-    
+
     if (!isOwner && !superAdmin) {
       return res.status(403).json({ message: 'Only the company owner or super admin can delete the company' });
     }
@@ -482,7 +552,6 @@ export const deleteCompany = async (req, res) => {
     const Task = req.app.locals.Task || (await import('../models/Task.js')).default;
     const Project = req.app.locals.Project || (await import('../models/Project.js')).default;
     const Department = req.app.locals.Department || (await import('../models/Department.js')).default;
-    const Team = req.app.locals.Team || (await import('../models/Team.js')).default;
     const Channel = req.app.locals.Channel || (await import('../models/Channel.js')).default;
     const Group = req.app.locals.Group || (await import('../models/Group.js')).default;
     const Announcement = req.app.locals.Announcement || (await import('../models/Announcement.js')).default;
@@ -491,7 +560,6 @@ export const deleteCompany = async (req, res) => {
       Task.deleteMany({ company: companyId }),
       Project.deleteMany({ company: companyId }),
       Department.deleteMany({ company: companyId }),
-      Team.deleteMany({ company: companyId }),
       Channel.deleteMany({ company: companyId }),
       Group.deleteMany({ company: companyId }),
       Announcement.deleteMany({ company: companyId }),
@@ -501,7 +569,7 @@ export const deleteCompany = async (req, res) => {
     // Remove company from all users
     await User.updateMany(
       { companies: companyId },
-      { 
+      {
         $pull: { companies: companyId },
         $unset: { defaultCompany: companyId }
       }
@@ -513,6 +581,19 @@ export const deleteCompany = async (req, res) => {
     res.json({ message: 'Company and all related data deleted successfully' });
   } catch (e) {
     console.error('Company deletion error:', e);
+    res.status(500).json({ message: e.message });
+  }
+};
+
+// SuperAdmin: List ALL companies with their plan info
+export const getAllCompanies = async (req, res) => {
+  try {
+    const companies = await Company.find({})
+      .populate('plan', 'name price billingCycle')
+      .select('name owner members plan subscriptionStatus subscriptionExpiresAt createdAt')
+      .sort({ createdAt: -1 });
+    res.json(companies);
+  } catch (e) {
     res.status(500).json({ message: e.message });
   }
 };

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
-import { 
-  IoPersonAddOutline, 
-  IoMailOutline, 
+import {
+  IoPersonAddOutline,
+  IoMailOutline,
   IoCallOutline,
   IoBusinessOutline,
   IoSearchOutline,
@@ -13,9 +13,12 @@ import {
   IoCheckmarkCircleOutline,
   IoCloseOutline,
   IoClipboardOutline,
-  IoLayersOutline
+  IoLayersOutline,
+  IoGridOutline,
+  IoListOutline
 } from 'react-icons/io5';
 import { useThemeColors } from '../../utils/themeHelper';
+import { toast } from '../../utils/toast';
 
 export default function Teams() {
   const theme = useThemeColors();
@@ -38,6 +41,7 @@ export default function Teams() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [memberProfile, setMemberProfile] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -67,7 +71,7 @@ export default function Teams() {
           mobileNumber: m.user?.mobileNumber || '',
           profilePic: m.user?.profilePic || ''
         }));
-        
+
         // Include the owner as well
         if (data.owner) {
           const ownerData = {
@@ -86,13 +90,12 @@ export default function Teams() {
             mappedMembers.unshift(ownerData); // Add owner at the beginning
           }
         }
-        
+
         setMembers(mappedMembers);
       } else {
         setMembers([]);
       }
     } catch (err) {
-      console.error('Failed to fetch team members:', err);
       setMembers([]);
     } finally {
       setLoading(false);
@@ -104,7 +107,7 @@ export default function Teams() {
       const { data } = await api.get(`/api/companies/${id}`);
       setCompany(data);
     } catch (err) {
-      console.error('Failed to fetch company details:', err);
+      // Quietly fail
     }
   };
 
@@ -118,29 +121,29 @@ export default function Teams() {
     setSelectedMember(member);
     setShowProfileModal(true);
     setLoadingProfile(true);
-    
+
     try {
       // Fetch member's tasks
-      const tasksRes = await api.get('/api/tasks', { 
-        params: { companyId, assignee: member._id } 
+      const tasksRes = await api.get('/api/tasks', {
+        params: { companyId, assignee: member._id }
       });
-      
+
       // Fetch groups member belongs to
-      const groupsRes = await api.get('/api/groups', { 
-        params: { companyId } 
+      const groupsRes = await api.get('/api/groups', {
+        params: { companyId }
       });
-      const memberGroups = groupsRes.data.filter(g => 
+      const memberGroups = groupsRes.data.filter(g =>
         g.members?.some(m => (m._id || m) === member._id)
       );
-      
+
       // Fetch departments
-      const deptsRes = await api.get('/api/departments', { 
-        params: { companyId } 
+      const deptsRes = await api.get('/api/departments', {
+        params: { companyId }
       });
-      const memberDepts = deptsRes.data.filter(d => 
+      const memberDepts = deptsRes.data.filter(d =>
         d.members?.some(m => (m._id || m) === member._id)
       );
-      
+
       setMemberProfile({
         ...member,
         tasks: tasksRes.data || [],
@@ -148,7 +151,6 @@ export default function Teams() {
         departments: memberDepts || []
       });
     } catch (err) {
-      console.error('Failed to load member profile:', err);
       setMemberProfile({ ...member, tasks: [], groups: [], departments: [] });
     } finally {
       setLoadingProfile(false);
@@ -157,7 +159,7 @@ export default function Teams() {
 
   const confirmRemovalStep2 = async () => {
     if (removalConfirm.verificationCode !== generatedCode) {
-      alert('Verification code is incorrect. Please try again.');
+      toast.error('Verification code is incorrect. Please try again.');
       return;
     }
 
@@ -165,11 +167,12 @@ export default function Teams() {
       await api.delete(`/api/companies/${companyId}/members/${removalConfirm.member._id}`);
       setMembers(prev => prev.filter(m => m._id !== removalConfirm.member._id));
       setRemovalConfirm({ show: false, member: null, step: 1, verificationCode: '' });
-      alert('Member successfully removed.');
+      toast.success('Member successfully removed.');
     } catch (e) {
-      const msg = e.response?.data?.message || 'Failed to remove member';
-      alert(msg);
-      console.error('Failed to remove member', e);
+      if (e.response?.status !== 403) {
+        const msg = e.response?.data?.message || 'Failed to remove member';
+        toast.error(msg);
+      }
     }
   };
 
@@ -197,7 +200,7 @@ export default function Teams() {
 
   const copyLink = () => {
     if (!inviteResult?.link) return;
-    
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(inviteResult.link)
         .then(() => {
@@ -215,8 +218,7 @@ export default function Teams() {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           } catch (err) {
-            console.error('Failed to copy link:', err);
-            alert('Failed to copy link. Please copy manually.');
+            toast.error('Failed to copy link. Please copy manually.');
           }
           document.body.removeChild(textarea);
         });
@@ -240,8 +242,8 @@ export default function Teams() {
 
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         member.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         member.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      member.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = filterRole === 'all' || member.role === filterRole;
     return matchesSearch && matchesRole;
   });
@@ -297,10 +299,26 @@ export default function Teams() {
               <option value="employee">Employee</option>
             </select>
           </div>
+          <div className="flex bg-white border-2 border-slate-200 rounded-xl overflow-hidden p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? `${theme.bgPrimary} text-white shadow-md` : 'text-slate-400 hover:text-slate-600'}`}
+              title="Grid View"
+            >
+              <IoGridOutline className="text-xl" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? `${theme.bgPrimary} text-white shadow-md` : 'text-slate-400 hover:text-slate-600'}`}
+              title="List View"
+            >
+              <IoListOutline className="text-xl" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Members Grid */}
+      {/* Members Grid/List */}
       <div className="grow overflow-y-auto p-8">
         {loading ? (
           <div className="flex items-center justify-center h-64">
@@ -312,7 +330,7 @@ export default function Teams() {
             <h3 className="text-xl font-semibold text-slate-600 mb-2">No team members found</h3>
             <p className="text-slate-500">Try adjusting your search or filters</p>
           </div>
-        ) : (
+        ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMembers.map((member) => (
               <div
@@ -358,13 +376,13 @@ export default function Teams() {
 
                 {/* Actions */}
                 <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
-                  <button 
+                  <button
                     onClick={() => viewMemberProfile(member)}
                     className={`flex-1 px-4 py-2 bg-${theme.primaryLight} text-${theme.primary} rounded-lg font-semibold hover:bg-${theme.primaryLighter} transition text-sm`}
                   >
                     View Profile
                   </button>
-                  {['owner', 'manager'].includes(companyRole) && (
+                  {['owner', 'manager'].includes(companyRole) && member.role !== 'owner' && (
                     <button onClick={() => initiateRemoval(member)} className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition text-sm">
                       Remove
                     </button>
@@ -372,6 +390,86 @@ export default function Teams() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border-2 border-slate-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Member</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Role & Dept</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredMembers.map((member) => (
+                    <tr key={member._id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 bg-gradient-to-br from-${theme.primary} to-purple-600 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm`}>
+                            {getInitials(member.firstName, member.lastName)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                              {member.firstName} {member.lastName}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <IoMailOutline className="text-slate-400" />
+                            <span>{member.email}</span>
+                          </div>
+                          {member.mobileNumber && (
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                              <IoCallOutline className="text-slate-400" />
+                              <span>{member.mobileNumber}</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1.5">
+                          <span className={`inline-flex w-fit px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border-2 ${getRoleBadgeColor(member.role)}`}>
+                            {member.role}
+                          </span>
+                          {member.department && (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                              <IoBusinessOutline className="text-slate-400" />
+                              <span>{member.department}</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => viewMemberProfile(member)}
+                            className={`p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-indigo-100 hover:text-indigo-600 transition shadow-sm`}
+                            title="View Profile"
+                          >
+                            <IoPeopleOutline className="text-lg" />
+                          </button>
+                          {['owner', 'manager'].includes(companyRole) && member.role !== 'owner' && (
+                            <button
+                              onClick={() => initiateRemoval(member)}
+                              className="p-2 bg-slate-100 text-red-600 rounded-lg hover:bg-red-100 transition shadow-sm"
+                              title="Remove Member"
+                            >
+                              <IoCloseOutline className="text-lg" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -385,24 +483,24 @@ export default function Teams() {
                 <IoLinkOutline className="text-2xl text-slate-600" />
                 <h2 className="text-2xl font-bold text-slate-800">Create Invite Link</h2>
               </div>
-              <button onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
+              <button onClick={() => { setShowInvite(false); setInviteResult(null); }} className="p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
             </div>
-            
+
             {!inviteResult?.link ? (
               <form onSubmit={sendInvite}>
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Role</label>
-                  <select value={inviteRole} onChange={(e)=>setInviteRole(e.target.value)} className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}>
+                  <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}>
                     <option value="employee">Employee</option>
                     <option value="manager">Manager</option>
                   </select>
                 </div>
-                
+
                 <div className="mb-6">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Department</label>
-                  <select value={inviteDept} onChange={(e)=>setInviteDept(e.target.value)} className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}>
+                  <select value={inviteDept} onChange={(e) => setInviteDept(e.target.value)} className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none bg-white`}>
                     <option value="">None</option>
-                    {(company?.departments||[]).map((d)=>(
+                    {(company?.departments || []).map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
@@ -413,8 +511,8 @@ export default function Teams() {
                 )}
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={()=>{setShowInvite(false); setInviteResult(null);}} className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition">Cancel</button>
-                  <button type="submit" disabled={sendingInvite} className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50`}>{sendingInvite? 'Creating…':'Generate Link'}</button>
+                  <button type="button" onClick={() => { setShowInvite(false); setInviteResult(null); }} className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition">Cancel</button>
+                  <button type="submit" disabled={sendingInvite} className={`flex-1 px-6 py-3 ${theme.bgPrimary} text-white rounded-xl font-semibold ${theme.bgPrimaryHover} transition disabled:opacity-50`}>{sendingInvite ? 'Creating…' : 'Generate Link'}</button>
                 </div>
               </form>
             ) : (
@@ -434,14 +532,13 @@ export default function Teams() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   type="button"
                   onClick={copyLink}
-                  className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
-                    copied 
-                      ? `${theme.bgPrimary} text-white` 
-                      : `border-2 border-slate-200 text-slate-700 hover:border-slate-300`
-                  }`}
+                  className={`w-full px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${copied
+                    ? `${theme.bgPrimary} text-white`
+                    : `border-2 border-slate-200 text-slate-700 hover:border-slate-300`
+                    }`}
                 >
                   {copied ? (
                     <>
@@ -458,8 +555,8 @@ export default function Teams() {
 
                 <p className="text-xs text-slate-500 text-center">The recipient can click the link to create an account and join your team</p>
 
-                <button 
-                  onClick={()=>{setShowInvite(false); setInviteResult(null);}}
+                <button
+                  onClick={() => { setShowInvite(false); setInviteResult(null); }}
                   className="w-full px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
                 >
                   Done
@@ -541,7 +638,7 @@ export default function Teams() {
           </div>
         </div>
       )}
-      
+
       {/* Member Profile Modal */}
       {showProfileModal && selectedMember && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -563,7 +660,7 @@ export default function Teams() {
                 <IoCloseOutline className="text-2xl text-slate-400" />
               </button>
             </div>
-            
+
             {loadingProfile ? (
               <div className="px-8 py-16 flex items-center justify-center">
                 <div className={`animate-spin rounded-full h-12 w-12 border-b-2 border-${theme.primary}`}></div>
@@ -606,19 +703,17 @@ export default function Teams() {
                           <div key={task._id} className="p-3 bg-purple-50 rounded-xl border border-purple-200">
                             <p className="font-semibold text-slate-800 text-sm mb-1">{task.title}</p>
                             <div className="flex items-center gap-2 text-xs">
-                              <span className={`px-2 py-0.5 rounded-full ${
-                                task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                              <span className={`px-2 py-0.5 rounded-full ${task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
                                 task.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                'bg-slate-100 text-slate-700'
-                              }`}>
+                                  'bg-slate-100 text-slate-700'
+                                }`}>
                                 {task.status}
                               </span>
                               {task.priority && (
-                                <span className={`px-2 py-0.5 rounded-full ${
-                                  task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                <span className={`px-2 py-0.5 rounded-full ${task.priority === 'high' ? 'bg-red-100 text-red-700' :
                                   task.priority === 'medium' ? 'bg-orange-100 text-orange-700' :
-                                  'bg-green-100 text-green-700'
-                                }`}>
+                                    'bg-green-100 text-green-700'
+                                  }`}>
                                   {task.priority}
                                 </span>
                               )}

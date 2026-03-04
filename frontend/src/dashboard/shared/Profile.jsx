@@ -2,18 +2,18 @@ import { IoPencilOutline, IoSaveOutline, IoCloseOutline } from 'react-icons/io5'
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import React from 'react';
-import api from '../../api/axios'; 
+import api from '../../api/axios';
 
 // 🎨 HIGH-CONTRAST COLOR MAPPINGS
 const ACCENT_PURPLE = 'purple-700'; // Used for Avatar, Focus states
 
 const Profile = () => {
-        // Role-based button colors: green for employees, blue for managers
-        const isManager = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard/manager');
-        const EDIT_COLOR = isManager ? 'blue-600' : 'green-600';
-        const EDIT_HOVER = isManager ? 'blue-700' : 'green-700';
-        const SAVE_COLOR = isManager ? 'blue-600' : 'green-600';
-        const SAVE_HOVER = isManager ? 'blue-700' : 'green-700';
+    // Role-based button colors: green for employees, blue for managers
+    const isManager = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard/manager');
+    const EDIT_COLOR = isManager ? 'blue-600' : 'green-600';
+    const EDIT_HOVER = isManager ? 'blue-700' : 'green-700';
+    const SAVE_COLOR = isManager ? 'blue-600' : 'green-600';
+    const SAVE_HOVER = isManager ? 'blue-700' : 'green-700';
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -22,14 +22,13 @@ const Profile = () => {
         lastName: '',
         email: '',
         mobileNumber: '',
-        profilePic: '', 
     });
     const [error, setError] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
 
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
-    
+
     // Derived state for display
     const combinedName = `${profileData.firstName} ${profileData.lastName}`;
     const initialAvatar = profileData.firstName[0] || 'U';
@@ -45,25 +44,23 @@ const Profile = () => {
             }
             try {
                 const { data } = await api.get('/api/users/profile', config);
-                
+
                 const initialData = {
                     firstName: data.firstName || '',
                     lastName: data.lastName || '',
                     email: data.email || '',
                     mobileNumber: data.mobileNumber || 'Add number',
-                    profilePic: data.profilePic || '/images/default_avatar.png',
                 };
-                
+
                 setProfileData(initialData);
-                
+
                 // Store in localStorage for sidebar and header
                 localStorage.setItem('userProfile', JSON.stringify({
                     firstName: initialData.firstName,
                     lastName: initialData.lastName,
                     email: initialData.email,
-                    profilePic: initialData.profilePic
                 }));
-                
+
             } catch (err) {
                 console.error("Failed to fetch profile:", err);
                 setError("Failed to load profile data.");
@@ -84,33 +81,31 @@ const Profile = () => {
             firstName: profileData.firstName,
             lastName: profileData.lastName,
             mobileNumber: profileData.mobileNumber === 'Add number' ? '' : profileData.mobileNumber,
-            profilePic: profileData.profilePic
         };
 
         try {
             // API call to update profile
             const { data: responseData } = await api.put('/api/users/profile', dataToSave, config);
-            
+
             // FIX: Update the token if the backend re-issues it after save (common for updates)
             if (responseData.token) {
                 localStorage.setItem('token', responseData.token);
             }
-            
+
             // FIX: Update local state with the saved data
             setProfileData({ ...profileData, ...dataToSave });
-            
+
             // Update localStorage for header display
             const updatedProfile = {
                 firstName: profileData.firstName,
                 lastName: profileData.lastName,
                 email: profileData.email,
-                profilePic: profileData.profilePic
             };
             localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
-            
+
             // Trigger profile update event
             window.dispatchEvent(new Event('profileUpdated'));
-            
+
             setIsEditing(false);
             alert('Profile Updated Successfully!');
         } catch (err) {
@@ -137,13 +132,13 @@ const Profile = () => {
         const firstName = parts[0] || '';
         const lastName = parts.slice(1).join(' ');
 
-        setProfileData({ 
-            ...profileData, 
+        setProfileData({
+            ...profileData,
             firstName: firstName,
             lastName: lastName,
         });
     };
-    
+
     // --- RENDER HELPERS ---
     const renderValue = (value) => value === 'Add number' || value === '' ? (
         <span className="text-gray-400 italic">Not specified</span>
@@ -171,7 +166,7 @@ const Profile = () => {
             setDeleteLoading(false);
         }
     };
-    
+
 
     if (loading) return <div className="text-center p-10">Loading Profile...</div>;
     if (error) return <div className="text-center p-10 text-red-500">{error}</div>;
@@ -181,25 +176,17 @@ const Profile = () => {
             <h2 className="text-2xl font-bold text-gray-800 mb-8">Profile Settings</h2> {/* High contrast text */}
 
             <div className="flex justify-between items-start mb-8 pb-4 border-b border-gray-100">
-                
+
                 {/* 1. Avatar Section */}
                 <div className="flex items-center">
                     <div className="relative w-24 h-24 mr-6 flex-shrink-0">
                         {/* Avatar Image or Initial Placeholder */}
                         {/* Avatar initial placeholder color updated to ACCENT_PURPLE for brand consistency */}
                         <div className={`w-full h-full bg-${ACCENT_PURPLE} rounded-full flex items-center justify-center text-3xl font-bold text-black overflow-hidden border-2 border-white shadow-md`}>
-                            {profileData.profilePic && profileData.profilePic !== '/images/default_avatar.png' ? (
-                                <img 
-                                    src={profileData.profilePic} 
-                                    alt="User Avatar" 
-                                    className="w-full h-full object-cover" 
-                                />
-                            ) : (
-                                initialAvatar
-                            )}
+                            {initialAvatar}
                         </div>
                     </div>
-                    
+
                     {/* User Info (Name/Email) */}
                     <div>
                         <p className="text-xl font-semibold text-gray-800">{combinedName}</p>
@@ -231,7 +218,7 @@ const Profile = () => {
                             </button>
                         </>
                     ) : (
-                        <button 
+                        <button
                             onClick={() => setIsEditing(true)}
                             type="button"
                             // Edit button color based on role (green for employee, blue for manager)
@@ -246,7 +233,7 @@ const Profile = () => {
 
             {/* --- Profile Details Form --- */}
             <form onSubmit={handleSave} className="space-y-4">
-                
+
                 {/* Full Name Field */}
                 <div className="grid grid-cols-3 gap-4 py-4 border-b border-gray-100 items-center">
                     <label className="text-black-500 font-medium">Full Name</label>
@@ -266,7 +253,7 @@ const Profile = () => {
                         )}
                     </div>
                 </div>
-                
+
                 {/* Email Field */}
                 <div className="grid grid-cols-3 gap-4 py-4 border-b border-gray-100 items-center">
                     <label className="text-black-500 font-medium">Email Account</label>
@@ -275,7 +262,7 @@ const Profile = () => {
                         <p className="text-gray-800 font-medium">{profileData.email}</p>
                     </div>
                 </div>
-                
+
                 {/* Mobile Number Field */}
                 <div className="grid grid-cols-3 gap-4 py-4 border-b border-gray-100 items-center">
                     <label className="text-black-500 font-medium">Mobile Number</label>
@@ -295,7 +282,7 @@ const Profile = () => {
                         )}
                     </div>
                 </div>
-                
+
                 {/* Hidden submit button to allow form submission via Enter key */}
                 {isEditing && <button type="submit" hidden />}
 

@@ -20,7 +20,7 @@ function Header() {
         } else {
             setIsSuperAdmin(false);
         }
-        
+
         // Listen for profile updates
         const handleStorageChange = () => {
             const updatedProfile = localStorage.getItem('userProfile');
@@ -35,10 +35,10 @@ function Header() {
                 setIsSuperAdmin(false);
             }
         };
-        
+
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('profileUpdated', handleStorageChange);
-        
+
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('profileUpdated', handleStorageChange);
@@ -60,12 +60,12 @@ function Header() {
                 {/* 2. Primary Navigation (Center/Right-aligned on desktop) */}
                 <nav className="hidden md:flex items-center space-x-7">
                     <Link to="/" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Home</Link>
-                    <Link to="/pricing" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Pricing</Link>
+                    {/* <Link to="/pricing" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Pricing</Link> */}
                     <Link to="/about" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">About</Link>
                     <Link to="/contact" className="text-gray-600 hover:text-indigo-600 transition-colors font-medium">Contact</Link>
                     {isSuperAdmin && (
-                        <Link 
-                            to="/dashboard/super-admin" 
+                        <Link
+                            to="/dashboard/super-admin"
                             className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm"
                         >
                             <IoShieldCheckmarkOutline className="w-4 h-4" />
@@ -90,8 +90,8 @@ function Header() {
                     <Link to="/login" className="text-gray-700 hover:text-indigo-600 transition-colors font-medium hidden sm:inline">
                         Log in
                     </Link>
-                    <Link 
-                        to="/signup" 
+                    <Link
+                        to="/signup"
                         className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200 ease-in-out transform hover:scale-105"
                     >
                         Get Started
@@ -106,9 +106,9 @@ function Header() {
                         <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
                             Home
                         </Link>
-                        <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
+                        {/* <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
                             Pricing
-                        </Link>
+                        </Link> */}
                         <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-700 hover:text-indigo-600 font-medium">
                             About
                         </Link>

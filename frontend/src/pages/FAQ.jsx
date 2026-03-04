@@ -23,7 +23,7 @@ const FAQ = () => {
     },
     {
       question: 'How many team members can I add?',
-      answer: 'The number of team members depends on your plan. Our basic plan includes up to 10 users, while our Pro and Enterprise plans offer unlimited team members.'
+      answer: 'The number of team members depends on your specific plan. We offer flexible plans ranging from small teams to unlimited enterprise access. Check our Pricing page for detailed limits.'
     },
     {
       question: 'Is my data secure?',

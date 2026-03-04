@@ -15,7 +15,6 @@ import projectRoutes from './routes/projectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import channelRoutes from './routes/channelRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
-import teamRoutes from './routes/teamRoutes.js';
 import groupRoutes from './routes/groupRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
@@ -23,6 +22,8 @@ import superAdminRoutes from './routes/superAdminRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
+import pricingPlanRoutes from './routes/pricingPlanRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,7 +48,10 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+        const ext = path.extname(file.originalname).toLowerCase();
+        // Sanitize: allow only alphanumeric for name part
+        const sanitizedBase = file.originalname.replace(ext, '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+        cb(null, 'profile-' + uniqueSuffix + '-' + sanitizedBase + ext);
     }
 });
 
@@ -55,13 +59,14 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-        if (mimetype && extname) {
+        const allowedExtensions = /^\.(jpeg|jpg|png)$/;
+        const allowedMimes = /image\/(jpeg|png)/;
+        const ext = path.extname(file.originalname).toLowerCase();
+
+        if (allowedExtensions.test(ext) && allowedMimes.test(file.mimetype)) {
             return cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed'));
+            cb(new Error('Only JPEG, JPG, and PNG image files are allowed for profile pictures.'));
         }
     }
 });
@@ -90,7 +95,6 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/departments', departmentRoutes);
-app.use('/api/teams', teamRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -98,11 +102,13 @@ app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/notes', notesRoutes);
+app.use('/api/pricing-plans', pricingPlanRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // 404 handler for undefined routes
 app.use((req, res, next) => {
     console.log(`404 - Route not found: ${req.method} ${req.url}`);
-    res.status(404).json({ 
+    res.status(404).json({
         message: 'Route not found',
         path: req.url,
         method: req.method
@@ -118,6 +124,40 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message || 'Something broke!' });
 });
 
-app.listen(PORT, () => {
+// Socket.io Setup
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: corsOrigins || "*", // Allow all if not specified, or match express cors
+        methods: ["GET", "POST"]
+    }
+});
+
+// Track active users
+let activeUsers = 0;
+
+io.on('connection', (socket) => {
+    activeUsers++;
+
+
+    // Broadcast active user count to all clients (or just admins if we separated namespaces)
+    io.emit('activeUsers', activeUsers);
+
+    socket.on('disconnect', () => {
+        activeUsers--;
+
+        io.emit('activeUsers', activeUsers);
+    });
+});
+
+// Store io in app for use in routes if needed
+app.set('io', io);
+
+// ... (Error handling middleware remains above)
+
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
