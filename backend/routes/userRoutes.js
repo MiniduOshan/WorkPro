@@ -2,6 +2,7 @@ import { Router } from 'express';
 import userController from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { checkLimit } from '../middleware/limitMiddleware.js';
+import { authLimiter, sensitiveLimiter } from '../middleware/rateLimitMiddleware.js';
 
 // Multer will be passed via app.upload from server.js
 let upload;
@@ -17,11 +18,13 @@ router.use((req, res, next) => {
 });
 
 // Public Routes
-router.post('/signup', userController.registerUser);
-router.post('/login', userController.authUser);
-router.post('/forgot-password', userController.forgotPassword);
-router.post('/reset-password', userController.resetPassword);
+router.post('/signup', authLimiter, userController.registerUser);
+router.post('/login', authLimiter, userController.authUser);
+router.post('/forgot-password', authLimiter, userController.forgotPassword);
+router.post('/reset-password', authLimiter, userController.resetPassword);
 router.post('/auth/google', userController.googleAuth);
+router.get('/verify-email', sensitiveLimiter, userController.verifyEmail);
+router.post('/resend-verification', sensitiveLimiter, userController.resendVerification);
 
 // FIX: Added public route for user lookup by email (used by invitation modal)
 router.get('/lookup', userController.getUserByEmail); // Assumes controller is updated

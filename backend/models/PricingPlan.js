@@ -16,8 +16,8 @@ const PricingPlanSchema = new mongoose.Schema(
         },
         limits: {
             maxUsers: { type: Number, default: 2 }, // -1 for unlimited
-            maxStorageStr: { type: String, default: '1GB' }, // Store as string (e.g., '1GB', '10GB') for display
-            maxStorageBytes: { type: Number, default: 1073741824 }, // Actual bytes for enforcement
+            maxStorageStr: { type: String, default: '200MB' }, // Store as string (e.g., '200MB', '1GB') for display
+            maxStorageBytes: { type: Number, default: 209715200 }, // 200MB in bytes for enforcement
             maxProjects: { type: Number, default: 3 }, // Fallback for old data
             maxProjectGroups: { type: Number, default: 3 },
             maxDepartments: { type: Number, default: 2 },

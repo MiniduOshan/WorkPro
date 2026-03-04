@@ -24,6 +24,7 @@ import aiRoutes from './routes/aiRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
 import pricingPlanRoutes from './routes/pricingPlanRoutes.js';
 import subscriptionRoutes from './routes/subscriptionRoutes.js';
+import { generalLimiter } from './middleware/rateLimitMiddleware.js';
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,6 +90,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
+app.use('/api', generalLimiter);
 app.use('/api/users', userRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/projects', projectRoutes);

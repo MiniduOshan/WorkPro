@@ -16,6 +16,9 @@ const UserSchema = new mongoose.Schema(
     isSuperAdmin: { type: Boolean, default: false }, // For super admin access to analytics
     resetPasswordToken: { type: String }, // Hashed token for password reset
     resetPasswordExpire: { type: Date }, // Expiration time for reset token
+    isVerified: { type: Boolean, default: false }, // Email verification status
+    verificationToken: { type: String }, // Hashed token for email verification
+    verificationTokenExpire: { type: Date }, // Expiration time for verification token
   },
   { timestamps: true }
 );

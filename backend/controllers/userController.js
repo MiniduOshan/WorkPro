@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import generateToken from '../config/generateToken.js';
 import crypto from 'crypto';
-import { sendPasswordResetEmail } from '../config/email.js';
+import { sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail } from '../config/email.js';
 import { OAuth2Client } from 'google-auth-library';
 
 // Fixed super admin email - cannot be changed through website
@@ -57,11 +57,37 @@ const registerUser = async (req, res) => {
             lastName,
             email,
             password,
-            isSuperAdmin: isSuperAdmin  // Only set true for admin.workpro@gmail.com
+            isSuperAdmin: isSuperAdmin,
+            isVerified: false,
         });
 
         if (user) {
-            res.status(201).json(getUserResponse(user));
+            // Generate verification token
+            const verificationToken = crypto.randomBytes(32).toString('hex');
+            user.verificationToken = crypto
+                .createHash('sha256')
+                .update(verificationToken)
+                .digest('hex');
+            user.verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+            await user.save();
+
+            // Send verification email
+            const verifyUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/users/verify-email?token=${verificationToken}`;
+            try {
+                await sendVerificationEmail({
+                    to: user.email,
+                    verifyLink: verifyUrl,
+                    firstName: user.firstName,
+                });
+            } catch (emailErr) {
+                console.error('[SIGNUP] Failed to send verification email:', emailErr.message);
+            }
+
+            res.status(201).json({
+                message: 'Account created! Please check your email to verify your account.',
+                needsVerification: true,
+                email: user.email,
+            });
         } else {
             res.status(400).json({ message: 'Invalid user data (Mongoose validation error)' });
         }
@@ -81,6 +107,15 @@ const authUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await user.matchPassword(password))) {
+            // Block login if email not verified
+            if (!user.isVerified) {
+                return res.status(403).json({
+                    message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+                    needsVerification: true,
+                    email: user.email,
+                });
+            }
+
             // Keep any existing super-admin flag, but also allow the fixed admin email
             const isSuperAdmin = user.isSuperAdmin === true || email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
             if (user.isSuperAdmin !== isSuperAdmin) {
@@ -484,6 +519,7 @@ const googleAuth = async (req, res) => {
                 password: randomPassword,
                 isSuperAdmin,
                 googleId,
+                isVerified: true, // Google already verifies email
             });
         } else {
             const shouldBeSuperAdmin = user.isSuperAdmin === true || email === SUPER_ADMIN_EMAIL.toLowerCase();
@@ -509,6 +545,12 @@ const googleAuth = async (req, res) => {
                 shouldSave = true;
             }
 
+            // Auto-verify Google OAuth users
+            if (!user.isVerified) {
+                user.isVerified = true;
+                shouldSave = true;
+            }
+
             if (shouldSave) {
                 await user.save();
             }
@@ -521,15 +563,113 @@ const googleAuth = async (req, res) => {
     }
 };
 
+// @desc    Verify email with token
+// @route   GET /api/users/verify-email?token=xxx
+// @access  Public
+const verifyEmail = async (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).json({ message: 'Verification token is required' });
+    }
+
+    try {
+        const hashedToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+
+        const user = await User.findOne({
+            verificationToken: hashedToken,
+            verificationTokenExpire: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            return res.redirect(`${frontendUrl}/login?verified=expired`);
+        }
+
+        // Mark as verified
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpire = undefined;
+        await user.save();
+
+        // Send welcome email automatically
+        try {
+            await sendWelcomeEmail({
+                to: user.email,
+                firstName: user.firstName,
+            });
+            console.log('[VERIFY] Welcome email sent to:', user.email);
+        } catch (emailErr) {
+            console.error('[VERIFY] Failed to send welcome email:', emailErr.message);
+        }
+
+        // Redirect to frontend login with success flag
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        res.redirect(`${frontendUrl}/login?verified=true`);
+    } catch (error) {
+        console.error('[VERIFY EMAIL ERROR]:', error);
+        res.status(500).json({ message: 'Verification failed. Please try again.' });
+    }
+};
+
+// @desc    Resend verification email
+// @route   POST /api/users/resend-verification
+// @access  Public
+const resendVerification = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.json({ message: 'If an account exists, a verification email will be sent.' });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: 'This email is already verified. Please log in.' });
+        }
+
+        // Generate new verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        user.verificationToken = crypto
+            .createHash('sha256')
+            .update(verificationToken)
+            .digest('hex');
+        user.verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+        await user.save();
+
+        const verifyUrl = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/users/verify-email?token=${verificationToken}`;
+        await sendVerificationEmail({
+            to: user.email,
+            verifyLink: verifyUrl,
+            firstName: user.firstName,
+        });
+
+        res.json({ message: 'Verification email sent! Please check your inbox.' });
+    } catch (error) {
+        console.error('[RESEND VERIFICATION ERROR]:', error);
+        res.status(500).json({ message: 'Failed to resend verification email.' });
+    }
+};
+
 export default {
     registerUser,
     authUser,
     getUserByEmail,
     getUserProfile,
-    updateUserProfile, // <--- Preserved and updated
-    uploadProfilePic,   // <--- New file upload endpoint
-    deleteUserAccount,  // <--- Account deletion
-    forgotPassword,     // <--- Password reset request
-    resetPassword,      // <--- Password reset with token
-    googleAuth,         // <--- Google OAuth
+    updateUserProfile,
+    uploadProfilePic,
+    deleteUserAccount,
+    forgotPassword,
+    resetPassword,
+    googleAuth,
+    verifyEmail,
+    resendVerification,
 };

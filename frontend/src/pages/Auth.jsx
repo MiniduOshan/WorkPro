@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   IoMailOutline,
   IoLockClosedOutline,
@@ -7,7 +7,9 @@ import {
   IoPersonOutline,
   IoEyeOutline,
   IoEyeOffOutline,
-  IoCloseOutline
+  IoCloseOutline,
+  IoCheckmarkCircleOutline,
+  IoMailOpenOutline,
 } from 'react-icons/io5';
 import api from '../api/axios';
 
@@ -55,6 +57,24 @@ const Auth = ({ type }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [verificationState, setVerificationState] = useState(null); // { email, message }
+  const [resendLoading, setResendLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check for verification status from URL params
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      setError('');
+      setVerificationState({ message: 'Email verified successfully! You can now log in.', type: 'success' });
+      searchParams.delete('verified');
+      setSearchParams(searchParams, { replace: true });
+    } else if (verified === 'expired') {
+      setError('Verification link has expired. Please request a new one.');
+      searchParams.delete('verified');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -109,7 +129,7 @@ const Auth = ({ type }) => {
     window.google.accounts.id.renderButton(googleButtonRef.current, {
       theme: 'outline',
       size: 'large',
-      width: '100%',
+      width: 400,
       text: isLogin ? 'signin_with' : 'signup_with',
       shape: 'rectangular',
     });
@@ -225,11 +245,25 @@ const Auth = ({ type }) => {
 
     try {
       const { data } = await api.post(endpoint, formData);
+
+      // Handle verification required (signup response)
+      if (data.needsVerification) {
+        setVerificationState({ email: data.email, message: data.message, type: 'verify' });
+        return;
+      }
+
       await handleAuthSuccess(data);
 
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Authentication failed. Please try again.';
-      setError(errorMessage);
+      const needsVerification = err.response?.data?.needsVerification;
+      const email = err.response?.data?.email;
+
+      if (needsVerification && email) {
+        setVerificationState({ email, message: errorMessage, type: 'unverified' });
+      } else {
+        setError(errorMessage);
+      }
     }
   };
 
@@ -251,103 +285,178 @@ const Auth = ({ type }) => {
             </p>
           </div>
 
+          {/* Verification success banner */}
+          {verificationState?.type === 'success' && (
+            <div className="p-4 mb-6 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+              <IoCheckmarkCircleOutline className="w-5 h-5 flex-shrink-0" />
+              {verificationState.message}
+            </div>
+          )}
+
+          {/* Check your email screen (after signup) */}
+          {verificationState?.type === 'verify' && (
+            <div className="text-center py-6">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <IoMailOpenOutline className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Check Your Email</h2>
+              <p className="text-gray-600 mb-4">{verificationState.message}</p>
+              <p className="text-sm text-gray-500 mb-6">We sent a verification link to <strong>{verificationState.email}</strong></p>
+              <button
+                type="button"
+                disabled={resendLoading}
+                onClick={async () => {
+                  setResendLoading(true);
+                  try {
+                    await api.post('/api/users/resend-verification', { email: verificationState.email });
+                    setError('');
+                    setVerificationState(prev => ({ ...prev, message: 'Verification email resent! Check your inbox.' }));
+                  } catch (err) {
+                    setError(err.response?.data?.message || 'Failed to resend verification email.');
+                  } finally {
+                    setResendLoading(false);
+                  }
+                }}
+                className="text-blue-600 hover:text-blue-700 font-semibold text-sm hover:underline disabled:opacity-50"
+              >
+                {resendLoading ? 'Sending...' : "Didn't receive it? Resend email"}
+              </button>
+              <div className="mt-6">
+                <Link to="/login" className="text-sm text-gray-500 hover:text-gray-700">
+                  ← Back to Login
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Unverified login attempt */}
+          {verificationState?.type === 'unverified' && (
+            <div className="p-4 mb-6 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="mb-2">{verificationState.message}</p>
+              <button
+                type="button"
+                disabled={resendLoading}
+                onClick={async () => {
+                  setResendLoading(true);
+                  try {
+                    const { data } = await api.post('/api/users/resend-verification', { email: verificationState.email });
+                    setVerificationState(prev => ({ ...prev, message: data.message }));
+                  } catch (err) {
+                    setVerificationState(prev => ({ ...prev, message: err.response?.data?.message || 'Failed to resend.' }));
+                  } finally {
+                    setResendLoading(false);
+                  }
+                }}
+                className="text-orange-800 font-semibold hover:underline disabled:opacity-50"
+              >
+                {resendLoading ? 'Sending...' : 'Resend Verification Email'}
+              </button>
+            </div>
+          )}
+
           {error && (
             <div className="p-4 mb-6 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg animate-pulse" role="alert">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-2">
-            {!isLogin && (
-              <div className="flex space-x-4">
-                <AuthInput
-                  name="firstName"
-                  placeholder="First"
-                  icon={IoPersonOutline}
-                  formData={formData}
-                  handleChange={handleChange}
-                />
-                <AuthInput
-                  name="lastName"
-                  placeholder="Last"
-                  icon={IoPersonOutline}
-                  formData={formData}
-                  handleChange={handleChange}
-                />
-              </div>
-            )}
+          {verificationState?.type !== 'verify' && (
+            <form onSubmit={handleSubmit} className="space-y-2">
+              {!isLogin && (
+                <div className="flex space-x-4">
+                  <AuthInput
+                    name="firstName"
+                    placeholder="First"
+                    icon={IoPersonOutline}
+                    formData={formData}
+                    handleChange={handleChange}
+                  />
+                  <AuthInput
+                    name="lastName"
+                    placeholder="Last"
+                    icon={IoPersonOutline}
+                    formData={formData}
+                    handleChange={handleChange}
+                  />
+                </div>
+              )}
 
-            <AuthInput
-              name="email"
-              placeholder="Email Address"
-              type="email"
-              icon={IoMailOutline}
-              formData={formData}
-              handleChange={handleChange}
-            />
-
-            <AuthInput
-              name="password"
-              placeholder="Password"
-              type="password"
-              icon={IoLockClosedOutline}
-              formData={formData}
-              handleChange={handleChange}
-            />
-
-            {isLogin && (
-              <div className="flex justify-end mb-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            )}
-
-            {!isLogin && (
               <AuthInput
-                name="confirmPassword"
-                placeholder="Confirm Password"
+                name="email"
+                placeholder="Email Address"
+                type="email"
+                icon={IoMailOutline}
+                formData={formData}
+                handleChange={handleChange}
+              />
+
+              <AuthInput
+                name="password"
+                placeholder="Password"
                 type="password"
                 icon={IoLockClosedOutline}
                 formData={formData}
                 handleChange={handleChange}
               />
-            )}
 
-            <button
-              type="submit"
-              className="w-full py-3 mt-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-none transition-all active:scale-[0.98]"
-            >
-              {isLogin ? 'Login Now' : 'Signup Now'}
-            </button>
-          </form>
+              {isLogin && (
+                <div className="flex justify-end mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
 
-          <div className="flex items-center my-8">
-            <div className="grow border-t border-gray-200"></div>
-            <span className="shrink mx-4 text-gray-400 text-sm font-medium">OR</span>
-            <div className="grow border-t border-gray-200"></div>
-          </div>
+              {!isLogin && (
+                <AuthInput
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  type="password"
+                  icon={IoLockClosedOutline}
+                  formData={formData}
+                  handleChange={handleChange}
+                />
+              )}
 
-          {googleClientId ? (
-            <div className="w-full mb-4">
-              <div ref={googleButtonRef} className="w-full flex justify-center" />
-            </div>
-          ) : (
-            <div className="w-full mb-4 p-3 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg">
-              Google sign-in is not configured.
-            </div>
+              <button
+                type="submit"
+                className="w-full py-3 mt-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-none transition-all active:scale-[0.98]"
+              >
+                {isLogin ? 'Login Now' : 'Signup Now'}
+              </button>
+            </form>
           )}
 
-          <Link
-            to={isLogin ? '/signup' : '/login'}
-            className="w-full block text-center py-3 border-2 border-blue-600 text-blue-600 text-lg font-semibold rounded-lg hover:bg-blue-50 transition-all"
-          >
-            {isLogin ? 'Create Account' : 'Login to Existing Account'}
-          </Link>
+          {verificationState?.type !== 'verify' && (
+            <>
+              <div className="flex items-center my-8">
+                <div className="grow border-t border-gray-200"></div>
+                <span className="shrink mx-4 text-gray-400 text-sm font-medium">OR</span>
+                <div className="grow border-t border-gray-200"></div>
+              </div>
+
+              {googleClientId ? (
+                <div className="w-full mb-4">
+                  <div ref={googleButtonRef} className="w-full flex justify-center" />
+                </div>
+              ) : (
+                <div className="w-full mb-4 p-3 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  Google sign-in is not configured.
+                </div>
+              )}
+
+              <Link
+                to={isLogin ? '/signup' : '/login'}
+                className="w-full block text-center py-3 border-2 border-blue-600 text-blue-600 text-lg font-semibold rounded-lg hover:bg-blue-50 transition-all"
+              >
+                {isLogin ? 'Create Account' : 'Login to Existing Account'}
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
@@ -388,8 +497,8 @@ const Auth = ({ type }) => {
 
             {forgotPasswordMessage && (
               <div className={`p-4 mb-4 text-sm rounded-lg ${forgotPasswordMessage.includes('sent')
-                  ? 'text-green-700 bg-green-50 border border-green-200'
-                  : 'text-red-700 bg-red-50 border border-red-200'
+                ? 'text-green-700 bg-green-50 border border-green-200'
+                : 'text-red-700 bg-red-50 border border-red-200'
                 }`}>
                 {forgotPasswordMessage}
               </div>

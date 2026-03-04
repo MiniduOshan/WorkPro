@@ -1,4 +1,5 @@
 import PricingPlan from '../models/PricingPlan.js';
+import Company from '../models/Company.js';
 import fs from 'fs';
 
 // Helper to get company and its plan

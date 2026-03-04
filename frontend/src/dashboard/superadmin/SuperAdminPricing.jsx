@@ -38,8 +38,8 @@ const SuperAdminPricing = () => {
     },
     limits: {
       maxUsers: 5,
-      maxStorageStr: '1GB',
-      maxStorageBytes: 1073741824,
+      maxStorageStr: '200MB',
+      maxStorageBytes: 209715200,
       maxProjectGroups: 3,
       maxDepartments: 2,
       maxChannels: 5,
