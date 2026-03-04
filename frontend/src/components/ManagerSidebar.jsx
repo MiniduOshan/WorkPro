@@ -14,7 +14,7 @@ import {
   IoShieldCheckmarkOutline,
   IoFlashOutline,
   IoDocumentTextOutline,
-  IoSparklesOutline,
+  IoAnalyticsOutline,
   IoWalletOutline
 } from 'react-icons/io5';
 
@@ -64,7 +64,7 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
 
   const managementLinks = [
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/manager' },
-    { name: 'AI Insights', icon: IoSparklesOutline, path: '/dashboard/manager/ai-insights' },
+    { name: 'Analytics', icon: IoAnalyticsOutline, path: '/dashboard/manager/analytics' },
     ...(companyRole === 'owner' ? [
       { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
     ] : []),

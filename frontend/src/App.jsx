@@ -301,8 +301,8 @@ function App() {
                     <Route path="invite" element={<Invite />} />
                     <Route path="documents" element={<DocumentLibrary />} />
                     <Route path="notes" element={<Notes />} />
-                    <Route path="ai-insights" element={<AIInsights />} />
-                    <Route path="ai-insights" element={<AIInsights />} />
+                    <Route path="analytics" element={<AIInsights />} />
+                    <Route path="analytics" element={<AIInsights />} />
                     <Route path="billing" element={<ProtectedRoute requireCompany={true} allowedRoles={['owner']}><Billing /></ProtectedRoute>} />
                     <Route path="create-company" element={<CompanyCreate />} />
                 </Route>

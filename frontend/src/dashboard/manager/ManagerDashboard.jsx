@@ -367,7 +367,7 @@ export default function ManagerDashboard() {
       setAiSummary(data.summary);
     } catch (err) {
       if (err.response && err.response.status === 403) {
-        setAiSummary('AI insights are not enabled for your current plan.');
+        setAiSummary('Analytics are not enabled for your current plan.');
       } else {
         console.error('Failed to fetch AI summary:', err);
         setAiSummary('AI summary unavailable right now.');

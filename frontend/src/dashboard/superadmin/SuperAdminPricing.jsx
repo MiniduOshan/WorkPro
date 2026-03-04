@@ -34,7 +34,6 @@ const SuperAdminPricing = () => {
       support: false,
       emailNotifications: true,
       fileUpload: true,
-      analytics: false,
       aiInsights: false,
     },
     limits: {
@@ -252,11 +251,11 @@ const SuperAdminPricing = () => {
               <div className="space-y-2 border-t pt-4 mt-4">
                 <h4 className="font-semibold text-gray-900">Features</h4>
                 <ul className="text-sm space-y-1">
-                  {Object.entries(plan.features).map(([key, enabled]) => (
+                  {Object.entries(plan.features).filter(([key]) => key !== 'analytics').map(([key, enabled]) => (
                     <li key={key} className={`flex items-center gap-2 ${enabled ? 'text-gray-700' : 'text-gray-400'}`}>
                       {enabled ? <IoCheckmarkCircle className="text-green-500" /> : <IoClose className="text-red-300" />}
                       <span className="capitalize">
-                        {key === 'support' ? 'Customer Support 24/7' : key.replace(/([A-Z])/g, ' $1').trim()}
+                        {key === 'support' ? 'Customer Support 24/7' : key === 'aiInsights' ? 'Analytics' : key.replace(/([A-Z])/g, ' $1').trim()}
                       </span>
                     </li>
                   ))}
@@ -466,7 +465,7 @@ const SuperAdminPricing = () => {
                   Feature Access
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {Object.keys(newPlan.features).map((feature) => (
+                  {Object.keys(newPlan.features).filter((f) => f !== 'analytics').map((feature) => (
                     <label key={feature} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${newPlan.features[feature] ? 'bg-green-50 border-green-200 shadow-sm' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
                       <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${newPlan.features[feature] ? 'bg-green-500 text-white' : 'bg-gray-200'}`}>
                         {newPlan.features[feature] && <IoCheckmarkCircle className="w-4 h-4" />}
@@ -478,7 +477,7 @@ const SuperAdminPricing = () => {
                         onChange={(e) => setNewPlan({ ...newPlan, features: { ...newPlan.features, [feature]: e.target.checked } })}
                       />
                       <span className="text-sm font-medium text-gray-700 capitalize select-none">
-                        {feature === 'support' ? 'Customer Support 24/7' : feature.replace(/([A-Z])/g, ' $1').trim()}
+                        {feature === 'support' ? 'Customer Support 24/7' : feature === 'aiInsights' ? 'Analytics' : feature.replace(/([A-Z])/g, ' $1').trim()}
                       </span>
                     </label>
                   ))}
