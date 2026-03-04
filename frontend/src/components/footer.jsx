@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { IoShieldCheckmarkOutline } from 'react-icons/io5';
+import { IoShieldCheckmarkOutline, IoCallOutline, IoMailOutline, IoLocationOutline } from 'react-icons/io5';
 
 function Footer() {
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -45,14 +45,19 @@ function Footer() {
                             <li><Link to="/terms" className="hover:text-blue-400">Terms of Service</Link></li>
                         </ul>
                     </div>
-                    {/* Column 3: Social */}
+                    {/* Column 3: Contact */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-4">Connect</h3>
+                        <h3 className="text-lg font-semibold mb-4">Contact</h3>
                         <div className="flex space-x-4">
-                            {/* Placeholder for social media icons */}
-                            <a href="/contact" className="hover:text-blue-400">FB</a>
-                            <a href="/contact" className="hover:text-blue-400">X</a>
-                            <a href="/contact" className="hover:text-blue-400">In</a>
+                            <a href="tel:+94762288794" className="hover:text-blue-400 transition-colors" title="Call Us">
+                                <IoCallOutline className="w-6 h-6" />
+                            </a>
+                            <a href="mailto:support@workpro.app" className="hover:text-blue-400 transition-colors" title="Email Us">
+                                <IoMailOutline className="w-6 h-6" />
+                            </a>
+                            <a href="https://maps.google.com/?q=Homagama,Sri+Lanka" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors" title="Visit Us">
+                                <IoLocationOutline className="w-6 h-6" />
+                            </a>
                         </div>
                     </div>
                     {/* Column 4: Newsletter/Branding */}
@@ -61,7 +66,7 @@ function Footer() {
                         <p className="text-sm text-gray-400">Your complete project management and team collaboration platform.</p>
                     </div>
                 </div>
-                
+
                 <div className="mt-8 pt-6 border-t border-gray-700 text-center text-sm text-gray-500">
                     &copy; {new Date().getFullYear()} WorkPro. All rights reserved.
                 </div>

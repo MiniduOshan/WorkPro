@@ -192,7 +192,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto p-8">
+      <div className="p-8">
         <div className="max-w-5xl mx-auto">
           {/* Tabs */}
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">

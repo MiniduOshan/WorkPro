@@ -45,7 +45,24 @@ export default function CompanyCreate() {
       setStatus(`Organization "${data.name}" established successfully!`);
       setStatusType('success');
       localStorage.setItem('companyId', data._id);
+      localStorage.setItem('companyName', data.name);
       localStorage.setItem('companyRole', 'owner');
+
+      // Update userProfile if it exists
+      const userProfile = localStorage.getItem('userProfile');
+      if (userProfile) {
+        try {
+          const profile = JSON.parse(userProfile);
+          if (!profile.companies) profile.companies = [];
+          if (!profile.companies.includes(data._id)) {
+            profile.companies.push(data._id);
+          }
+          profile.defaultCompany = data._id;
+          localStorage.setItem('userProfile', JSON.stringify(profile));
+        } catch (err) {
+          console.error('Error updating profile in localStorage:', err);
+        }
+      }
 
       // Get current role to determine which dashboard to redirect to
       const currentPath = window.location.pathname;

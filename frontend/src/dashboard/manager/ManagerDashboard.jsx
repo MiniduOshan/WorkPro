@@ -287,8 +287,6 @@ export default function ManagerDashboard() {
   const [inviteGenerating, setInviteGenerating] = useState(false);
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
-  const [aiSummary, setAiSummary] = useState('');
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [companyForm, setCompanyForm] = useState({
     name: '', description: '', website: '', mission: '', vision: '', industry: '', departments: ['Tech', 'Marketing', 'HR']
@@ -340,7 +338,6 @@ export default function ManagerDashboard() {
         ...prev,
         overdueTasks: (summary.tasks.byStatus?.cancelled || 0),
       }));
-      fetchProgressSummary(companyId);
       fetchManagerTasks(companyId);
       setTeamMembers((companyRes.data.members || []).map(m => ({
         id: m.user?._id || m.user,
@@ -356,26 +353,15 @@ export default function ManagerDashboard() {
       ]);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
+      if (err.response?.status === 403 || err.response?.status === 404) {
+        localStorage.removeItem('companyId');
+        localStorage.removeItem('companyRole');
+        localStorage.removeItem('companyName');
+        navigate('/select-company');
+      }
     }
   };
 
-  const fetchProgressSummary = async (companyId) => {
-    if (!companyId) return;
-    try {
-      setAiSummaryLoading(true);
-      const { data } = await api.get('/api/ai/progress-summary', { headers: { 'x-company-id': companyId } });
-      setAiSummary(data.summary);
-    } catch (err) {
-      if (err.response && err.response.status === 403) {
-        setAiSummary('Analytics are not enabled for your current plan.');
-      } else {
-        console.error('Failed to fetch AI summary:', err);
-        setAiSummary('AI summary unavailable right now.');
-      }
-    } finally {
-      setAiSummaryLoading(false);
-    }
-  };
 
   const handleCreateCompany = async (e) => {
     e.preventDefault();
@@ -393,10 +379,29 @@ export default function ManagerDashboard() {
       const { data } = await api.post('/api/companies', companyForm);
       localStorage.setItem('companyId', data._id);
       localStorage.setItem('companyRole', 'owner');
+      localStorage.setItem('companyName', data.name);
+
+      // Update userProfile if it exists
+      const profileStr = localStorage.getItem('userProfile');
+      if (profileStr) {
+        try {
+          const profile = JSON.parse(profileStr);
+          if (!profile.companies) profile.companies = [];
+          if (!profile.companies.includes(data._id)) {
+            profile.companies.push(data._id);
+          }
+          profile.defaultCompany = data._id;
+          localStorage.setItem('userProfile', JSON.stringify(profile));
+        } catch (e) {
+          console.error('Error updating profile in localStorage:', e);
+        }
+      }
+
       setCompanyData(data);
       setShowCompanyModal(false);
       setIsCreatingCompany(false);
       alert('✓ Company created successfully!');
+      window.location.reload(); // Refresh to update all context
     } catch (err) {
       setIsCreatingCompany(false);
       alert(err.response?.data?.message || 'Failed to create company.');
@@ -553,7 +558,7 @@ export default function ManagerDashboard() {
               </div>
             </header>
 
-            <div className="grow overflow-y-auto p-8 bg-slate-50">
+            <div className="p-8 bg-slate-50">
               {/* Dashboard Header */}
               <div className="mb-10 bg-linear-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white flex justify-between items-center shadow-xl">
                 <div>
@@ -563,28 +568,8 @@ export default function ManagerDashboard() {
 
               {/* Main Grid: Summary on left, Calendar on right */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-10">
-                {/* Left: Summary & Stats */}
+                {/* Left: Stats & Priority Tasks */}
                 <div className="xl:col-span-2 space-y-6">
-                  <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-blue-600 font-semibold mb-2">Executive Summary</p>
-                      <h3 className="text-xl font-bold text-slate-900 mb-3">Last 24h AI Briefing</h3>
-                      <p className="text-slate-600 whitespace-pre-line text-sm leading-relaxed">
-                        {aiSummaryLoading ? 'Generating summary…' : aiSummary || 'No recent activity yet.'}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2 min-w-[160px]">
-                      <button
-                        onClick={() => fetchProgressSummary(localStorage.getItem('companyId'))}
-                        disabled={aiSummaryLoading}
-                        className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2 justify-center"
-                      >
-                        <IoSparklesOutline /> {aiSummaryLoading ? 'Refreshing...' : 'Refresh AI'}
-                      </button>
-                      <span className="text-xs text-slate-500 text-center">Uses recent tasks & announcements</span>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {companyRole === 'owner' && (
                       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">

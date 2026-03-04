@@ -75,7 +75,7 @@ export default function Notes() {
         </div>
       </div>
 
-      <div className="grow overflow-y-auto p-8 custom-scrollbar">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
 
           {/* Creator Section */}

@@ -55,7 +55,7 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="flex flex-col h-full bg-slate-50 font-sans">
-      <div className="grow overflow-y-auto p-6 lg:p-10">
+      <div className="p-6 lg:p-10">
 
         {/* Header Section */}
         <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">

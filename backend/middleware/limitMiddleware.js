@@ -133,7 +133,7 @@ export const checkFeature = (featureName) => {
             }
 
             if (!plan.features[featureName]) {
-                return res.status(403).json({ message: `Feature '${featureName}' is not available in your current plan (${plan.name}).` });
+                return res.status(403).json({ feature: featureName });
             }
 
             req.company = company;

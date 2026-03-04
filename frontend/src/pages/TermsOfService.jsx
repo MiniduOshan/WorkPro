@@ -10,7 +10,7 @@ const TermsOfService = () => {
             Terms of Service
           </h1>
           <p className="text-xl text-blue-100">
-            Last updated: February 12, 2026
+            Last updated: March 4, 2026
           </p>
         </div>
       </section>
@@ -19,7 +19,7 @@ const TermsOfService = () => {
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 md:p-12 space-y-8">
-            
+
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 leading-relaxed">
@@ -128,7 +128,7 @@ const TermsOfService = () => {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Governing Law</h2>
               <p className="text-gray-700 leading-relaxed">
-                These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to its conflict of law provisions.
+                These Terms shall be governed by and construed in accordance with the laws of Sri Lanka, without regard to its conflict of law provisions.
               </p>
             </div>
 
@@ -138,9 +138,9 @@ const TermsOfService = () => {
                 If you have any questions about these Terms of Service, please contact us:
               </p>
               <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <p className="text-gray-700 mb-2"><strong>Email:</strong> legal@workpro.com</p>
-                <p className="text-gray-700 mb-2"><strong>Address:</strong> WorkPro Inc., 123 Business St, Suite 100, San Francisco, CA 94105</p>
-                <p className="text-gray-700"><strong>Phone:</strong> 1-800-WORKPRO</p>
+                <p className="text-gray-700 mb-2"><strong>Email:</strong> support@workpro.app</p>
+                <p className="text-gray-700 mb-2"><strong>Address:</strong> Homagama, Sri Lanka</p>
+                <p className="text-gray-700"><strong>Phone:</strong> +94 762 288 794</p>
               </div>
             </div>
 

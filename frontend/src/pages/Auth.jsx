@@ -167,6 +167,9 @@ const Auth = ({ type }) => {
     if (data.user) {
       localStorage.setItem('userProfile', JSON.stringify(data.user));
       localStorage.setItem('userId', data.user._id);
+      if (data.user.defaultCompany) {
+        localStorage.setItem('companyId', data.user.defaultCompany);
+      }
     }
 
     const userEmail = data.user?.email?.toLowerCase() || '';

@@ -7,9 +7,26 @@ const SelectCompany = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState(location.state?.companies || []);
+  const [defaultCompanyId, setDefaultCompanyId] = useState(location.state?.defaultCompany);
 
-  const companies = location.state?.companies || [];
-  const defaultCompanyId = location.state?.defaultCompany;
+  React.useEffect(() => {
+    if (companies.length === 0) {
+      const fetchInitialData = async () => {
+        try {
+          setLoading(true);
+          const { data } = await api.get('/api/companies/my-companies');
+          setCompanies(data.companies || []);
+          setDefaultCompanyId(data.defaultCompany);
+        } catch (err) {
+          console.error('Failed to fetch initial companies:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchInitialData();
+    }
+  }, []);
 
   // SuperAdmins should never reach this page - they bypass company selection
   // This check is just a safety net. Routing should prevent this in App.jsx
@@ -118,17 +135,15 @@ const SelectCompany = () => {
               key={company._id}
               onClick={() => handleSelectCompany(company._id)}
               disabled={loading}
-              className={`text-left p-6 rounded-lg border-2 transition-all hover:shadow-lg transform hover:scale-102 ${
-                defaultCompanyId === company._id
+              className={`text-left p-6 rounded-lg border-2 transition-all hover:shadow-lg transform hover:scale-102 ${defaultCompanyId === company._id
                   ? 'bg-primary-100 border-primary-600'
                   : 'bg-white border-gray-200 hover:border-primary-600'
-              } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className={`text-xl font-bold ${
-                    defaultCompanyId === company._id ? 'text-primary-600' : 'text-gray-900'
-                  }`}>
+                  <h3 className={`text-xl font-bold ${defaultCompanyId === company._id ? 'text-primary-600' : 'text-gray-900'
+                    }`}>
                     {company.name}
                   </h3>
 
@@ -150,11 +165,10 @@ const SelectCompany = () => {
                 </div>
 
                 <div className="flex-shrink-0 ml-4">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                    defaultCompanyId === company._id
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${defaultCompanyId === company._id
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-400 group-hover:bg-primary-600 group-hover:text-white'
-                  }`}>
+                    }`}>
                     <IoChevronForward className="w-6 h-6" />
                   </div>
                 </div>

@@ -117,7 +117,7 @@ const SuperAdminSidebar = ({ variant = 'desktop', className = '', onNavigate = (
           <IoShieldCheckmarkOutline className="text-xl" />
         </div>
         <div>
-          <span className="text-xl font-extrabold text-gray-900 tracking-tight block leading-none">SuperAdmin</span>
+          <span className="text-xl font-extrabold text-gray-900 tracking-tight block leading-none">WorkPro</span>
           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest pl-0.5">Control Panel</span>
         </div>
       </div>

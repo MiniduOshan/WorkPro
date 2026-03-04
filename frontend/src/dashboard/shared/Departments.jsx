@@ -164,7 +164,7 @@ export default function Departments() {
       </div>
 
       {/* Content */}
-      <div className="grow overflow-y-auto p-8">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {departments.map(dept => (
             <div key={dept._id} className="bg-white p-6 rounded-2xl border-2 border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all relative">

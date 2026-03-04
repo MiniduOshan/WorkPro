@@ -98,7 +98,7 @@ const EmployeeDashboardLayout = () => {
     };
 
     return (
-        <div className={`dashboard-theme ${isDarkMode ? 'dark' : ''} flex min-h-screen bg-app-bg transition-colors duration-300 w-full overflow-hidden`}>
+        <div className={`dashboard-theme ${isDarkMode ? 'dark' : ''} flex h-screen bg-app-bg transition-colors duration-300 w-full overflow-hidden`}>
             <EmployeeSidebar />
 
             {/* Mobile Sidebar Drawer */}

@@ -35,6 +35,7 @@ const SuperAdminPricing = () => {
       emailNotifications: true,
       fileUpload: true,
       aiInsights: false,
+      monthlyReports: false,
     },
     limits: {
       maxUsers: 5,
@@ -255,7 +256,7 @@ const SuperAdminPricing = () => {
                     <li key={key} className={`flex items-center gap-2 ${enabled ? 'text-gray-700' : 'text-gray-400'}`}>
                       {enabled ? <IoCheckmarkCircle className="text-green-500" /> : <IoClose className="text-red-300" />}
                       <span className="capitalize">
-                        {key === 'support' ? 'Customer Support 24/7' : key === 'aiInsights' ? 'Analytics' : key.replace(/([A-Z])/g, ' $1').trim()}
+                        {key === 'support' ? 'Customer Support 24/7' : key === 'aiInsights' ? 'Advanced AI Analysis' : key === 'monthlyReports' ? 'PDF Monthly Reports' : key.replace(/([A-Z])/g, ' $1').trim()}
                       </span>
                     </li>
                   ))}
@@ -477,7 +478,7 @@ const SuperAdminPricing = () => {
                         onChange={(e) => setNewPlan({ ...newPlan, features: { ...newPlan.features, [feature]: e.target.checked } })}
                       />
                       <span className="text-sm font-medium text-gray-700 capitalize select-none">
-                        {feature === 'support' ? 'Customer Support 24/7' : feature === 'aiInsights' ? 'Analytics' : feature.replace(/([A-Z])/g, ' $1').trim()}
+                        {feature === 'support' ? 'Customer Support 24/7' : feature === 'aiInsights' ? 'Advanced AI Analysis' : feature === 'monthlyReports' ? 'PDF Monthly Reports' : feature.replace(/([A-Z])/g, ' $1').trim()}
                       </span>
                     </label>
                   ))}

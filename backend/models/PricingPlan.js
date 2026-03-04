@@ -13,6 +13,7 @@ const PricingPlanSchema = new mongoose.Schema(
             fileUpload: { type: Boolean, default: true },
             analytics: { type: Boolean, default: false },
             aiInsights: { type: Boolean, default: false },
+            monthlyReports: { type: Boolean, default: false },
         },
         limits: {
             maxUsers: { type: Number, default: 2 }, // -1 for unlimited

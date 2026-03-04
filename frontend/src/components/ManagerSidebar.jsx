@@ -22,13 +22,29 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
   const location = useLocation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ firstName: 'User', lastName: 'Name', email: '', isSuperAdmin: false });
+  const [features, setFeatures] = useState({});
   const companyRole = localStorage.getItem('companyRole') || 'manager';
+  const companyId = localStorage.getItem('companyId');
 
   useEffect(() => {
     const storedProfile = localStorage.getItem('userProfile');
     if (storedProfile) {
       setProfile(JSON.parse(storedProfile));
     }
+
+    const fetchFeatures = async () => {
+      if (!companyId) return;
+      try {
+        const { data } = await api.get(`/api/companies/${companyId}`);
+        if (data.plan && data.plan.features) {
+          setFeatures(data.plan.features);
+        }
+      } catch (err) {
+        console.error('Failed to fetch company features for sidebar:', err);
+      }
+    };
+
+    fetchFeatures();
 
     const handleProfileUpdate = () => {
       const updatedProfile = localStorage.getItem('userProfile');
@@ -41,7 +57,7 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, []);
+  }, [companyId]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -66,6 +82,7 @@ const ManagerSidebar = ({ variant = 'desktop', className = '', onNavigate = () =
     { name: 'Dashboard', icon: IoGridOutline, path: '/dashboard/manager' },
     { name: 'Analytics', icon: IoAnalyticsOutline, path: '/dashboard/manager/analytics' },
     ...(companyRole === 'owner' ? [
+      { name: 'Monthly Report', icon: IoDocumentTextOutline, path: '/dashboard/manager/monthly-report' },
       { name: 'Users', icon: IoPeopleOutline, path: '/dashboard/manager/teams' },
     ] : []),
     { name: 'Task Oversight', icon: IoClipboardOutline, path: '/dashboard/manager/tasks' },

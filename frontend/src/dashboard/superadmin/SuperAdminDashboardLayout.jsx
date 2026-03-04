@@ -25,7 +25,7 @@ const SuperAdminDashboardLayout = () => {
   };
 
   return (
-    <div className={`dashboard-theme ${isDarkMode ? 'dark' : ''} flex min-h-screen bg-app-bg overflow-hidden`}>
+    <div className={`dashboard-theme ${isDarkMode ? 'dark' : ''} flex h-screen bg-app-bg overflow-hidden`}>
       <SuperAdminSidebar />
 
       {/* Mobile Sidebar Drawer */}
@@ -44,7 +44,7 @@ const SuperAdminDashboardLayout = () => {
           </div>
         </div>
       )}
-      
+
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Top Header */}
         <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between sticky top-0 z-10">
@@ -98,7 +98,7 @@ const SuperAdminDashboardLayout = () => {
 
               {showProfileDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-2">
-                  
+
                   <button
                     onClick={() => {
                       localStorage.clear();

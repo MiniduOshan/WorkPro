@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  IoAnalyticsOutline,
   IoRefreshOutline,
   IoStatsChartOutline,
   IoCheckmarkCircle,
   IoAlertCircle,
   IoTrendingUpOutline,
+  IoRocketOutline,
+  IoDocumentTextOutline,
+  IoAnalyticsOutline, // Added IoAnalyticsOutline here
 } from 'react-icons/io5';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -13,6 +15,7 @@ import {
   AreaChart, Area,
 } from 'recharts';
 import api from '../../api/axios';
+import MonthlyReport from './MonthlyReport';
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1'];
 
@@ -22,14 +25,30 @@ const AIInsights = () => {
   const [rawData, setRawData] = useState(null);
   const [chartData, setChartData] = useState(null);
   const [lastGenerated, setLastGenerated] = useState(null);
+  const [features, setFeatures] = useState({});
 
   const token = localStorage.getItem('token');
   const companyId = localStorage.getItem('companyId');
 
   useEffect(() => {
-    generateSummary();
+    fetchFeatures();
     fetchChartData();
   }, []);
+
+  const fetchFeatures = async () => {
+    if (!companyId) return;
+    try {
+      const { data } = await api.get(`/api/companies/${companyId}`);
+      if (data.plan && data.plan.features) {
+        setFeatures(data.plan.features);
+        if (data.plan.features.aiInsights) {
+          generateSummary();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch company features:', err);
+    }
+  };
 
   const generateSummary = async () => {
     try {
@@ -44,7 +63,7 @@ const AIInsights = () => {
       setRawData(response.data.rawData);
       setLastGenerated(new Date(response.data.generatedAt));
     } catch (err) {
-      console.error('Failed to generate AI summary:', err);
+      console.error('Failed to generate analytics summary:', err);
     } finally {
       setLoading(false);
     }
@@ -100,54 +119,91 @@ const AIInsights = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
             <IoAnalyticsOutline className="w-8 h-8 text-purple-600" />
-            Analytics
+            Performance Analytics
           </h1>
-          <p className="text-slate-600 mt-2">Your daily analytics powered by AI</p>
+          <p className="text-slate-600 mt-2">Real-time engagement and predictive modeling</p>
         </div>
-        <button
-          onClick={() => { generateSummary(); fetchChartData(); }}
-          disabled={loading}
-          className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition disabled:opacity-50"
-        >
-          <IoRefreshOutline className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          {loading ? 'Generating...' : 'Refresh'}
-        </button>
+        {features.aiInsights && (
+          <button
+            onClick={() => { generateSummary(); fetchChartData(); }}
+            disabled={loading}
+            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition disabled:opacity-50"
+          >
+            <IoRefreshOutline className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Generating...' : 'Refresh'}
+          </button>
+        )}
       </div>
 
-      {/* Main AI Summary Card */}
-      <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl shadow-xl border-2 border-purple-200 p-8 ai-summary-card">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <IoAnalyticsOutline className="w-6 h-6 text-white animate-pulse" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-slate-800">Daily Intelligence Report</h2>
-              {lastGenerated && (
-                <span className="text-xs text-slate-500">
-                  Generated {lastGenerated.toLocaleTimeString()}
-                </span>
-              )}
+      {features.aiInsights ? (
+        <>
+          {/* Main Analytics Summary Card */}
+          <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl shadow-xl border-2 border-purple-200 p-8 ai-summary-card">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <IoAnalyticsOutline className="w-6 h-6 text-white animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-slate-800">Analytics Intelligence Summary</h2>
+                  {lastGenerated && (
+                    <span className="text-xs text-slate-500">
+                      Generated {lastGenerated.toLocaleTimeString()}
+                    </span>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gradient-to-r from-purple-200 to-transparent rounded animate-pulse"></div>
+                    <div className="h-4 bg-gradient-to-r from-blue-200 to-transparent rounded animate-pulse"></div>
+                    <div className="h-4 bg-gradient-to-r from-indigo-200 to-transparent rounded animate-pulse w-3/4"></div>
+                  </div>
+                ) : summary ? (
+                  <div className="prose prose-lg max-w-none">
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-line analytics-summary-text">
+                      {summary}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-slate-500">No data available for generation.</p>
+                )}
+              </div>
             </div>
-
-            {loading ? (
-              <div className="space-y-3">
-                <div className="h-4 bg-gradient-to-r from-purple-200 to-transparent rounded animate-pulse"></div>
-                <div className="h-4 bg-gradient-to-r from-blue-200 to-transparent rounded animate-pulse"></div>
-                <div className="h-4 bg-gradient-to-r from-indigo-200 to-transparent rounded animate-pulse w-3/4"></div>
-              </div>
-            ) : summary ? (
-              <div className="prose prose-lg max-w-none">
-                <p className="text-slate-700 leading-relaxed whitespace-pre-line ai-summary-text">
-                  {summary}
-                </p>
-              </div>
-            ) : (
-              <p className="text-slate-500">No data available for summary generation.</p>
-            )}
           </div>
+
+          {/* Key Metrics */}
+          {rawData && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* ... existing metrics cards ... */}
+            </div>
+          )}
+
+          {/* Charts Section */}
+          {chartData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* ... existing charts ... */}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="bg-white p-16 rounded-3xl shadow-sm text-center border border-slate-100 max-w-3xl mx-auto my-8">
+          <div className="w-24 h-24 bg-purple-50 text-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-8 transform rotate-3">
+            <IoAnalyticsOutline className="text-5xl" />
+          </div>
+          <h2 className="text-3xl font-bold text-slate-800 mb-4">Analytics Intelligence</h2>
+          <p className="text-slate-600 mb-10 text-lg leading-relaxed">
+            Get professional analytics insights and real-time engagement monitoring
+            of your company's workspace. Upgrade to unlock advanced analytics.
+          </p>
+          <button
+            onClick={() => window.location.href = '/dashboard/manager/billing'}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-10 py-4 rounded-2xl font-bold hover:shadow-xl hover:shadow-purple-200 transition-all text-lg"
+          >
+            Upgrade Plan
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Key Metrics */}
       {rawData && (
@@ -354,7 +410,7 @@ const AIInsights = () => {
               <span className="text-blue-600 font-bold text-xs">2</span>
             </div>
             <p>
-              <strong className="text-slate-800">AI Analysis:</strong> Our AI processes the data to identify trends, achievements, and areas needing attention.
+              <strong className="text-slate-800">Analytics Processing:</strong> We process the data to identify trends, achievements, and areas needing attention.
             </p>
           </div>
           <div className="flex items-start gap-3">

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Task from '../models/Task.js';
 import Announcement from '../models/Announcement.js';
 import Channel from '../models/Channel.js';
@@ -205,6 +206,69 @@ Announcements: ${announcements.length}`;
 
     res.json({ summary: aiResult.content, generatedAt: new Date() });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Full Monthly Report aggregation
+export const getMonthlyReport = async (req, res) => {
+  try {
+    const companyId = req.headers['x-company-id'];
+    if (!companyId) return res.status(400).json({ message: 'Company ID is required' });
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    // 1. Task Metrics
+    const [tasksThisMonth, tasksPrevMonth] = await Promise.all([
+      Task.countDocuments({ company: companyId, status: 'done', updatedAt: { $gte: startOfMonth } }),
+      Task.countDocuments({ company: companyId, status: 'done', updatedAt: { $gte: startOfPrevMonth, $lte: endOfPrevMonth } })
+    ]);
+
+    // 2. Department Breakdown
+    const deptBreakdown = await Task.aggregate([
+      { $match: { company: new mongoose.Types.ObjectId(companyId) } },
+      { $group: { _id: '$department', total: { $sum: 1 }, completed: { $sum: { $cond: [{ $eq: ['$status', 'done'] }, 1, 0] } } } }
+    ]);
+
+    // 3. Top Contributors (Owners/Managers/Employees with most completions)
+    const topContributors = await Task.aggregate([
+      { $match: { company: new mongoose.Types.ObjectId(companyId), status: 'done', updatedAt: { $gte: startOfMonth } } },
+      { $group: { _id: '$assignee', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+      { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+      { $unwind: '$user' },
+      { $project: { name: { $concat: ['$user.firstName', ' ', '$user.lastName'] }, count: 1 } }
+    ]);
+
+    // 4. Project Distribution
+    const Project = (await import('../models/Project.js')).default;
+    const projectStats = await Project.aggregate([
+      { $match: { company: new mongoose.Types.ObjectId(companyId) } },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+
+    // 5. General Activity
+    const announcementsCount = await Announcement.countDocuments({ company: companyId, createdAt: { $gte: startOfMonth } });
+
+    res.json({
+      month: now.toLocaleString('default', { month: 'long', year: 'numeric' }),
+      tasks: {
+        completedThisMonth: tasksThisMonth,
+        completedLastMonth: tasksPrevMonth,
+        growth: tasksPrevMonth === 0 ? 100 : Math.round(((tasksThisMonth - tasksPrevMonth) / tasksPrevMonth) * 100),
+        deptBreakdown: deptBreakdown.map(d => ({ department: d._id || 'General', total: d.total, completed: d.completed })),
+      },
+      topContributors,
+      projects: projectStats.reduce((acc, p) => { acc[p._id] = p.count; return acc; }, {}),
+      announcementsCount,
+      generatedAt: new Date()
+    });
+  } catch (error) {
+    console.error('Monthly Report Error:', error);
     res.status(500).json({ message: error.message });
   }
 };

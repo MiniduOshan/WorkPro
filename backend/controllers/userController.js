@@ -21,6 +21,8 @@ const getUserResponse = (user) => {
         username: `${user.firstName} ${user.lastName}`, // The combined name
         email: user.email,
         isSuperAdmin: isSuperAdmin,
+        companies: user.companies || [],
+        defaultCompany: user.defaultCompany,
         token: generateToken(user._id),
         user: {
             _id: user._id,
@@ -28,6 +30,8 @@ const getUserResponse = (user) => {
             lastName: user.lastName,
             email: user.email,
             isSuperAdmin: isSuperAdmin,
+            companies: user.companies || [],
+            defaultCompany: user.defaultCompany,
         }
     };
 };
@@ -173,8 +177,10 @@ const getUserProfile = async (req, res) => {
             lastName: user.lastName,
             username: `${user.firstName} ${user.lastName}`,
             email: user.email,
-            mobileNumber: user.mobileNumber, // <--- NEW FIELD
-            profilePic: user.profilePic,     // <--- NEW FIELD
+            mobileNumber: user.mobileNumber,
+            profilePic: user.profilePic,
+            companies: user.companies || [],
+            defaultCompany: user.defaultCompany,
             createdAt: user.createdAt,
         });
     } else {

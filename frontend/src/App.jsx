@@ -40,6 +40,7 @@ import Notes from './dashboard/shared/Notes.jsx';
 import Settings from './dashboard/shared/Settings.jsx';
 import DocumentLibrary from './dashboard/shared/DocumentLibrary.jsx';
 import AIInsights from './dashboard/manager/AIInsights.jsx';
+import MonthlyReport from './dashboard/manager/MonthlyReport.jsx';
 import CompanyCreate from './pages/CompanyCreate.jsx';
 import InviteJoin from './pages/InviteJoin.jsx';
 import Invite from './dashboard/shared/Invite.jsx';
@@ -302,7 +303,7 @@ function App() {
                     <Route path="documents" element={<DocumentLibrary />} />
                     <Route path="notes" element={<Notes />} />
                     <Route path="analytics" element={<AIInsights />} />
-                    <Route path="analytics" element={<AIInsights />} />
+                    <Route path="monthly-report" element={<ProtectedRoute requireCompany={true} allowedRoles={['owner']}><MonthlyReport /></ProtectedRoute>} />
                     <Route path="billing" element={<ProtectedRoute requireCompany={true} allowedRoles={['owner']}><Billing /></ProtectedRoute>} />
                     <Route path="create-company" element={<CompanyCreate />} />
                 </Route>
