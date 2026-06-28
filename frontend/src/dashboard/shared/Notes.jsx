@@ -154,8 +154,23 @@ export default function Notes() {
 const NoteCard = ({ note, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [val, setVal] = useState({ title: note.title, content: note.content });
+  const editContainerRef = React.useRef(null);
 
-  const handleBlur = () => {
+  const handleBlur = (e) => {
+    // Check if the new focused element is still within our editing container
+    // If so, don't exit editing mode (user is switching between title and content)
+    setTimeout(() => {
+      if (editContainerRef.current && editContainerRef.current.contains(document.activeElement)) {
+        return; // Still focused within the editing container
+      }
+      setIsEditing(false);
+      if (val.title !== note.title || val.content !== note.content) {
+        onUpdate(note._id, val.title, val.content);
+      }
+    }, 100);
+  };
+
+  const handleSaveAndClose = () => {
     setIsEditing(false);
     if (val.title !== note.title || val.content !== note.content) {
       onUpdate(note._id, val.title, val.content);
@@ -166,13 +181,14 @@ const NoteCard = ({ note, onUpdate, onDelete }) => {
     <div className="inline-block w-full bg-white rounded-2xl border border-slate-200 shadow-sm hover:border-green-300 transition-colors group">
       <div className="p-6">
         {isEditing ? (
-          <div className="space-y-2">
+          <div className="space-y-2" ref={editContainerRef}>
             <input
               autoFocus
               className="w-full font-bold text-slate-800 border-none focus:ring-0 p-0 text-base bg-transparent"
               value={val.title}
               onChange={e => setVal({ ...val, title: e.target.value })}
               onBlur={handleBlur}
+              placeholder="Title"
             />
             <textarea
               className="w-full text-slate-700 font-medium border-none focus:ring-0 p-0 text-sm resize-none bg-transparent"
@@ -180,7 +196,17 @@ const NoteCard = ({ note, onUpdate, onDelete }) => {
               value={val.content}
               onChange={e => setVal({ ...val, content: e.target.value })}
               onBlur={handleBlur}
+              placeholder="Content"
             />
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={handleSaveAndClose}
+                className="px-4 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Done
+              </button>
+            </div>
           </div>
         ) : (
           <div onClick={() => setIsEditing(true)} className="cursor-pointer">

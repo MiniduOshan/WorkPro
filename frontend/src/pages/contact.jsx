@@ -14,7 +14,7 @@ const Contact = () => {
             title: 'Email Us',
             detail: 'support@workpro.app',
             sub: 'We respond within 24 hours',
-            href: 'https://mail.google.com/mail/?view=cm&to=support@workpro.app',
+            href: 'mailto:support@workpro.app',
             color: 'blue',
         },
         {
@@ -116,7 +116,7 @@ const Contact = () => {
                                 Drop us a line and we'll get back to you within 24 hours.
                             </p>
                             <a
-                                href="https://mail.google.com/mail/?view=cm&to=support@workpro.app&su=Contact+Request"
+                                href="mailto:support@workpro.app?subject=Contact%20Request"
                                 className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all text-lg"
                             >
                                 <IoMailOutline className="w-5 h-5" />

@@ -128,7 +128,7 @@ const ManagerDashboardLayout = () => {
                         >
                             <IoMenuOutline className="w-5 h-5 text-gray-700" />
                         </button>
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Manager Dashboard</h1>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{localStorage.getItem('companyRole') === 'owner' ? 'Owner Dashboard' : 'Manager Dashboard'}</h1>
                         <div className="w-full sm:w-auto">
                             <CompanySwitcher currentCompanyId={companyId} />
                         </div>

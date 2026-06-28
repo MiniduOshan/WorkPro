@@ -45,10 +45,10 @@ function Footer() {
                             <li><Link to="/terms" className="hover:text-blue-400">Terms of Service</Link></li>
                         </ul>
                     </div>
-                    {/* Column 3: Contact */}
+                    {/* Column 3: Contact & Social */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4">Contact</h3>
-                        <div className="flex space-x-4">
+                        <div className="flex space-x-4 mb-4">
                             <a href="tel:+94762288794" className="hover:text-blue-400 transition-colors" title="Call Us">
                                 <IoCallOutline className="w-6 h-6" />
                             </a>
@@ -75,4 +75,4 @@ function Footer() {
     );
 }
 
-export default Footer;
+export default Footer;

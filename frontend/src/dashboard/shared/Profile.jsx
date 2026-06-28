@@ -25,6 +25,8 @@ const Profile = () => {
     });
     const [error, setError] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteInput, setDeleteInput] = useState('');
 
     const token = localStorage.getItem('token');
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -80,6 +82,7 @@ const Profile = () => {
         const dataToSave = {
             firstName: profileData.firstName,
             lastName: profileData.lastName,
+            email: profileData.email,
             mobileNumber: profileData.mobileNumber === 'Add number' ? '' : profileData.mobileNumber,
         };
 
@@ -148,8 +151,7 @@ const Profile = () => {
 
     const handleDeleteAccount = async () => {
         if (deleteLoading) return;
-        const confirmText = window.prompt('Type DELETE to confirm account removal. This cannot be undone.');
-        if (confirmText !== 'DELETE') return;
+        if (deleteInput !== 'DELETE') return;
         try {
             setDeleteLoading(true);
             await api.delete('/api/users/account', config);
@@ -258,8 +260,18 @@ const Profile = () => {
                 <div className="grid grid-cols-3 gap-4 py-4 border-b border-gray-100 items-center">
                     <label className="text-black-500 font-medium">Email Account</label>
                     <div className="col-span-2">
-                        {/* Email is never editable here, just displayed */}
-                        <p className="text-gray-800 font-medium">{profileData.email}</p>
+                        {isEditing ? (
+                            <input
+                                type="email"
+                                name="email"
+                                value={profileData.email}
+                                onChange={handleChange}
+                                className={`w-full border border-gray-300 rounded-lg p-2 focus:ring-${ACCENT_PURPLE} focus:border-${ACCENT_PURPLE}`}
+                                required
+                            />
+                        ) : (
+                            renderValue(profileData.email)
+                        )}
                     </div>
                 </div>
 
@@ -291,13 +303,41 @@ const Profile = () => {
             <div className="mt-8 pt-6 border-t border-red-100">
                 <h3 className="text-lg font-bold text-red-700 mb-3">Danger Zone</h3>
                 <p className="text-sm text-red-600 mb-4">Delete your account and remove all workspace memberships. This action is permanent.</p>
-                <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleteLoading}
-                    className="px-4 py-2 rounded-lg border border-red-200 text-red-700 font-semibold hover:bg-red-50 disabled:opacity-60"
-                >
-                    {deleteLoading ? 'Deleting...' : 'Delete My Account'}
-                </button>
+                
+                {!showDeleteConfirm ? (
+                    <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-4 py-2 rounded-lg border border-red-200 text-red-700 font-semibold hover:bg-red-50"
+                    >
+                        Delete My Account
+                    </button>
+                ) : (
+                    <div className="bg-red-50 p-4 rounded-xl border border-red-200">
+                        <p className="text-sm font-semibold text-red-800 mb-2">Type "DELETE" to confirm account deletion:</p>
+                        <div className="flex gap-2">
+                            <input 
+                                type="text"
+                                value={deleteInput}
+                                onChange={(e) => setDeleteInput(e.target.value)}
+                                placeholder="DELETE"
+                                className="border border-red-300 rounded-lg px-3 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            />
+                            <button
+                                onClick={handleDeleteAccount}
+                                disabled={deleteLoading || deleteInput !== 'DELETE'}
+                                className="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 disabled:opacity-50 transition"
+                            >
+                                {deleteLoading ? 'Deleting...' : 'Confirm'}
+                            </button>
+                            <button
+                                onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); }}
+                                className="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-200 rounded-lg transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

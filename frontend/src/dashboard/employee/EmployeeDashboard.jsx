@@ -11,6 +11,7 @@ const EmployeeDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const storedCompanyId = localStorage.getItem('companyId');
@@ -58,14 +59,22 @@ const EmployeeDashboard = () => {
       <div className="p-6 lg:p-10">
 
         {/* Header Section */}
-        <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-slate-800 tracking-tight">{getGreeting()}!</h2>
             <p className="text-slate-500 mt-1 text-lg">
               You have <span className="font-semibold text-green-600">{summary.tasks.total} active tasks</span> assigned to you.
             </p>
           </div>
-
+          <div className="flex items-center">
+             <input
+                type="text"
+                placeholder="Search priority tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-white border rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-64 shadow-sm"
+              />
+          </div>
         </header>
 
         {/* Stats Grid */}
@@ -90,13 +99,13 @@ const EmployeeDashboard = () => {
 
             {loading ? (
               <LoadingSpinner />
-            ) : tasks.length === 0 ? (
+            ) : tasks.filter(t => !searchQuery.trim() || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.description?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
               <div className="bg-white rounded-2xl border border-green-100 p-12 text-center shadow-sm">
-                <p className="text-slate-400">No pending tasks for today.</p>
+                <p className="text-slate-400">No pending tasks found for today.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {tasks.slice(0, 4).map((task) => (
+                {tasks.filter(t => !searchQuery.trim() || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.description?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 4).map((task) => (
                   <TaskCardCompact key={task._id} task={task} navigate={navigate} />
                 ))}
               </div>

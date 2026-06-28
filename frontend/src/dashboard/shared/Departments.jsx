@@ -42,15 +42,24 @@ export default function Departments() {
 
   const createDepartment = async (e) => {
     e.preventDefault();
-    if (!newDepartment.name.trim()) {
+    const trimmedName = newDepartment.name.trim();
+    if (!trimmedName) {
       alert('Department name is required');
+      return;
+    }
+    if (trimmedName.length < 2) {
+      alert('Department name must be at least 2 characters long');
+      return;
+    }
+    if (!/^[a-zA-Z0-9\s&-]+$/.test(trimmedName)) {
+      alert('Department name can only contain letters, numbers, spaces, hyphens, and ampersands');
       return;
     }
 
     try {
       setCreatingDept(true);
       await api.post('/api/departments', {
-        name: newDepartment.name,
+        name: trimmedName,
         description: newDepartment.description,
         companyId
       });

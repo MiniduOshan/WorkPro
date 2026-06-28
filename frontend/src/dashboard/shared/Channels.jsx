@@ -26,6 +26,7 @@ export default function Channels() {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [companyMembers, setCompanyMembers] = useState([]);
   const [companyRole, setCompanyRole] = useState('');
+  const [channelSearch, setChannelSearch] = useState('');
   const canCreateChannel = companyRole === 'manager' || companyRole === 'owner';
 
   useEffect(() => {
@@ -282,6 +283,8 @@ export default function Channels() {
               <input
                 type="text"
                 placeholder="Search channels..."
+                value={channelSearch}
+                onChange={(e) => setChannelSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
@@ -311,7 +314,9 @@ export default function Channels() {
             ) : (
               <div className="space-y-1">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">Channels</p>
-                {channels.map((channel) => (
+                {channels
+                  .filter(channel => !channelSearch.trim() || channel.name.toLowerCase().includes(channelSearch.toLowerCase()))
+                  .map((channel) => (
                   <div key={channel._id} className="relative group">
                     <button
                       onClick={() => setSelected(channel)}
@@ -541,9 +546,25 @@ export default function Channels() {
       {showMembersModal && selected && (selected.members?.[0]?._id === userProfile?._id || selected.members?.[0] === userProfile?._id || companyRole === 'owner') && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="channel-members-modal bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-slate-800">Manage Channel Members</h2>
               <button onClick={() => setShowMembersModal(false)} className="channel-modal-close-btn p-2 hover:bg-slate-100 rounded-lg transition">✕</button>
+            </div>
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search members..."
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                id="memberSearchInput"
+                onChange={(e) => {
+                  // Use DOM-based filtering for simplicity in inline modal
+                  const query = e.target.value.toLowerCase();
+                  document.querySelectorAll('.channel-current-member, .channel-add-member, .channel-join-request').forEach(el => {
+                    const name = el.querySelector('span')?.textContent?.toLowerCase() || '';
+                    el.style.display = name.includes(query) ? '' : 'none';
+                  });
+                }}
+              />
             </div>
 
             {/* Join Requests */}

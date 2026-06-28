@@ -546,7 +546,7 @@ export default function ManagerDashboard() {
         ) : (
           <>
             <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
-              <h1 className="text-xl font-bold text-slate-800">Manager Dashboard</h1>
+              <h1 className="text-xl font-bold text-slate-800">{companyRole === 'owner' ? 'Owner Dashboard' : 'Manager Dashboard'}</h1>
               <div className="flex items-center gap-6">
                 <input
                   type="text"
@@ -608,13 +608,13 @@ export default function ManagerDashboard() {
                         View All
                       </button>
                     </div>
-                    {tasks.length === 0 ? (
+                    {tasks.filter(t => !searchQuery.trim() || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.description?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
                       <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
-                        <p className="text-slate-400">No tasks assigned yet.</p>
+                        <p className="text-slate-400">No tasks found.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        {tasks.slice(0, 4).map((task) => (
+                        {tasks.filter(t => !searchQuery.trim() || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.description?.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 4).map((task) => (
                           <TaskCardManagerCompact key={task._id} task={task} navigate={navigate} />
                         ))}
                       </div>

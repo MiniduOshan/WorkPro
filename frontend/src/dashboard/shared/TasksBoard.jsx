@@ -35,6 +35,7 @@ export default function TasksBoard() {
   const [dueDate, setDueDate] = useState('');
   const [visibility, setVisibility] = useState('public');
   const [filterDepartment, setFilterDepartment] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
@@ -344,11 +345,20 @@ export default function TasksBoard() {
     }
   };
 
+  // Filter tasks based on search query
+  const filteredTasks = searchQuery.trim()
+    ? tasks.filter(t =>
+        (t.title && t.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.description && t.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.assignee && `${t.assignee.firstName || ''} ${t.assignee.lastName || ''}`.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : tasks;
+
   const columns = [
-    { id: 'to-do', label: 'To Do', icon: IoTimeOutline, color: 'slate', count: tasks.filter(t => t.status === 'to-do').length },
-    { id: 'in-progress', label: 'In Progress', icon: IoCreateOutline, color: 'blue', count: tasks.filter(t => t.status === 'in-progress').length },
-    { id: 'cancelled', label: 'Cancelled', icon: IoAlertCircleOutline, color: 'red', count: tasks.filter(t => t.status === 'cancelled').length },
-    { id: 'done', label: 'Done', icon: IoCheckmarkDoneOutline, color: 'green', count: tasks.filter(t => t.status === 'done').length },
+    { id: 'to-do', label: 'To Do', icon: IoTimeOutline, color: 'slate', count: filteredTasks.filter(t => t.status === 'to-do').length },
+    { id: 'in-progress', label: 'In Progress', icon: IoCreateOutline, color: 'blue', count: filteredTasks.filter(t => t.status === 'in-progress').length },
+    { id: 'cancelled', label: 'Cancelled', icon: IoAlertCircleOutline, color: 'red', count: filteredTasks.filter(t => t.status === 'cancelled').length },
+    { id: 'done', label: 'Done', icon: IoCheckmarkDoneOutline, color: 'green', count: filteredTasks.filter(t => t.status === 'done').length },
   ];
 
   const getStatusColor = (status) => {
@@ -371,6 +381,16 @@ export default function TasksBoard() {
             <p className="text-slate-600">Manage and track team tasks across projects</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-4 pr-4 py-2 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 bg-white text-sm w-48"
+              />
+            </div>
             {/* Department Filter */}
             {departments.length > 0 && (
               <div className="flex items-center gap-2">
@@ -426,7 +446,7 @@ export default function TasksBoard() {
 
                   {/* Tasks List */}
                   <div className="flex-grow overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                    {tasks.filter(t => t.status === column.id).map((task) => (
+                    {filteredTasks.filter(t => t.status === column.id).map((task) => (
                       <div
                         key={task._id}
                         onClick={() => openViewModal(task)}
@@ -509,7 +529,7 @@ export default function TasksBoard() {
                         </div>
                       </div>
                     ))}
-                    {tasks.filter(t => t.status === column.id).length === 0 && (
+                    {filteredTasks.filter(t => t.status === column.id).length === 0 && (
                       <div className="text-center py-8 text-slate-400 kanban-empty-state">
                         <Icon className="mx-auto text-4xl mb-2 opacity-50" />
                         <p className="text-sm">No tasks</p>
@@ -544,7 +564,18 @@ export default function TasksBoard() {
                   />
                 </div>
 
-
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none resize-none`}
+                    placeholder="Enter task description (optional)"
+                    rows={3}
+                  />
+                </div>
 
                 {companyRole !== 'employee' && (
                   <>
@@ -656,6 +687,7 @@ export default function TasksBoard() {
                   <input
                     type="date"
                     value={dueDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setDueDate(e.target.value)}
                     className={`w-full px-4 py-3 border-2 border-slate-200 rounded-xl ${theme.focusBorderPrimary} focus:outline-none`}
                   />

@@ -1,12 +1,12 @@
 import React from "react";
-import { 
-  IoPeopleOutline, 
-  IoRocketOutline, 
-  IoCheckmarkCircleOutline, 
-  IoShieldCheckmarkOutline, 
-  IoFlashOutline, 
-  IoHeartOutline, 
-  IoArrowForwardOutline 
+import {
+  IoPeopleOutline,
+  IoRocketOutline,
+  IoCheckmarkCircleOutline,
+  IoShieldCheckmarkOutline,
+  IoBusinessOutline,
+  IoGlobeOutline,
+  IoArrowForwardOutline
 } from "react-icons/io5";
 
 const About = () => {
@@ -44,11 +44,11 @@ const About = () => {
               </p>
             </div>
             <div className="order-1 md:order-2 bg-gradient-to-tr from-blue-600 to-indigo-700 rounded-3xl p-12 aspect-video flex flex-col items-center justify-center text-white text-center shadow-2xl relative">
-                <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-3xl opacity-20"></div>
-                <div className="relative z-10">
-                    <div className="text-6xl font-black mb-2 tracking-tighter">500+</div>
-                    <p className="text-blue-100 font-medium text-lg uppercase tracking-wider">Companies Trusting WorkPro</p>
-                </div>
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-3xl opacity-20"></div>
+              <div className="relative z-10">
+                <div className="text-6xl font-black mb-2 tracking-tighter">500+</div>
+                <p className="text-blue-100 font-medium text-lg uppercase tracking-wider">Companies Trusting WorkPro</p>
+              </div>
             </div>
           </div>
         </div>
@@ -63,7 +63,7 @@ const About = () => {
               The principles that drive every line of code we write.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ValueCard icon={IoFlashOutline} title="Innovation" desc="We constantly innovate to deliver cutting-edge features that solve real team problems." />
             <ValueCard icon={IoShieldCheckmarkOutline} title="Reliability" desc="Your data is sacred. We maintain 99.9% uptime and enterprise-grade security." />
@@ -81,17 +81,17 @@ const About = () => {
           <div className="bg-slate-900 rounded-[3rem] p-12 md:p-16 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20"></div>
             <div className="relative z-10">
-                <IoPeopleOutline className="w-16 h-16 text-blue-400 mx-auto mb-8" />
-                <h2 className="text-4xl font-bold mb-6">Join Our Growing Community</h2>
-                <p className="text-slate-400 text-lg mb-10 leading-relaxed">
-                  Thousands of teams use WorkPro to collaborate better every day. From startups to enterprises, we scale with you.
-                </p>
-                <button 
-                  onClick={() => window.location.href = '/signup'}
-                  className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 inline-flex items-center gap-2"
-                >
-                  Get Started Free <IoArrowForwardOutline />
-                </button>
+              <IoPeopleOutline className="w-16 h-16 text-blue-400 mx-auto mb-8" />
+              <h2 className="text-4xl font-bold mb-6">Join Our Growing Community</h2>
+              <p className="text-slate-400 text-lg mb-10 leading-relaxed">
+                Thousands of teams use WorkPro to collaborate better every day. From startups to enterprises, we scale with you.
+              </p>
+              <button
+                onClick={() => window.location.href = '/signup'}
+                className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 inline-flex items-center gap-2"
+              >
+                Get Started Free <IoArrowForwardOutline />
+              </button>
             </div>
           </div>
         </div>

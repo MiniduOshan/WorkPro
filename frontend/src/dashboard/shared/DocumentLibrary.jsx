@@ -95,7 +95,17 @@ const DocumentLibrary = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setUploadError('Please select a file to upload.');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (selectedFile.size > maxSize) {
+      setUploadError(`File size (${formatFileSize(selectedFile.size)}) exceeds the maximum limit of 10MB.`);
+      return;
+    }
 
     setUploadError('');
     try {
@@ -357,6 +367,14 @@ const UploadModal = ({ onClose, onUpload, uploadData, setUploadData, selectedFil
 
               if (!allowedExtensions.includes(ext)) {
                 alert('Invalid file type. Please select a PDF, Word, MP3, MP4, or Image (JPEG, PNG, JPG) file.');
+                e.target.value = '';
+                return;
+              }
+
+              // Validate file size (max 10MB)
+              const maxSize = 10 * 1024 * 1024;
+              if (file.size > maxSize) {
+                alert(`File size exceeds the maximum limit of 10MB. Selected file: ${(file.size / (1024 * 1024)).toFixed(1)}MB`);
                 e.target.value = '';
                 return;
               }
