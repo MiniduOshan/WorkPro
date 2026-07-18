@@ -65,7 +65,7 @@ WorkPro helps companies:
 
 ---
 
-## ☁️ Deployment
+## Deployment
 
 ### 🐳 Dockerization
 - Frontend and backend containerized using Docker
