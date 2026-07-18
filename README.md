@@ -105,5 +105,3 @@ cd ../frontend
 npm install
 npm run dev
 ```
-
-This repository now targets company project management workflows while keeping the original MERN foundation.
