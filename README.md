@@ -1,4 +1,4 @@
-# 🧩 WorkPro — Company Project Management Suite
+# 🧩 WorkPro - Company Project Management Suite
 
 A production-ready project management tool for companies. WorkPro centralises company profiles, team collaboration, task tracking, projects, and chat — with invitation links for seamless onboarding.
 
