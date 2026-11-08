@@ -19,8 +19,8 @@ WorkPro helps companies:
 ## 🚀 Key Features
 
 ### 🏢 Company Profiles + Invitations
-- Create company with profile fields (name, website, description)
-- Invite via tokenized links; accept to auto-join with assigned role
+- Create a company with profile fields (name, website, description)
+- Invite via tokenised links; accept to auto-join with assigned role
 
 ### 🗂️ Projects & Tasks
 - Project lifecycle statuses (planned, active, on-hold, completed)
@@ -68,7 +68,7 @@ WorkPro helps companies:
 ## Deployment
 
 ### 🐳 Dockerization
-- Frontend and backend containerized using Docker
+- Frontend and backend containerised using Docker
 - Consistent environments across development and production
 - Simplified deployment and scalability
 
